@@ -48,9 +48,6 @@
   <ItemGroup>
     <Compile Include="Cliente.cs" />
     <Compile Include="ClienteDAL.cs" />
-    <Compile Include="ClienteDAL.Designer.cs">
-      <DependentUpon>ClienteDAL.cs</DependentUpon>
-    </Compile>
     <Compile Include="DatabaseConnection.cs" />
     <Compile Include="FormBuscaCliente.cs">
       <SubType>Form</SubType>
