@@ -1,17 +1,16 @@
-﻿// =============================================
-// PROGRAM - PONTO DE ENTRADA
-// Arquivo: Program.cs
-// =============================================
-using System;
+﻿using System;
 using System.Windows.Forms;
 
-static class Program
+namespace Cadastro1
 {
-    [STAThread]
-    static void Main()
+    static class Program
     {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-        Application.Run(new FormMenuPrincipal());
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new FormMenuPrincipal());
+        }
     }
 }

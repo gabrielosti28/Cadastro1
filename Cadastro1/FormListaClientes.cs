@@ -1,139 +1,123 @@
-﻿// =============================================
-// FORM DE LISTAGEM
-// Arquivo: FormListaClientes.cs
-// =============================================
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-public partial class FormListaClientes : Form
+namespace Cadastro1
 {
-    private ClienteDAL clienteDAL;
-
-    public FormListaClientes()
+    public partial class FormListaClientes : Form
     {
-        InitializeComponent();
-        clienteDAL = new ClienteDAL();
-        CarregarClientes();
-    }
+        private ClienteDAL clienteDAL;
 
-    private void InitializeComponent()
-    {
-        this.Text = "Todos os Clientes Cadastrados";
-        this.Size = new Size(1100, 700);
-        this.StartPosition = FormStartPosition.CenterScreen;
-        this.BackColor = Color.FromArgb(240, 248, 255);
-
-        // Título
-        Label lblTitulo = new Label
+        public FormListaClientes()
         {
-            Text = "📋 TODOS OS CLIENTES",
-            Font = new Font("Segoe UI", 20, FontStyle.Bold),
-            ForeColor = Color.FromArgb(0, 102, 204),
-            Location = new Point(380, 20),
-            AutoSize = true
-        };
-
-        // Grade de dados com fonte maior e cores
-        DataGridView dgvClientes = new DataGridView
-        {
-            Name = "dgvClientes",
-            Location = new Point(30, 80),
-            Size = new Size(1030, 520),
-            ReadOnly = true,
-            AllowUserToAddRows = false,
-            AllowUserToDeleteRows = false,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            BackgroundColor = Color.White,
-            Font = new Font("Segoe UI", 11),
-            RowHeadersVisible = false,
-            BorderStyle = BorderStyle.None,
-            AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = Color.FromArgb(236, 240, 241)
-            },
-            DefaultCellStyle = new DataGridViewCellStyle
-            {
-                SelectionBackColor = Color.FromArgb(52, 152, 219),
-                SelectionForeColor = Color.White,
-                Padding = new Padding(5)
-            },
-            ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = Color.FromArgb(52, 73, 94),
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Alignment = DataGridViewContentAlignment.MiddleCenter
-            },
-            EnableHeadersVisualStyles = false,
-            RowTemplate = { Height = 35 },
-            ColumnHeadersHeight = 40
-        };
-
-        Button btnFechar = new Button
-        {
-            Text = "✖ FECHAR",
-            Location = new Point(460, 620),
-            Size = new Size(180, 45),
-            Font = new Font("Segoe UI", 13, FontStyle.Bold),
-            BackColor = Color.FromArgb(231, 76, 60),
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Cursor = Cursors.Hand
-        };
-        btnFechar.FlatAppearance.BorderSize = 0;
-        btnFechar.Click += (s, e) => this.Close();
-
-        this.Controls.AddRange(new Control[] { lblTitulo, dgvClientes, btnFechar });
-    }
-
-    private void CarregarClientes()
-    {
-        try
-        {
-            DataGridView dgv = (DataGridView)this.Controls["dgvClientes"];
-            var clientes = clienteDAL.ListarTodosClientes();
-
-            if (clientes.Count == 0)
-            {
-                MessageBox.Show("ℹ Nenhum cliente cadastrado ainda!\n\nCadastre o primeiro cliente no menu principal.",
-                    "Lista Vazia", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                this.Close();
-                return;
-            }
-
-            dgv.DataSource = clientes;
-
-            // Configurar aparência das colunas
-            dgv.Columns["ClienteID"].HeaderText = "CÓDIGO";
-            dgv.Columns["ClienteID"].Width = 80;
-
-            dgv.Columns["NomeCompleto"].HeaderText = "NOME COMPLETO";
-            dgv.Columns["CPF"].HeaderText = "CPF";
-            dgv.Columns["CPF"].Width = 120;
-
-            dgv.Columns["DataNascimento"].HeaderText = "NASCIMENTO";
-            dgv.Columns["DataNascimento"].Width = 130;
-            dgv.Columns["DataNascimento"].DefaultCellStyle.Format = "dd/MM/yyyy";
-
-            dgv.Columns["Endereco"].HeaderText = "ENDEREÇO";
-            dgv.Columns["Cidade"].HeaderText = "CIDADE";
-            dgv.Columns["Cidade"].Width = 150;
-
-            dgv.Columns["BeneficioINSS"].HeaderText = "BENEFÍCIO INSS";
-            dgv.Columns["BeneficioINSS"].Width = 140;
-
-            dgv.Columns["DataCadastro"].HeaderText = "CADASTRADO EM";
-            dgv.Columns["DataCadastro"].Width = 150;
-            dgv.Columns["DataCadastro"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
-
-            dgv.Columns["Ativo"].Visible = false;
+            InitializeComponent();
+            clienteDAL = new ClienteDAL();
+            ConfigurarInterface();
         }
-        catch (Exception ex)
+
+        private void ConfigurarInterface()
         {
-            MessageBox.Show("✖ Erro ao carregar clientes:\n\n" + ex.Message,
-                "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            // Configurações visuais básicas
+            this.BackColor = Color.FromArgb(240, 248, 255);
+        }
+
+        private void FormListaClientes_Load(object sender, EventArgs e)
+        {
+            CarregarClientes();
+        }
+
+        private void CarregarClientes()
+        {
+            try
+            {
+                var clientes = clienteDAL.ListarTodosClientes();
+
+                if (clientes.Count == 0)
+                {
+                    MessageBox.Show("ℹ Nenhum cliente cadastrado ainda!\n\nCadastre o primeiro cliente no menu principal.",
+                        "Lista Vazia", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.Close();
+                    return;
+                }
+
+                dgvClientes.DataSource = clientes;
+
+                // Configurar colunas
+                if (dgvClientes.Columns.Contains("ClienteID"))
+                {
+                    dgvClientes.Columns["ClienteID"].HeaderText = "CÓDIGO";
+                    dgvClientes.Columns["ClienteID"].Width = 80;
+                }
+
+                if (dgvClientes.Columns.Contains("NomeCompleto"))
+                {
+                    dgvClientes.Columns["NomeCompleto"].HeaderText = "NOME COMPLETO";
+                }
+
+                if (dgvClientes.Columns.Contains("CPF"))
+                {
+                    dgvClientes.Columns["CPF"].HeaderText = "CPF";
+                    dgvClientes.Columns["CPF"].Width = 120;
+                }
+
+                if (dgvClientes.Columns.Contains("DataNascimento"))
+                {
+                    dgvClientes.Columns["DataNascimento"].HeaderText = "NASCIMENTO";
+                    dgvClientes.Columns["DataNascimento"].Width = 130;
+                    dgvClientes.Columns["DataNascimento"].DefaultCellStyle.Format = "dd/MM/yyyy";
+                }
+
+                if (dgvClientes.Columns.Contains("Endereco"))
+                {
+                    dgvClientes.Columns["Endereco"].HeaderText = "ENDEREÇO";
+                }
+
+                if (dgvClientes.Columns.Contains("Cidade"))
+                {
+                    dgvClientes.Columns["Cidade"].HeaderText = "CIDADE";
+                    dgvClientes.Columns["Cidade"].Width = 150;
+                }
+
+                if (dgvClientes.Columns.Contains("BeneficioINSS"))
+                {
+                    dgvClientes.Columns["BeneficioINSS"].HeaderText = "BENEFÍCIO INSS";
+                    dgvClientes.Columns["BeneficioINSS"].Width = 140;
+                }
+
+                if (dgvClientes.Columns.Contains("DataCadastro"))
+                {
+                    dgvClientes.Columns["DataCadastro"].HeaderText = "CADASTRADO EM";
+                    dgvClientes.Columns["DataCadastro"].Width = 150;
+                    dgvClientes.Columns["DataCadastro"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
+                }
+
+                if (dgvClientes.Columns.Contains("Ativo"))
+                {
+                    dgvClientes.Columns["Ativo"].Visible = false;
+                }
+
+                // Centralizar cabeçalhos e algumas colunas
+                foreach (DataGridViewColumn coluna in dgvClientes.Columns)
+                {
+                    if (coluna.HeaderText.Contains("CÓDIGO") ||
+                        coluna.HeaderText.Contains("CPF") ||
+                        coluna.HeaderText.Contains("NASCIMENTO") ||
+                        coluna.HeaderText.Contains("CADASTRADO"))
+                    {
+                        coluna.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("✖ Erro ao carregar clientes:\n\n" + ex.Message,
+                    "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnFechar_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }
