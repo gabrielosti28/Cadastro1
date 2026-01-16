@@ -1,17 +1,12 @@
-﻿// =============================================
-// CLASSE DE CONEXÃO COM O BANCO DE DADOS
-// Arquivo: DatabaseConnection.cs
-// =============================================
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 
 namespace Cadastro1
 {
     public class DatabaseConnection
     {
-        // ALTERE AQUI SEUS DADOS DE CONEXÃO:
+        // STRING DE CONEXÃO CORRETA (Windows Authentication)
         private static string connectionString =
-           
-             "Data Source=localhost;Initial Catalog=projeto1;Integrated Security=True";
+            "Data Source=DESKTOP-83DNHA9\\GOSTI;Initial Catalog=projeto1;Integrated Security=True";
 
         public static SqlConnection GetConnection()
         {
