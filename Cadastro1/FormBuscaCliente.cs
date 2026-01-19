@@ -7,99 +7,11 @@ namespace Cadastro1
     public partial class FormBuscaCliente : Form
     {
         private ClienteDAL clienteDAL;
-        private MaskedTextBox txtCPFBusca;
-        private Panel panelResultado;
 
         public FormBuscaCliente()
         {
             InitializeComponent();
             clienteDAL = new ClienteDAL();
-            CriarInterface();
-        }
-
-        private void CriarInterface()
-        {
-            this.Text = "Buscar Cliente por CPF";
-            this.Size = new Size(750, 650);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(240, 248, 255);
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-
-            Label lblTitulo = new Label
-            {
-                Text = "🔍 BUSCAR CLIENTE",
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
-                ForeColor = Color.FromArgb(0, 102, 204),
-                Location = new Point(230, 20),
-                AutoSize = true
-            };
-
-            Panel panelBusca = new Panel
-            {
-                Location = new Point(50, 80),
-                Size = new Size(650, 120),
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-
-            Label lblCPF = new Label
-            {
-                Text = "Digite o CPF (11 números):",
-                Location = new Point(30, 20),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                ForeColor = Color.FromArgb(52, 73, 94)
-            };
-
-            txtCPFBusca = new MaskedTextBox
-            {
-                Location = new Point(30, 50),
-                Size = new Size(300, 40),
-                Font = new Font("Segoe UI", 16),
-                Mask = "00000000000"
-            };
-
-            Button btnBuscar = new Button
-            {
-                Text = "🔍 BUSCAR",
-                Location = new Point(350, 45),
-                Size = new Size(180, 45),
-                Font = new Font("Segoe UI", 13, FontStyle.Bold),
-                BackColor = Color.FromArgb(52, 152, 219),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand
-            };
-            btnBuscar.FlatAppearance.BorderSize = 0;
-            btnBuscar.Click += BtnBuscar_Click;
-
-            panelBusca.Controls.AddRange(new Control[] { lblCPF, txtCPFBusca, btnBuscar });
-
-            panelResultado = new Panel
-            {
-                Location = new Point(50, 220),
-                Size = new Size(650, 330),
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Visible = false
-            };
-
-            Button btnFechar = new Button
-            {
-                Text = "✖ FECHAR",
-                Location = new Point(280, 565),
-                Size = new Size(180, 45),
-                Font = new Font("Segoe UI", 13, FontStyle.Bold),
-                BackColor = Color.FromArgb(231, 76, 60),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand
-            };
-            btnFechar.FlatAppearance.BorderSize = 0;
-            btnFechar.Click += (s, e) => this.Close();
-
-            this.Controls.AddRange(new Control[] { lblTitulo, panelBusca, panelResultado, btnFechar });
         }
 
         private void BtnBuscar_Click(object sender, EventArgs e)
@@ -192,6 +104,11 @@ namespace Cadastro1
 
             p.Controls.AddRange(new Control[] { lbl, val });
             return p;
+        }
+
+        private void BtnFechar_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }
