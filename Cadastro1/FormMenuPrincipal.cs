@@ -1,4 +1,9 @@
-﻿using System;
+﻿// =============================================
+// MENU PRINCIPAL - ATUALIZADO COM SEGURANÇA
+// Arquivo: FormMenuPrincipal.cs
+// Sistema Profissional de Cadastro
+// =============================================
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -6,23 +11,71 @@ namespace Cadastro1
 {
     public partial class FormMenuPrincipal : Form
     {
+        private Label lblUsuarioLogado;
+        private Button btnAlterarSenha;
+
         public FormMenuPrincipal()
         {
             InitializeComponent();
             ConfigurarInterface();
+            ConfigurarSeguranca();
         }
 
         private void ConfigurarInterface()
         {
-            // Configurações visuais básicas
             this.BackColor = Color.FromArgb(240, 248, 255);
+        }
+
+        private void ConfigurarSeguranca()
+        {
+            // Criar label para mostrar usuário logado
+            lblUsuarioLogado = new Label
+            {
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(0, 102, 204),
+                Location = new Point(20, 20),
+                Text = $"👤 Usuário: {Usuario.UsuarioLogado?.Nome ?? "Não identificado"}"
+            };
+            panelContainer.Controls.Add(lblUsuarioLogado);
+            lblUsuarioLogado.BringToFront();
+
+            // Criar botão de alterar senha
+            btnAlterarSenha = new Button
+            {
+                BackColor = Color.FromArgb(230, 126, 34),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(550, 15),
+                Size = new Size(160, 35),
+                Text = "🔑 Alterar Senha",
+                Cursor = Cursors.Hand
+            };
+            btnAlterarSenha.FlatAppearance.BorderSize = 0;
+            btnAlterarSenha.Click += BtnAlterarSenha_Click;
+            btnAlterarSenha.MouseEnter += Botao_MouseEnter;
+            btnAlterarSenha.MouseLeave += Botao_MouseLeave;
+
+            panelContainer.Controls.Add(btnAlterarSenha);
+            btnAlterarSenha.BringToFront();
+
+            // Modificar o botão sair para fazer logout
+            btnSair.Text = "🔒 Sair e Fazer Logout";
+        }
+
+        private void BtnAlterarSenha_Click(object sender, EventArgs e)
+        {
+            using (FormAlterarSenha formSenha = new FormAlterarSenha())
+            {
+                formSenha.ShowDialog();
+            }
         }
 
         private void Botao_MouseEnter(object sender, EventArgs e)
         {
             if (sender is Button btn)
             {
-                // Escurece a cor do botão em 10%
                 Color corAtual = btn.BackColor;
                 btn.BackColor = ControlPaint.Dark(corAtual, 0.1f);
             }
@@ -32,7 +85,6 @@ namespace Cadastro1
         {
             if (sender is Button btn)
             {
-                // Retorna à cor original baseada no texto do botão
                 switch (btn.Text)
                 {
                     case string s when s.Contains("CADASTRAR"):
@@ -43,6 +95,9 @@ namespace Cadastro1
                         break;
                     case string s when s.Contains("VER TODOS"):
                         btn.BackColor = Color.FromArgb(155, 89, 182);
+                        break;
+                    case string s when s.Contains("Alterar Senha"):
+                        btn.BackColor = Color.FromArgb(230, 126, 34);
                         break;
                     case string s when s.Contains("Sair"):
                         btn.BackColor = Color.FromArgb(231, 76, 60);
@@ -71,9 +126,26 @@ namespace Cadastro1
 
         private void btnSair_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Deseja realmente sair?", "Confirmar",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            DialogResult resultado = MessageBox.Show(
+                "Deseja realmente sair do sistema?\n\n" +
+                "Você precisará fazer login novamente.",
+                "Confirmar Saída",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (resultado == DialogResult.Yes)
             {
+                // Fazer logout
+                Usuario.Logout();
+
+                MessageBox.Show(
+                    "✓ Logout realizado com sucesso!",
+                    "Sistema",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
                 Application.Exit();
             }
         }
