@@ -42,7 +42,7 @@ namespace Cadastro1
 
                 dgvClientes.DataSource = clientes;
 
-                // Configurar colunas
+                // Configurar colunas existentes
                 if (dgvClientes.Columns.Contains("ClienteID"))
                 {
                     dgvClientes.Columns["ClienteID"].HeaderText = "CÓDIGO";
@@ -96,6 +96,24 @@ namespace Cadastro1
                     dgvClientes.Columns["Ativo"].Visible = false;
                 }
 
+                // NOVO: Adicionar coluna de botão para anexos
+                if (!dgvClientes.Columns.Contains("btnAnexos"))
+                {
+                    DataGridViewButtonColumn btnAnexos = new DataGridViewButtonColumn
+                    {
+                        Name = "btnAnexos",
+                        HeaderText = "DOCUMENTOS",
+                        Text = "📎 Ver",
+                        UseColumnTextForButtonValue = true,
+                        Width = 100
+                    };
+                    dgvClientes.Columns.Add(btnAnexos);
+                }
+
+                // Adicionar evento de clique no botão
+                dgvClientes.CellClick -= DgvClientes_CellClick; // Remover se já existir
+                dgvClientes.CellClick += DgvClientes_CellClick;
+
                 // Centralizar cabeçalhos e algumas colunas
                 foreach (DataGridViewColumn coluna in dgvClientes.Columns)
                 {
@@ -112,6 +130,34 @@ namespace Cadastro1
             {
                 MessageBox.Show("✖ Erro ao carregar clientes:\n\n" + ex.Message,
                     "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // ADICIONE este novo método ao FormListaClientes:
+
+        private void DgvClientes_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // Verificar se clicou na coluna de botão de anexos
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                if (dgvClientes.Columns[e.ColumnIndex].Name == "btnAnexos")
+                {
+                    try
+                    {
+                        Cliente cliente = (Cliente)dgvClientes.Rows[e.RowIndex].DataBoundItem;
+                        FormAnexosCliente formAnexos = new FormAnexosCliente(cliente);
+                        formAnexos.ShowDialog();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(
+                            "Erro ao abrir anexos:\n\n" + ex.Message,
+                            "Erro",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                    }
+                }
             }
         }
 

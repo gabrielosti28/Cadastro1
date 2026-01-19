@@ -47,8 +47,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cliente.cs" />
+    <Compile Include="ClienteAnexo.cs" />
+    <Compile Include="ClienteAnexoDAL.cs" />
     <Compile Include="ClienteDAL.cs" />
     <Compile Include="DatabaseConnection.cs" />
+    <Compile Include="FormAnexosCliente.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAnexosCliente.Designer.cs">
+      <DependentUpon>FormAnexosCliente.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormBuscaCliente.cs">
       <SubType>Form</SubType>
     </Compile>

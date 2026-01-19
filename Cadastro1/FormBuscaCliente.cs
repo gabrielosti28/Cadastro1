@@ -74,7 +74,43 @@ namespace Cadastro1
             panelResultado.Controls.Add(CriarCampoResultado("Cidade:", cliente.Cidade, y += 50));
             panelResultado.Controls.Add(CriarCampoResultado("INSS:", cliente.BeneficioINSS, y += 50));
 
+            // NOVO: Botão para ver documentos/anexos
+            Button btnVerAnexos = new Button
+            {
+                Text = "📎 VER DOCUMENTOS E ANEXOS",
+                Location = new Point(150, y += 60),
+                Size = new Size(350, 45),
+                BackColor = Color.FromArgb(52, 152, 219),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnVerAnexos.FlatAppearance.BorderSize = 0;
+            btnVerAnexos.Click += (s, e) => AbrirAnexosCliente(cliente);
+
+            panelResultado.Controls.Add(btnVerAnexos);
             panelResultado.Visible = true;
+        }
+
+        // ADICIONE este novo método ao FormBuscaCliente:
+
+        private void AbrirAnexosCliente(Cliente cliente)
+        {
+            try
+            {
+                FormAnexosCliente formAnexos = new FormAnexosCliente(cliente);
+                formAnexos.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Erro ao abrir anexos:\n\n" + ex.Message,
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
         }
 
         private Panel CriarCampoResultado(string titulo, string valor, int y)
