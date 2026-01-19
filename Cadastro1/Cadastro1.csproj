@@ -75,6 +75,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="FormBuscaCliente.resx">
+      <DependentUpon>FormBuscaCliente.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormCadastroCliente.resx">
       <DependentUpon>FormCadastroCliente.cs</DependentUpon>
     </EmbeddedResource>
