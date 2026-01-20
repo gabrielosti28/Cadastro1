@@ -7,6 +7,7 @@ namespace Cadastro1
     public partial class FormBuscaCliente : Form
     {
         private ClienteDAL clienteDAL;
+        private Cliente clienteEncontrado;
 
         public FormBuscaCliente()
         {
@@ -32,11 +33,13 @@ namespace Cadastro1
 
                 if (cliente != null)
                 {
+                    clienteEncontrado = cliente;
                     MostrarResultado(cliente);
                 }
                 else
                 {
                     panelResultado.Visible = false;
+                    clienteEncontrado = null;
                     MessageBox.Show(
                         "❌ Cliente não encontrado!\n\nO CPF informado não está cadastrado no sistema.",
                         "Não Encontrado",
@@ -82,23 +85,73 @@ namespace Cadastro1
             if (!string.IsNullOrEmpty(cliente.BeneficioINSS2))
                 panelResultado.Controls.Add(CriarCampoResultado("2º INSS:", cliente.BeneficioINSS2, y += 50));
 
+            // Botão para editar cliente
+            Button btnEditar = new Button
+            {
+                Text = "✏️ EDITAR CLIENTE",
+                Location = new Point(50, y += 60),
+                Size = new Size(200, 45),
+                BackColor = Color.FromArgb(230, 126, 34),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnEditar.FlatAppearance.BorderSize = 0;
+            btnEditar.Click += (s, e) => AbrirEdicaoCliente(cliente);
+
             // Botão para ver documentos/anexos
             Button btnVerAnexos = new Button
             {
                 Text = "📎 VER DOCUMENTOS E ANEXOS",
-                Location = new Point(150, y += 60),
-                Size = new Size(350, 45),
+                Location = new Point(270, y),
+                Size = new Size(300, 45),
                 BackColor = Color.FromArgb(52, 152, 219),
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
                 FlatStyle = FlatStyle.Flat,
                 Cursor = Cursors.Hand
             };
             btnVerAnexos.FlatAppearance.BorderSize = 0;
             btnVerAnexos.Click += (s, e) => AbrirAnexosCliente(cliente);
 
+            panelResultado.Controls.Add(btnEditar);
             panelResultado.Controls.Add(btnVerAnexos);
             panelResultado.Visible = true;
+        }
+
+        private void AbrirEdicaoCliente(Cliente cliente)
+        {
+            try
+            {
+                FormEditarCliente formEditar = new FormEditarCliente(cliente);
+                if (formEditar.ShowDialog() == DialogResult.OK)
+                {
+                    // Recarregar dados do cliente após edição
+                    Cliente clienteAtualizado = clienteDAL.ConsultarPorCPF(cliente.CPF);
+                    if (clienteAtualizado != null)
+                    {
+                        clienteEncontrado = clienteAtualizado;
+                        MostrarResultado(clienteAtualizado);
+
+                        MessageBox.Show(
+                            "✔ Dados atualizados com sucesso!",
+                            "Sucesso",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Erro ao editar cliente:\n\n" + ex.Message,
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
         }
 
         private void AbrirAnexosCliente(Cliente cliente)

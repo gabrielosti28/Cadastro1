@@ -50,7 +50,7 @@
             this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelContainer.Location = new System.Drawing.Point(0, 0);
             this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(748, 592);
+            this.panelContainer.Size = new System.Drawing.Size(1003, 653);
             this.panelContainer.TabIndex = 0;
             // 
             // panelBotoes
@@ -60,9 +60,9 @@
             this.panelBotoes.Controls.Add(this.btnListar);
             this.panelBotoes.Controls.Add(this.btnBuscar);
             this.panelBotoes.Controls.Add(this.btnNovo);
-            this.panelBotoes.Location = new System.Drawing.Point(50, 150);
+            this.panelBotoes.Location = new System.Drawing.Point(153, 155);
             this.panelBotoes.Name = "panelBotoes";
-            this.panelBotoes.Size = new System.Drawing.Size(600, 320);
+            this.panelBotoes.Size = new System.Drawing.Size(742, 325);
             this.panelBotoes.TabIndex = 1;
             // 
             // btnListar
@@ -72,9 +72,9 @@
             this.btnListar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnListar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnListar.ForeColor = System.Drawing.Color.White;
-            this.btnListar.Location = new System.Drawing.Point(100, 190);
+            this.btnListar.Location = new System.Drawing.Point(161, 218);
             this.btnListar.Name = "btnListar";
-            this.btnListar.Size = new System.Drawing.Size(400, 60);
+            this.btnListar.Size = new System.Drawing.Size(424, 80);
             this.btnListar.TabIndex = 2;
             this.btnListar.Text = "📋 VER TODOS OS CLIENTES";
             this.btnListar.UseVisualStyleBackColor = false;
@@ -89,9 +89,9 @@
             this.btnBuscar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBuscar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnBuscar.ForeColor = System.Drawing.Color.White;
-            this.btnBuscar.Location = new System.Drawing.Point(100, 110);
+            this.btnBuscar.Location = new System.Drawing.Point(161, 127);
             this.btnBuscar.Name = "btnBuscar";
-            this.btnBuscar.Size = new System.Drawing.Size(400, 60);
+            this.btnBuscar.Size = new System.Drawing.Size(424, 75);
             this.btnBuscar.TabIndex = 1;
             this.btnBuscar.Text = "🔍 BUSCAR CLIENTE POR CPF";
             this.btnBuscar.UseVisualStyleBackColor = false;
@@ -106,9 +106,9 @@
             this.btnNovo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNovo.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnNovo.ForeColor = System.Drawing.Color.White;
-            this.btnNovo.Location = new System.Drawing.Point(100, 30);
+            this.btnNovo.Location = new System.Drawing.Point(161, 22);
             this.btnNovo.Name = "btnNovo";
-            this.btnNovo.Size = new System.Drawing.Size(400, 60);
+            this.btnNovo.Size = new System.Drawing.Size(424, 82);
             this.btnNovo.TabIndex = 0;
             this.btnNovo.Text = "➕ CADASTRAR NOVO CLIENTE";
             this.btnNovo.UseVisualStyleBackColor = false;
@@ -121,7 +121,7 @@
             this.lblSubtitulo.AutoSize = true;
             this.lblSubtitulo.Font = new System.Drawing.Font("Segoe UI", 14F);
             this.lblSubtitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
-            this.lblSubtitulo.Location = new System.Drawing.Point(220, 90);
+            this.lblSubtitulo.Location = new System.Drawing.Point(210, 112);
             this.lblSubtitulo.Name = "lblSubtitulo";
             this.lblSubtitulo.Size = new System.Drawing.Size(240, 25);
             this.lblSubtitulo.TabIndex = 2;
@@ -132,7 +132,7 @@
             this.lblTitulo.AutoSize = true;
             this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 24F, System.Drawing.FontStyle.Bold);
             this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblTitulo.Location = new System.Drawing.Point(150, 40);
+            this.lblTitulo.Location = new System.Drawing.Point(133, 54);
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new System.Drawing.Size(387, 45);
             this.lblTitulo.TabIndex = 2;
@@ -145,9 +145,9 @@
             this.btnSair.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSair.Font = new System.Drawing.Font("Segoe UI", 12F);
             this.btnSair.ForeColor = System.Drawing.Color.White;
-            this.btnSair.Location = new System.Drawing.Point(225, 502);
+            this.btnSair.Location = new System.Drawing.Point(393, 550);
             this.btnSair.Name = "btnSair";
-            this.btnSair.Size = new System.Drawing.Size(250, 50);
+            this.btnSair.Size = new System.Drawing.Size(243, 55);
             this.btnSair.TabIndex = 3;
             this.btnSair.Text = "✖ Sair do Sistema";
             this.btnSair.UseVisualStyleBackColor = false;
@@ -159,7 +159,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(748, 592);
+            this.ClientSize = new System.Drawing.Size(1003, 653);
             this.Controls.Add(this.panelContainer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;

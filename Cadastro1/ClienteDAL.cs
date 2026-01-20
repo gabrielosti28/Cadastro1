@@ -45,6 +45,40 @@ namespace Cadastro1
             }
         }
 
+        public bool AtualizarCliente(Cliente cliente)
+        {
+            try
+            {
+                using (SqlConnection conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand("SP_AtualizarCliente", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.AddWithValue("@ClienteID", cliente.ClienteID);
+                        cmd.Parameters.AddWithValue("@NomeCompleto", cliente.NomeCompleto);
+                        cmd.Parameters.AddWithValue("@DataNascimento", cliente.DataNascimento);
+                        cmd.Parameters.AddWithValue("@Endereco", cliente.Endereco);
+                        cmd.Parameters.AddWithValue("@Cidade", cliente.Cidade);
+                        cmd.Parameters.AddWithValue("@CEP", cliente.CEP);
+                        cmd.Parameters.AddWithValue("@Telefone",
+                            string.IsNullOrEmpty(cliente.Telefone) ? (object)DBNull.Value : cliente.Telefone);
+                        cmd.Parameters.AddWithValue("@BeneficioINSS", cliente.BeneficioINSS);
+                        cmd.Parameters.AddWithValue("@BeneficioINSS2",
+                            string.IsNullOrEmpty(cliente.BeneficioINSS2) ? (object)DBNull.Value : cliente.BeneficioINSS2);
+
+                        cmd.ExecuteNonQuery();
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro ao atualizar cliente: " + ex.Message);
+            }
+        }
+
         public Cliente ConsultarPorCPF(string cpf)
         {
             try

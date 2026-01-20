@@ -40,6 +40,7 @@ namespace Cadastro1
                     return;
                 }
 
+                dgvClientes.DataSource = null;
                 dgvClientes.DataSource = clientes;
 
                 // Configurar colunas existentes
@@ -96,7 +97,36 @@ namespace Cadastro1
                     dgvClientes.Columns["Ativo"].Visible = false;
                 }
 
-                // NOVO: Adicionar coluna de botão para anexos
+                if (dgvClientes.Columns.Contains("CEP"))
+                {
+                    dgvClientes.Columns["CEP"].Visible = false;
+                }
+
+                if (dgvClientes.Columns.Contains("Telefone"))
+                {
+                    dgvClientes.Columns["Telefone"].Visible = false;
+                }
+
+                if (dgvClientes.Columns.Contains("BeneficioINSS2"))
+                {
+                    dgvClientes.Columns["BeneficioINSS2"].Visible = false;
+                }
+
+                // Adicionar coluna de botão para editar
+                if (!dgvClientes.Columns.Contains("btnEditar"))
+                {
+                    DataGridViewButtonColumn btnEditar = new DataGridViewButtonColumn
+                    {
+                        Name = "btnEditar",
+                        HeaderText = "EDITAR",
+                        Text = "✏️ Editar",
+                        UseColumnTextForButtonValue = true,
+                        Width = 100
+                    };
+                    dgvClientes.Columns.Insert(0, btnEditar);
+                }
+
+                // Adicionar coluna de botão para anexos
                 if (!dgvClientes.Columns.Contains("btnAnexos"))
                 {
                     DataGridViewButtonColumn btnAnexos = new DataGridViewButtonColumn
@@ -107,7 +137,7 @@ namespace Cadastro1
                         UseColumnTextForButtonValue = true,
                         Width = 100
                     };
-                    dgvClientes.Columns.Add(btnAnexos);
+                    dgvClientes.Columns.Insert(1, btnAnexos);
                 }
 
                 // Adicionar evento de clique no botão
@@ -133,18 +163,40 @@ namespace Cadastro1
             }
         }
 
-        // ADICIONE este novo método ao FormListaClientes:
-
         private void DgvClientes_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            // Verificar se clicou na coluna de botão de anexos
+            // Verificar se clicou em algum botão
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
-                if (dgvClientes.Columns[e.ColumnIndex].Name == "btnAnexos")
+                Cliente cliente = (Cliente)dgvClientes.Rows[e.RowIndex].DataBoundItem;
+
+                // Botão Editar
+                if (dgvClientes.Columns[e.ColumnIndex].Name == "btnEditar")
                 {
                     try
                     {
-                        Cliente cliente = (Cliente)dgvClientes.Rows[e.RowIndex].DataBoundItem;
+                        FormEditarCliente formEditar = new FormEditarCliente(cliente);
+                        if (formEditar.ShowDialog() == DialogResult.OK)
+                        {
+                            // Recarregar lista após edição
+                            CarregarClientes();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(
+                            "Erro ao abrir edição:\n\n" + ex.Message,
+                            "Erro",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                    }
+                }
+                // Botão Anexos
+                else if (dgvClientes.Columns[e.ColumnIndex].Name == "btnAnexos")
+                {
+                    try
+                    {
                         FormAnexosCliente formAnexos = new FormAnexosCliente(cliente);
                         formAnexos.ShowDialog();
                     }
