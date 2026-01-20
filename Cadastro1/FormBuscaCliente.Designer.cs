@@ -43,7 +43,7 @@
             this.lblTitulo.AutoSize = true;
             this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 20F, System.Drawing.FontStyle.Bold);
             this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblTitulo.Location = new System.Drawing.Point(230, 20);
+            this.lblTitulo.Location = new System.Drawing.Point(352, 20);
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new System.Drawing.Size(280, 37);
             this.lblTitulo.TabIndex = 0;
@@ -56,7 +56,7 @@
             this.panelBusca.Controls.Add(this.lblCPF);
             this.panelBusca.Controls.Add(this.txtCPFBusca);
             this.panelBusca.Controls.Add(this.btnBuscar);
-            this.panelBusca.Location = new System.Drawing.Point(50, 80);
+            this.panelBusca.Location = new System.Drawing.Point(115, 78);
             this.panelBusca.Name = "panelBusca";
             this.panelBusca.Size = new System.Drawing.Size(650, 120);
             this.panelBusca.TabIndex = 1;
@@ -101,9 +101,9 @@
             // 
             this.panelResultado.BackColor = System.Drawing.Color.White;
             this.panelResultado.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelResultado.Location = new System.Drawing.Point(50, 220);
+            this.panelResultado.Location = new System.Drawing.Point(12, 204);
             this.panelResultado.Name = "panelResultado";
-            this.panelResultado.Size = new System.Drawing.Size(650, 426);
+            this.panelResultado.Size = new System.Drawing.Size(835, 481);
             this.panelResultado.TabIndex = 2;
             this.panelResultado.Visible = false;
             // 
@@ -115,7 +115,7 @@
             this.btnFechar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnFechar.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
             this.btnFechar.ForeColor = System.Drawing.Color.White;
-            this.btnFechar.Location = new System.Drawing.Point(265, 652);
+            this.btnFechar.Location = new System.Drawing.Point(324, 691);
             this.btnFechar.Name = "btnFechar";
             this.btnFechar.Size = new System.Drawing.Size(180, 45);
             this.btnFechar.TabIndex = 3;
@@ -126,7 +126,7 @@
             // FormBuscaCliente
             // 
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
-            this.ClientSize = new System.Drawing.Size(823, 709);
+            this.ClientSize = new System.Drawing.Size(923, 759);
             this.Controls.Add(this.btnFechar);
             this.Controls.Add(this.panelResultado);
             this.Controls.Add(this.panelBusca);

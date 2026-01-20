@@ -70,11 +70,19 @@ namespace Cadastro1
             panelResultado.Controls.Add(CriarCampoResultado("Nome:", cliente.NomeCompleto, y));
             panelResultado.Controls.Add(CriarCampoResultado("CPF:", cliente.CPF, y += 50));
             panelResultado.Controls.Add(CriarCampoResultado("Nascimento:", cliente.DataNascimento.ToShortDateString(), y += 50));
+            panelResultado.Controls.Add(CriarCampoResultado("CEP:", cliente.CEP, y += 50));
             panelResultado.Controls.Add(CriarCampoResultado("Endereço:", cliente.Endereco, y += 50));
             panelResultado.Controls.Add(CriarCampoResultado("Cidade:", cliente.Cidade, y += 50));
+
+            if (!string.IsNullOrEmpty(cliente.Telefone))
+                panelResultado.Controls.Add(CriarCampoResultado("Telefone:", cliente.Telefone, y += 50));
+
             panelResultado.Controls.Add(CriarCampoResultado("INSS:", cliente.BeneficioINSS, y += 50));
 
-            // NOVO: Botão para ver documentos/anexos
+            if (!string.IsNullOrEmpty(cliente.BeneficioINSS2))
+                panelResultado.Controls.Add(CriarCampoResultado("2º INSS:", cliente.BeneficioINSS2, y += 50));
+
+            // Botão para ver documentos/anexos
             Button btnVerAnexos = new Button
             {
                 Text = "📎 VER DOCUMENTOS E ANEXOS",
@@ -92,8 +100,6 @@ namespace Cadastro1
             panelResultado.Controls.Add(btnVerAnexos);
             panelResultado.Visible = true;
         }
-
-        // ADICIONE este novo método ao FormBuscaCliente:
 
         private void AbrirAnexosCliente(Cliente cliente)
         {

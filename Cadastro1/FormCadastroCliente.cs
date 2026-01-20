@@ -12,19 +12,13 @@ namespace Cadastro1
         {
             InitializeComponent();
             clienteDAL = new ClienteDAL();
-            ConfigurarInterface();
-        }
-
-        private void ConfigurarInterface()
-        {
-            // Remova a criação dinâmica dos controles
-            // Agora tudo é feito pelo Designer
         }
 
         private void BtnSalvar_Click(object sender, EventArgs e)
         {
             try
             {
+                // Validação: Nome
                 if (string.IsNullOrWhiteSpace(txtNome.Text))
                 {
                     MessageBox.Show("⚠ Por favor, preencha o NOME COMPLETO do cliente!",
@@ -33,6 +27,7 @@ namespace Cadastro1
                     return;
                 }
 
+                // Validação: CPF
                 string cpf = txtCPF.Text.Replace(" ", "").Replace("-", "").Replace(".", "");
                 if (cpf.Length != 11)
                 {
@@ -42,6 +37,7 @@ namespace Cadastro1
                     return;
                 }
 
+                // Validação: Endereço
                 if (string.IsNullOrWhiteSpace(txtEndereco.Text))
                 {
                     MessageBox.Show("⚠ Por favor, preencha o ENDEREÇO do cliente!",
@@ -50,6 +46,17 @@ namespace Cadastro1
                     return;
                 }
 
+                // Validação: CEP (OBRIGATÓRIO)
+                string cep = txtCEP.Text.Replace("-", "").Replace("_", "").Trim();
+                if (cep.Length != 8)
+                {
+                    MessageBox.Show("⚠ O CEP deve conter exatamente 8 números!\n\nFormato: 00000-000",
+                        "CEP Incompleto", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtCEP.Focus();
+                    return;
+                }
+
+                // Validação: Cidade
                 if (string.IsNullOrWhiteSpace(txtCidade.Text))
                 {
                     MessageBox.Show("⚠ Por favor, preencha a CIDADE do cliente!",
@@ -58,7 +65,8 @@ namespace Cadastro1
                     return;
                 }
 
-                string inss = txtINSS.Text.Replace(" ", "");
+                // Validação: Benefício INSS (OBRIGATÓRIO)
+                string inss = txtINSS.Text.Replace(" ", "").Replace("_", "").Trim();
                 if (inss.Length != 10)
                 {
                     MessageBox.Show("⚠ O Benefício INSS deve conter exatamente 10 números!\n\nVerifique se digitou todos os números.",
@@ -67,10 +75,33 @@ namespace Cadastro1
                     return;
                 }
 
+                // Telefone é opcional - apenas validar se foi preenchido
+                string telefone = txtTelefone.Text.Replace("(", "").Replace(")", "")
+                    .Replace("-", "").Replace(" ", "").Replace("_", "").Trim();
+                if (!string.IsNullOrEmpty(txtTelefone.Text) && telefone.Length < 10)
+                {
+                    MessageBox.Show("⚠ Se informar o telefone, preencha corretamente!\n\nFormato: (00) 00000-0000",
+                        "Telefone Inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtTelefone.Focus();
+                    return;
+                }
+
+                // 2º Benefício INSS é opcional - apenas validar se foi preenchido
+                string inss2 = txtINSS2.Text.Replace(" ", "").Replace("_", "").Trim();
+                if (!string.IsNullOrEmpty(txtINSS2.Text) && inss2.Length != 10)
+                {
+                    MessageBox.Show("⚠ Se informar o 2º Benefício INSS, deve conter 10 números!",
+                        "2º INSS Inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtINSS2.Focus();
+                    return;
+                }
+
+                // Confirmação
                 DialogResult resultado = MessageBox.Show(
                     "Deseja realmente SALVAR este cliente?\n\n" +
                     $"Nome: {txtNome.Text}\n" +
-                    $"CPF: {cpf}",
+                    $"CPF: {cpf}\n" +
+                    $"CEP: {cep}",
                     "Confirmar Cadastro",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question
@@ -79,6 +110,7 @@ namespace Cadastro1
                 if (resultado == DialogResult.No)
                     return;
 
+                // Criar objeto Cliente
                 Cliente cliente = new Cliente
                 {
                     NomeCompleto = txtNome.Text.Trim(),
@@ -86,9 +118,13 @@ namespace Cadastro1
                     DataNascimento = dtpDataNasc.Value,
                     Endereco = txtEndereco.Text.Trim(),
                     Cidade = txtCidade.Text.Trim(),
-                    BeneficioINSS = inss
+                    CEP = cep,
+                    Telefone = string.IsNullOrEmpty(telefone) ? null : txtTelefone.Text.Trim(),
+                    BeneficioINSS = inss,
+                    BeneficioINSS2 = string.IsNullOrEmpty(inss2) ? null : inss2
                 };
 
+                // Salvar no banco
                 if (clienteDAL.InserirCliente(cliente))
                 {
                     MessageBox.Show(
@@ -114,11 +150,6 @@ namespace Cadastro1
         private void BtnCancelar_Click(object sender, EventArgs e)
         {
             this.Close();
-        }
-
-        private void lblNome_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }

@@ -2,15 +2,8 @@
 {
     partial class FormCadastroCliente
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -22,14 +15,16 @@
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             this.panelContainer = new System.Windows.Forms.Panel();
             this.panelForm = new System.Windows.Forms.Panel();
+            this.txtTelefone = new System.Windows.Forms.MaskedTextBox();
+            this.lblTelefone = new System.Windows.Forms.Label();
+            this.txtINSS2 = new System.Windows.Forms.MaskedTextBox();
+            this.lblINSS2 = new System.Windows.Forms.Label();
+            this.txtCEP = new System.Windows.Forms.MaskedTextBox();
+            this.lblCEP = new System.Windows.Forms.Label();
             this.txtCidade = new System.Windows.Forms.TextBox();
             this.lblCidade = new System.Windows.Forms.Label();
             this.txtEndereco = new System.Windows.Forms.TextBox();
@@ -61,13 +56,19 @@
             this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelContainer.Location = new System.Drawing.Point(0, 0);
             this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(769, 672);
+            this.panelContainer.Size = new System.Drawing.Size(769, 780);
             this.panelContainer.TabIndex = 0;
             // 
             // panelForm
             // 
             this.panelForm.BackColor = System.Drawing.Color.White;
             this.panelForm.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelForm.Controls.Add(this.txtTelefone);
+            this.panelForm.Controls.Add(this.lblTelefone);
+            this.panelForm.Controls.Add(this.txtINSS2);
+            this.panelForm.Controls.Add(this.lblINSS2);
+            this.panelForm.Controls.Add(this.txtCEP);
+            this.panelForm.Controls.Add(this.lblCEP);
             this.panelForm.Controls.Add(this.txtCidade);
             this.panelForm.Controls.Add(this.lblCidade);
             this.panelForm.Controls.Add(this.txtEndereco);
@@ -84,23 +85,83 @@
             this.panelForm.Controls.Add(this.lblNome);
             this.panelForm.Location = new System.Drawing.Point(50, 74);
             this.panelForm.Name = "panelForm";
-            this.panelForm.Size = new System.Drawing.Size(650, 493);
+            this.panelForm.Size = new System.Drawing.Size(650, 600);
             this.panelForm.TabIndex = 1;
+            // 
+            // txtTelefone
+            // 
+            this.txtTelefone.Font = new System.Drawing.Font("Segoe UI", 14F);
+            this.txtTelefone.Location = new System.Drawing.Point(350, 430);
+            this.txtTelefone.Mask = "(00) 00000-0000";
+            this.txtTelefone.Name = "txtTelefone";
+            this.txtTelefone.Size = new System.Drawing.Size(200, 32);
+            this.txtTelefone.TabIndex = 7;
+            // 
+            // lblTelefone
+            // 
+            this.lblTelefone.AutoSize = true;
+            this.lblTelefone.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.lblTelefone.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.lblTelefone.Location = new System.Drawing.Point(346, 400);
+            this.lblTelefone.Name = "lblTelefone";
+            this.lblTelefone.Size = new System.Drawing.Size(145, 19);
+            this.lblTelefone.TabIndex = 19;
+            this.lblTelefone.Text = "TELEFONE (opcional):";
+            // 
+            // txtINSS2
+            // 
+            this.txtINSS2.Font = new System.Drawing.Font("Segoe UI", 14F);
+            this.txtINSS2.Location = new System.Drawing.Point(40, 540);
+            this.txtINSS2.Mask = "0000000000";
+            this.txtINSS2.Name = "txtINSS2";
+            this.txtINSS2.Size = new System.Drawing.Size(280, 32);
+            this.txtINSS2.TabIndex = 8;
+            // 
+            // lblINSS2
+            // 
+            this.lblINSS2.AutoSize = true;
+            this.lblINSS2.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.lblINSS2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.lblINSS2.Location = new System.Drawing.Point(36, 510);
+            this.lblINSS2.Name = "lblINSS2";
+            this.lblINSS2.Size = new System.Drawing.Size(199, 19);
+            this.lblINSS2.TabIndex = 17;
+            this.lblINSS2.Text = "2º BENEFÍCIO INSS (opcional):";
+            // 
+            // txtCEP
+            // 
+            this.txtCEP.Font = new System.Drawing.Font("Segoe UI", 14F);
+            this.txtCEP.Location = new System.Drawing.Point(40, 350);
+            this.txtCEP.Mask = "00000-000";
+            this.txtCEP.Name = "txtCEP";
+            this.txtCEP.Size = new System.Drawing.Size(150, 32);
+            this.txtCEP.TabIndex = 4;
+            // 
+            // lblCEP
+            // 
+            this.lblCEP.AutoSize = true;
+            this.lblCEP.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.lblCEP.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.lblCEP.Location = new System.Drawing.Point(36, 320);
+            this.lblCEP.Name = "lblCEP";
+            this.lblCEP.Size = new System.Drawing.Size(43, 20);
+            this.lblCEP.TabIndex = 15;
+            this.lblCEP.Text = "CEP:";
             // 
             // txtCidade
             // 
             this.txtCidade.Font = new System.Drawing.Font("Segoe UI", 14F);
-            this.txtCidade.Location = new System.Drawing.Point(40, 350);
+            this.txtCidade.Location = new System.Drawing.Point(210, 350);
             this.txtCidade.Name = "txtCidade";
-            this.txtCidade.Size = new System.Drawing.Size(400, 32);
-            this.txtCidade.TabIndex = 4;
+            this.txtCidade.Size = new System.Drawing.Size(330, 32);
+            this.txtCidade.TabIndex = 5;
             // 
             // lblCidade
             // 
             this.lblCidade.AutoSize = true;
             this.lblCidade.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
             this.lblCidade.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.lblCidade.Location = new System.Drawing.Point(36, 320);
+            this.lblCidade.Location = new System.Drawing.Point(206, 320);
             this.lblCidade.Name = "lblCidade";
             this.lblCidade.Size = new System.Drawing.Size(68, 20);
             this.lblCidade.TabIndex = 12;
@@ -152,14 +213,14 @@
             this.txtINSS.Mask = "0000000000";
             this.txtINSS.Name = "txtINSS";
             this.txtINSS.Size = new System.Drawing.Size(280, 32);
-            this.txtINSS.TabIndex = 5;
+            this.txtINSS.TabIndex = 6;
             // 
             // lblDicaINSS
             // 
             this.lblDicaINSS.AutoSize = true;
             this.lblDicaINSS.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic);
             this.lblDicaINSS.ForeColor = System.Drawing.Color.Gray;
-            this.lblDicaINSS.Location = new System.Drawing.Point(330, 435);
+            this.lblDicaINSS.Location = new System.Drawing.Point(37, 470);
             this.lblDicaINSS.Name = "lblDicaINSS";
             this.lblDicaINSS.Size = new System.Drawing.Size(102, 15);
             this.lblDicaINSS.TabIndex = 15;
@@ -225,7 +286,6 @@
             this.lblNome.Size = new System.Drawing.Size(140, 20);
             this.lblNome.TabIndex = 0;
             this.lblNome.Text = "NOME COMPLETO:";
-            this.lblNome.Click += new System.EventHandler(this.lblNome_Click);
             // 
             // lblTitulo
             // 
@@ -245,10 +305,10 @@
             this.btnSalvar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSalvar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnSalvar.ForeColor = System.Drawing.Color.White;
-            this.btnSalvar.Location = new System.Drawing.Point(103, 585);
+            this.btnSalvar.Location = new System.Drawing.Point(103, 693);
             this.btnSalvar.Name = "btnSalvar";
             this.btnSalvar.Size = new System.Drawing.Size(220, 55);
-            this.btnSalvar.TabIndex = 6;
+            this.btnSalvar.TabIndex = 9;
             this.btnSalvar.Text = "✔ SALVAR CLIENTE";
             this.btnSalvar.UseVisualStyleBackColor = false;
             this.btnSalvar.Click += new System.EventHandler(this.BtnSalvar_Click);
@@ -260,10 +320,10 @@
             this.btnCancelar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCancelar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnCancelar.ForeColor = System.Drawing.Color.White;
-            this.btnCancelar.Location = new System.Drawing.Point(411, 585);
+            this.btnCancelar.Location = new System.Drawing.Point(411, 693);
             this.btnCancelar.Name = "btnCancelar";
             this.btnCancelar.Size = new System.Drawing.Size(180, 55);
-            this.btnCancelar.TabIndex = 7;
+            this.btnCancelar.TabIndex = 10;
             this.btnCancelar.Text = "✖ CANCELAR";
             this.btnCancelar.UseVisualStyleBackColor = false;
             this.btnCancelar.Click += new System.EventHandler(this.BtnCancelar_Click);
@@ -272,7 +332,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(769, 672);
+            this.ClientSize = new System.Drawing.Size(769, 780);
             this.Controls.Add(this.panelContainer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -284,13 +344,18 @@
             this.panelForm.ResumeLayout(false);
             this.panelForm.PerformLayout();
             this.ResumeLayout(false);
-
         }
 
         #endregion
 
         private System.Windows.Forms.Panel panelContainer;
         private System.Windows.Forms.Panel panelForm;
+        private System.Windows.Forms.MaskedTextBox txtTelefone;
+        private System.Windows.Forms.Label lblTelefone;
+        private System.Windows.Forms.MaskedTextBox txtINSS2;
+        private System.Windows.Forms.Label lblINSS2;
+        private System.Windows.Forms.MaskedTextBox txtCEP;
+        private System.Windows.Forms.Label lblCEP;
         private System.Windows.Forms.TextBox txtCidade;
         private System.Windows.Forms.Label lblCidade;
         private System.Windows.Forms.TextBox txtEndereco;

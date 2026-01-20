@@ -1,5 +1,5 @@
 ﻿// =============================================
-// CLASSE DE ACESSO A DADOS
+// CLASSE DE ACESSO A DADOS - ATUALIZADA
 // Arquivo: ClienteDAL.cs
 // =============================================
 using System;
@@ -27,7 +27,12 @@ namespace Cadastro1
                         cmd.Parameters.AddWithValue("@DataNascimento", cliente.DataNascimento);
                         cmd.Parameters.AddWithValue("@Endereco", cliente.Endereco);
                         cmd.Parameters.AddWithValue("@Cidade", cliente.Cidade);
+                        cmd.Parameters.AddWithValue("@CEP", cliente.CEP);
+                        cmd.Parameters.AddWithValue("@Telefone",
+                            string.IsNullOrEmpty(cliente.Telefone) ? (object)DBNull.Value : cliente.Telefone);
                         cmd.Parameters.AddWithValue("@BeneficioINSS", cliente.BeneficioINSS);
+                        cmd.Parameters.AddWithValue("@BeneficioINSS2",
+                            string.IsNullOrEmpty(cliente.BeneficioINSS2) ? (object)DBNull.Value : cliente.BeneficioINSS2);
 
                         cmd.ExecuteNonQuery();
                         return true;
@@ -64,7 +69,10 @@ namespace Cadastro1
                                     DataNascimento = Convert.ToDateTime(reader["DataNascimento"]),
                                     Endereco = reader["Endereco"].ToString(),
                                     Cidade = reader["Cidade"].ToString(),
+                                    CEP = reader["CEP"].ToString(),
+                                    Telefone = reader["Telefone"] == DBNull.Value ? "" : reader["Telefone"].ToString(),
                                     BeneficioINSS = reader["BeneficioINSS"].ToString(),
+                                    BeneficioINSS2 = reader["BeneficioINSS2"] == DBNull.Value ? "" : reader["BeneficioINSS2"].ToString(),
                                     DataCadastro = Convert.ToDateTime(reader["DataCadastro"]),
                                     Ativo = Convert.ToBoolean(reader["Ativo"])
                                 };
@@ -105,7 +113,10 @@ namespace Cadastro1
                                     DataNascimento = Convert.ToDateTime(reader["DataNascimento"]),
                                     Endereco = reader["Endereco"].ToString(),
                                     Cidade = reader["Cidade"].ToString(),
+                                    CEP = reader["CEP"].ToString(),
+                                    Telefone = reader["Telefone"] == DBNull.Value ? "" : reader["Telefone"].ToString(),
                                     BeneficioINSS = reader["BeneficioINSS"].ToString(),
+                                    BeneficioINSS2 = reader["BeneficioINSS2"] == DBNull.Value ? "" : reader["BeneficioINSS2"].ToString(),
                                     DataCadastro = Convert.ToDateTime(reader["DataCadastro"]),
                                     Ativo = Convert.ToBoolean(reader["Ativo"])
                                 });
