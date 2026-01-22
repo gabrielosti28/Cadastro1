@@ -1,6 +1,6 @@
 ﻿// =============================================
-// MENU PRINCIPAL - ATUALIZADO COM SEGURANÇA
-// Arquivo: FormMenuPrincipal.cs
+// MENU PRINCIPAL - COM BOTÃO DE BACKUP
+// Arquivo: FormMenuPrincipal.cs (ATUALIZADO)
 // Sistema Profissional de Cadastro
 // =============================================
 using System;
@@ -13,6 +13,7 @@ namespace Cadastro1
     {
         private Label lblUsuarioLogado;
         private Button btnAlterarSenha;
+        private Button btnGerenciarBackup;
 
         public FormMenuPrincipal()
         {
@@ -40,6 +41,26 @@ namespace Cadastro1
             panelContainer.Controls.Add(lblUsuarioLogado);
             lblUsuarioLogado.BringToFront();
 
+            // Criar botão de gerenciar backup
+            btnGerenciarBackup = new Button
+            {
+                BackColor = Color.FromArgb(52, 152, 219),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(350, 15),
+                Size = new Size(180, 35),
+                Text = "💾 Gerenciar Backup",
+                Cursor = Cursors.Hand
+            };
+            btnGerenciarBackup.FlatAppearance.BorderSize = 0;
+            btnGerenciarBackup.Click += BtnGerenciarBackup_Click;
+            btnGerenciarBackup.MouseEnter += Botao_MouseEnter;
+            btnGerenciarBackup.MouseLeave += Botao_MouseLeave;
+
+            panelContainer.Controls.Add(btnGerenciarBackup);
+            btnGerenciarBackup.BringToFront();
+
             // Criar botão de alterar senha
             btnAlterarSenha = new Button
             {
@@ -62,6 +83,14 @@ namespace Cadastro1
 
             // Modificar o botão sair para fazer logout
             btnSair.Text = "🔒 Sair e Fazer Logout";
+        }
+
+        private void BtnGerenciarBackup_Click(object sender, EventArgs e)
+        {
+            using (FormGerenciarBackup formBackup = new FormGerenciarBackup())
+            {
+                formBackup.ShowDialog();
+            }
         }
 
         private void BtnAlterarSenha_Click(object sender, EventArgs e)
@@ -96,6 +125,9 @@ namespace Cadastro1
                     case string s when s.Contains("VER TODOS"):
                         btn.BackColor = Color.FromArgb(155, 89, 182);
                         break;
+                    case string s when s.Contains("Gerenciar Backup"):
+                        btn.BackColor = Color.FromArgb(52, 152, 219);
+                        break;
                     case string s when s.Contains("Alterar Senha"):
                         btn.BackColor = Color.FromArgb(230, 126, 34);
                         break;
@@ -128,7 +160,9 @@ namespace Cadastro1
         {
             DialogResult resultado = MessageBox.Show(
                 "Deseja realmente sair do sistema?\n\n" +
-                "Você precisará fazer login novamente.",
+                "Você precisará fazer login novamente.\n\n" +
+                "💾 Lembre-se: O sistema faz backups automáticos diários,\n" +
+                "mas você pode fazer backups manuais em 'Gerenciar Backup'.",
                 "Confirmar Saída",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question
