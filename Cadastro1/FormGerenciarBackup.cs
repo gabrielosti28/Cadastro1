@@ -17,6 +17,17 @@ namespace Cadastro1
                 InitializeComponent();
                 backupManager = BackupManager.Instance;
 
+                // INICIALIZAÇÃO EXPLÍCITA DO DATAGRIDVIEW
+                if (dgvBackups != null)
+                {
+                    dgvBackups.AutoGenerateColumns = true;
+                    dgvBackups.AllowUserToAddRows = false;
+                    dgvBackups.AllowUserToDeleteRows = false;
+                    dgvBackups.ReadOnly = true;
+                    dgvBackups.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+                    dgvBackups.MultiSelect = false;
+                }
+
                 // Adicionar botão para configurar pasta
                 AdicionarBotaoConfigurarPasta();
 
@@ -100,56 +111,181 @@ namespace Cadastro1
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("=== INÍCIO CarregarBackups ===");
+
+                // Verificar lblStatus
                 if (lblStatus != null)
                 {
                     lblStatus.Text = "Carregando backups...";
                     lblStatus.ForeColor = Color.FromArgb(52, 73, 94);
+                    System.Diagnostics.Debug.WriteLine("lblStatus configurado");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("AVISO: lblStatus é NULL");
                 }
 
-                BackupInfo[] backups = backupManager.ListarBackups();
+                // Verificar backupManager
+                if (backupManager == null)
+                {
+                    MessageBox.Show("Erro: BackupManager não foi inicializado.",
+                        "Erro Crítico", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                System.Diagnostics.Debug.WriteLine("backupManager OK");
 
+                // Obter backups
+                BackupInfo[] backups = backupManager.ListarBackups();
+                System.Diagnostics.Debug.WriteLine($"Backups encontrados: {backups?.Length ?? 0}");
+
+                // Verificar dgvBackups
                 if (dgvBackups == null)
                 {
                     MessageBox.Show("Erro: Grade de backups não foi inicializada.",
                         "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+                System.Diagnostics.Debug.WriteLine("dgvBackups OK");
 
+                // Limpar DataSource
                 dgvBackups.DataSource = null;
-                dgvBackups.DataSource = backups;
+                System.Diagnostics.Debug.WriteLine("DataSource limpo");
 
+                // Configurar DataSource
+                dgvBackups.DataSource = backups;
+                System.Diagnostics.Debug.WriteLine("DataSource configurado");
+
+                // Aguardar um momento para o DataGridView processar
+                Application.DoEvents();
+                System.Diagnostics.Debug.WriteLine($"Colunas no grid: {dgvBackups.Columns?.Count ?? 0}");
+
+                // CONFIGURAÇÃO SEGURA DAS COLUNAS
                 if (dgvBackups.Columns != null && dgvBackups.Columns.Count > 0)
                 {
-                    if (dgvBackups.Columns.Contains("CaminhoCompleto"))
-                        dgvBackups.Columns["CaminhoCompleto"].Visible = false;
+                    System.Diagnostics.Debug.WriteLine("Iniciando configuração de colunas...");
 
-                    if (dgvBackups.Columns.Contains("NomeArquivo"))
+                    try
                     {
-                        dgvBackups.Columns["NomeArquivo"].HeaderText = "ARQUIVO";
-                        dgvBackups.Columns["NomeArquivo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                        // CaminhoCompleto
+                        if (dgvBackups.Columns.Contains("CaminhoCompleto"))
+                        {
+                            dgvBackups.Columns["CaminhoCompleto"].Visible = false;
+                            System.Diagnostics.Debug.WriteLine("✓ CaminhoCompleto configurado");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✖ Erro em CaminhoCompleto: {ex.Message}");
                     }
 
-                    if (dgvBackups.Columns.Contains("DataCriacao"))
+                    try
                     {
-                        dgvBackups.Columns["DataCriacao"].HeaderText = "DATA/HORA";
-                        dgvBackups.Columns["DataCriacao"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
-                        dgvBackups.Columns["DataCriacao"].Width = 180;
+                        // NomeArquivo
+                        if (dgvBackups.Columns.Contains("NomeArquivo"))
+                        {
+                            var coluna = dgvBackups.Columns["NomeArquivo"];
+                            if (coluna != null)
+                            {
+                                coluna.HeaderText = "ARQUIVO";
+                                coluna.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                                System.Diagnostics.Debug.WriteLine("✓ NomeArquivo configurado");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✖ Erro em NomeArquivo: {ex.Message}");
                     }
 
-                    if (dgvBackups.Columns.Contains("TamanhoFormatado"))
+                    try
                     {
-                        dgvBackups.Columns["TamanhoFormatado"].HeaderText = "TAMANHO";
-                        dgvBackups.Columns["TamanhoFormatado"].Width = 100;
+                        // DataCriacao - AQUI PROVAVELMENTE ESTÁ O ERRO
+                        if (dgvBackups.Columns.Contains("DataCriacao"))
+                        {
+                            var coluna = dgvBackups.Columns["DataCriacao"];
+                            if (coluna != null)
+                            {
+                                System.Diagnostics.Debug.WriteLine("Coluna DataCriacao existe");
+
+                                coluna.HeaderText = "DATA/HORA";
+                                System.Diagnostics.Debug.WriteLine("HeaderText definido");
+
+                                // Criar novo estilo se não existir
+                                if (coluna.DefaultCellStyle == null)
+                                {
+                                    coluna.DefaultCellStyle = new DataGridViewCellStyle();
+                                    System.Diagnostics.Debug.WriteLine("DefaultCellStyle criado");
+                                }
+
+                                coluna.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
+                                System.Diagnostics.Debug.WriteLine("Format definido");
+
+                                coluna.Width = 180;
+                                System.Diagnostics.Debug.WriteLine("✓ DataCriacao configurado");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✖ Erro em DataCriacao: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
                     }
 
-                    if (dgvBackups.Columns.Contains("Tipo"))
+                    try
                     {
-                        dgvBackups.Columns["Tipo"].HeaderText = "TIPO";
-                        dgvBackups.Columns["Tipo"].Width = 120;
+                        // TamanhoFormatado
+                        if (dgvBackups.Columns.Contains("TamanhoFormatado"))
+                        {
+                            var coluna = dgvBackups.Columns["TamanhoFormatado"];
+                            if (coluna != null)
+                            {
+                                coluna.HeaderText = "TAMANHO";
+                                coluna.Width = 100;
+                                System.Diagnostics.Debug.WriteLine("✓ TamanhoFormatado configurado");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✖ Erro em TamanhoFormatado: {ex.Message}");
                     }
 
-                    if (dgvBackups.Columns.Contains("TamanhoBytes"))
-                        dgvBackups.Columns["TamanhoBytes"].Visible = false;
+                    try
+                    {
+                        // Tipo
+                        if (dgvBackups.Columns.Contains("Tipo"))
+                        {
+                            var coluna = dgvBackups.Columns["Tipo"];
+                            if (coluna != null)
+                            {
+                                coluna.HeaderText = "TIPO";
+                                coluna.Width = 120;
+                                System.Diagnostics.Debug.WriteLine("✓ Tipo configurado");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✖ Erro em Tipo: {ex.Message}");
+                    }
+
+                    try
+                    {
+                        // TamanhoBytes
+                        if (dgvBackups.Columns.Contains("TamanhoBytes"))
+                        {
+                            dgvBackups.Columns["TamanhoBytes"].Visible = false;
+                            System.Diagnostics.Debug.WriteLine("✓ TamanhoBytes configurado");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✖ Erro em TamanhoBytes: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("AVISO: Nenhuma coluna no DataGridView");
                 }
 
                 if (lblStatus != null)
@@ -157,9 +293,16 @@ namespace Cadastro1
                     lblStatus.Text = $"✓ Pronto - {backups.Length} backup(s) encontrado(s)";
                     lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
                 }
+
+                System.Diagnostics.Debug.WriteLine("=== FIM CarregarBackups (SUCESSO) ===");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine("=== FIM CarregarBackups (ERRO) ===");
+                System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"InnerException: {ex.InnerException?.Message}");
+
                 if (lblStatus != null)
                 {
                     lblStatus.Text = "✖ Erro ao carregar backups";
@@ -167,7 +310,9 @@ namespace Cadastro1
                 }
 
                 MessageBox.Show(
-                    $"Erro ao carregar backups:\n\n{ex.Message}",
+                    $"Erro ao carregar backups:\n\n{ex.Message}\n\n" +
+                    $"Tipo: {ex.GetType().Name}\n" +
+                    $"Stack: {ex.StackTrace}",
                     "Erro",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);

@@ -18,7 +18,7 @@ namespace Cadastro1
     public class BackupManager
     {
         private static BackupManager _instance;
-        private Timer _backupTimer;
+        private System.Threading.Timer _backupTimer; // ← ESPECIFICAR O NAMESPACE COMPLETO
         private string _backupDirectory;
         private readonly int _backupIntervalHours = 24;
         private readonly int _maxBackupsToKeep = 30;
@@ -201,7 +201,9 @@ namespace Cadastro1
                 }
 
                 TimeSpan intervalo = TimeSpan.FromHours(_backupIntervalHours);
-                _backupTimer = new Timer(
+
+                // ← USAR System.Threading.Timer EXPLICITAMENTE
+                _backupTimer = new System.Threading.Timer(
                     callback: BackupTimerCallback,
                     state: null,
                     dueTime: intervalo,
