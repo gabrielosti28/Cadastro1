@@ -8,6 +8,7 @@ namespace Cadastro1
     public partial class FormGerenciarBackup : Form
     {
         private BackupManager backupManager;
+        private Button btnConfigurarPasta;
 
         public FormGerenciarBackup()
         {
@@ -16,7 +17,9 @@ namespace Cadastro1
                 InitializeComponent();
                 backupManager = BackupManager.Instance;
 
-                // CORRIGIDO: Mostrar diretório de backup
+                // Adicionar botão para configurar pasta
+                AdicionarBotaoConfigurarPasta();
+
                 if (lblDiretorio != null)
                 {
                     lblDiretorio.Text = $"📁 Backups salvos em: {backupManager.ObterDiretorioBackup()}";
@@ -28,6 +31,65 @@ namespace Cadastro1
             {
                 MessageBox.Show(
                     $"Erro ao iniciar formulário de backup:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void AdicionarBotaoConfigurarPasta()
+        {
+            // Criar botão para configurar pasta
+            btnConfigurarPasta = new Button
+            {
+                BackColor = Color.FromArgb(41, 128, 185),
+                Cursor = Cursors.Hand,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(10, 500),
+                Name = "btnConfigurarPasta",
+                Size = new Size(180, 40),
+                TabIndex = 7,
+                Text = "📂 Configurar Pasta",
+                UseVisualStyleBackColor = false
+            };
+
+            btnConfigurarPasta.FlatAppearance.BorderSize = 0;
+            btnConfigurarPasta.Click += BtnConfigurarPasta_Click;
+
+            // Adicionar ao painel de botões se existir, senão adicionar direto no form
+            if (panelBotoes != null)
+            {
+                panelBotoes.Controls.Add(btnConfigurarPasta);
+            }
+            else if (panelContainer != null)
+            {
+                panelContainer.Controls.Add(btnConfigurarPasta);
+                btnConfigurarPasta.BringToFront();
+            }
+        }
+
+        private void BtnConfigurarPasta_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (backupManager.EscolherDiretorioBackup())
+                {
+                    // Atualizar label com novo diretório
+                    if (lblDiretorio != null)
+                    {
+                        lblDiretorio.Text = $"📁 Backups salvos em: {backupManager.ObterDiretorioBackup()}";
+                    }
+
+                    // Recarregar lista de backups
+                    CarregarBackups();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao configurar pasta:\n\n{ex.Message}",
                     "Erro",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -46,10 +108,9 @@ namespace Cadastro1
 
                 BackupInfo[] backups = backupManager.ListarBackups();
 
-                // CORRIGIDO: Verificar se dgvBackups não é nulo
                 if (dgvBackups == null)
                 {
-                    MessageBox.Show("Erro: Grade de backups não foi inicializada corretamente.",
+                    MessageBox.Show("Erro: Grade de backups não foi inicializada.",
                         "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
@@ -63,7 +124,10 @@ namespace Cadastro1
                         dgvBackups.Columns["CaminhoCompleto"].Visible = false;
 
                     if (dgvBackups.Columns.Contains("NomeArquivo"))
+                    {
                         dgvBackups.Columns["NomeArquivo"].HeaderText = "ARQUIVO";
+                        dgvBackups.Columns["NomeArquivo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    }
 
                     if (dgvBackups.Columns.Contains("DataCriacao"))
                     {
@@ -103,8 +167,7 @@ namespace Cadastro1
                 }
 
                 MessageBox.Show(
-                    $"Erro ao carregar backups:\n\n{ex.Message}\n\n" +
-                    $"Verifique o diretório:\n{backupManager.ObterDiretorioBackup()}",
+                    $"Erro ao carregar backups:\n\n{ex.Message}",
                     "Erro",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -114,10 +177,14 @@ namespace Cadastro1
         private async void BtnBackupManual_Click(object sender, EventArgs e)
         {
             DialogResult resultado = MessageBox.Show(
-                "Deseja criar um backup MANUAL do banco de dados?\n\n" +
-                "O backup será salvo e poderá ser restaurado posteriormente.\n\n" +
-                "⚠️ IMPORTANTE: O SQL Server precisa de permissões para criar o arquivo.\n" +
-                "Se der erro, verifique as permissões no SQL Server.",
+                "📌 CRIAR BACKUP MANUAL?\n\n" +
+                "O backup será salvo na pasta configurada.\n\n" +
+                $"Local atual: {backupManager.ObterDiretorioBackup()}\n\n" +
+                "⚠ IMPORTANTE:\n" +
+                "• O SQL Server precisa ter permissão para criar arquivos\n" +
+                "• Se der erro, use o botão 'Configurar Pasta' para escolher outra pasta\n" +
+                "• Ou execute o SQL Server como Administrador\n\n" +
+                "Deseja continuar?",
                 "Confirmar Backup",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
@@ -132,7 +199,6 @@ namespace Cadastro1
         {
             try
             {
-                // Desabilitar botões
                 HabilitarBotoes(false);
 
                 if (progressBar != null)
@@ -143,7 +209,7 @@ namespace Cadastro1
 
                 if (lblStatus != null)
                 {
-                    lblStatus.Text = "Realizando backup... Por favor, aguarde.";
+                    lblStatus.Text = "⏳ Realizando backup... Aguarde, não feche!";
                     lblStatus.ForeColor = Color.FromArgb(230, 126, 34);
                 }
 
@@ -152,7 +218,6 @@ namespace Cadastro1
                     return backupManager.RealizarBackup(automatico);
                 });
 
-                // Registrar no audit log se disponível
                 try
                 {
                     AuditLogger.RegistrarBackup(caminho, true);
@@ -167,7 +232,8 @@ namespace Cadastro1
 
                 MessageBox.Show(
                     "✓ BACKUP REALIZADO COM SUCESSO!\n\n" +
-                    $"Arquivo criado:\n{System.IO.Path.GetFileName(caminho)}\n\n" +
+                    $"Arquivo: {System.IO.Path.GetFileName(caminho)}\n" +
+                    $"Local: {System.IO.Path.GetDirectoryName(caminho)}\n\n" +
                     "Seus dados estão protegidos.",
                     "Sucesso",
                     MessageBoxButtons.OK,
@@ -190,13 +256,8 @@ namespace Cadastro1
                 catch { }
 
                 MessageBox.Show(
-                    $"✖ ERRO ao realizar backup:\n\n{ex.Message}\n\n" +
-                    "SOLUÇÕES:\n" +
-                    "1. Execute o SQL Server como Administrador\n" +
-                    "2. Verifique permissões de escrita no disco\n" +
-                    "3. Verifique espaço em disco disponível\n" +
-                    $"4. Consulte o log em:\n{backupManager.ObterDiretorioBackup()}\\backup_log.txt",
-                    "Erro",
+                    ex.Message,
+                    "Erro no Backup",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -221,12 +282,12 @@ namespace Cadastro1
 
             DialogResult resultado = MessageBox.Show(
                 "⚠️ ATENÇÃO - OPERAÇÃO CRÍTICA!\n\n" +
-                $"Você está prestes a RESTAURAR o banco de dados para:\n" +
-                $"Arquivo: {backup.NomeArquivo}\n" +
-                $"Data: {backup.DataCriacao:dd/MM/yyyy HH:mm:ss}\n\n" +
-                "TODOS OS DADOS ATUAIS SERÃO SUBSTITUÍDOS!\n" +
-                "Esta operação não pode ser desfeita!\n\n" +
-                "Deseja continuar?",
+                $"Restaurar o banco para:\n" +
+                $"📄 Arquivo: {backup.NomeArquivo}\n" +
+                $"📅 Data: {backup.DataCriacao:dd/MM/yyyy HH:mm:ss}\n\n" +
+                "🚨 TODOS OS DADOS ATUAIS SERÃO SUBSTITUÍDOS!\n" +
+                "Esta operação NÃO pode ser desfeita!\n\n" +
+                "Tem certeza?",
                 "CONFIRMAR RESTAURAÇÃO",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
@@ -251,7 +312,7 @@ namespace Cadastro1
 
                 if (lblStatus != null)
                 {
-                    lblStatus.Text = "Restaurando backup... NÃO FECHE O PROGRAMA!";
+                    lblStatus.Text = "⏳ Restaurando... NÃO FECHE O PROGRAMA!";
                     lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
                 }
 
@@ -268,7 +329,7 @@ namespace Cadastro1
 
                 if (lblStatus != null)
                 {
-                    lblStatus.Text = "✓ Backup restaurado com sucesso!";
+                    lblStatus.Text = "✓ Backup restaurado!";
                     lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
                 }
 
@@ -279,14 +340,13 @@ namespace Cadastro1
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
 
-                // Reiniciar aplicação
                 Application.Restart();
             }
             catch (Exception ex)
             {
                 if (lblStatus != null)
                 {
-                    lblStatus.Text = "✖ Erro ao restaurar backup";
+                    lblStatus.Text = "✖ Erro ao restaurar";
                     lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
                 }
 
@@ -349,8 +409,11 @@ namespace Cadastro1
                     }
 
                     MessageBox.Show(
-                        "✓ BACKUP ÍNTEGRO!\n\nO arquivo de backup está OK e pode ser restaurado.",
-                        "Verificação", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        "✓ BACKUP ÍNTEGRO!\n\n" +
+                        "O arquivo está OK e pode ser restaurado.",
+                        "Verificação",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                 }
                 else
                 {
@@ -361,8 +424,11 @@ namespace Cadastro1
                     }
 
                     MessageBox.Show(
-                        "✖ BACKUP CORROMPIDO!\n\nO arquivo está danificado e não pode ser restaurado.",
-                        "Verificação", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        "✖ BACKUP CORROMPIDO!\n\n" +
+                        "O arquivo está danificado e não pode ser restaurado.",
+                        "Verificação",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
@@ -373,8 +439,11 @@ namespace Cadastro1
                     lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
                 }
 
-                MessageBox.Show($"Erro ao verificar backup:\n\n{ex.Message}",
-                    "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    $"Erro ao verificar:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
             finally
             {
@@ -396,7 +465,7 @@ namespace Cadastro1
             BackupInfo backup = (BackupInfo)dgvBackups.SelectedRows[0].DataBoundItem;
 
             DialogResult resultado = MessageBox.Show(
-                $"Deseja realmente EXCLUIR este backup?\n\n" +
+                $"Excluir este backup?\n\n" +
                 $"Arquivo: {backup.NomeArquivo}\n" +
                 $"Data: {backup.DataCriacao:dd/MM/yyyy HH:mm:ss}\n\n" +
                 "Esta ação não pode ser desfeita!",
@@ -420,8 +489,11 @@ namespace Cadastro1
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erro ao excluir backup:\n\n{ex.Message}",
-                        "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(
+                        $"Erro ao excluir:\n\n{ex.Message}",
+                        "Erro",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 }
             }
         }
@@ -473,6 +545,7 @@ namespace Cadastro1
             if (btnExcluir != null) btnExcluir.Enabled = habilitar;
             if (btnAtualizar != null) btnAtualizar.Enabled = habilitar;
             if (btnAbrirPasta != null) btnAbrirPasta.Enabled = habilitar;
+            if (btnConfigurarPasta != null) btnConfigurarPasta.Enabled = habilitar;
         }
     }
 }
