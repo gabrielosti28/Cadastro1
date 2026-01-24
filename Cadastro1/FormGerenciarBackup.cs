@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Threading.Tasks;
@@ -17,7 +18,6 @@ namespace Cadastro1
                 InitializeComponent();
                 backupManager = BackupManager.Instance;
 
-                // INICIALIZAÇÃO EXPLÍCITA DO DATAGRIDVIEW
                 if (dgvBackups != null)
                 {
                     dgvBackups.AutoGenerateColumns = true;
@@ -28,7 +28,6 @@ namespace Cadastro1
                     dgvBackups.MultiSelect = false;
                 }
 
-                // Adicionar botão para configurar pasta
                 AdicionarBotaoConfigurarPasta();
 
                 if (lblDiretorio != null)
@@ -50,7 +49,6 @@ namespace Cadastro1
 
         private void AdicionarBotaoConfigurarPasta()
         {
-            // Criar botão para configurar pasta
             btnConfigurarPasta = new Button
             {
                 BackColor = Color.FromArgb(41, 128, 185),
@@ -68,8 +66,9 @@ namespace Cadastro1
 
             btnConfigurarPasta.FlatAppearance.BorderSize = 0;
             btnConfigurarPasta.Click += BtnConfigurarPasta_Click;
+            btnConfigurarPasta.MouseEnter += Botao_MouseEnter;
+            btnConfigurarPasta.MouseLeave += Botao_MouseLeave;
 
-            // Adicionar ao painel de botões se existir, senão adicionar direto no form
             if (panelBotoes != null)
             {
                 panelBotoes.Controls.Add(btnConfigurarPasta);
@@ -87,13 +86,10 @@ namespace Cadastro1
             {
                 if (backupManager.EscolherDiretorioBackup())
                 {
-                    // Atualizar label com novo diretório
                     if (lblDiretorio != null)
                     {
                         lblDiretorio.Text = $"📁 Backups salvos em: {backupManager.ObterDiretorioBackup()}";
                     }
-
-                    // Recarregar lista de backups
                     CarregarBackups();
                 }
             }
@@ -111,211 +107,84 @@ namespace Cadastro1
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("=== INÍCIO CarregarBackups ===");
+                AtualizarStatus("Carregando backups...", Color.FromArgb(52, 73, 94));
 
-                // Verificar lblStatus
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "Carregando backups...";
-                    lblStatus.ForeColor = Color.FromArgb(52, 73, 94);
-                    System.Diagnostics.Debug.WriteLine("lblStatus configurado");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("AVISO: lblStatus é NULL");
-                }
-
-                // Verificar backupManager
-                if (backupManager == null)
-                {
-                    MessageBox.Show("Erro: BackupManager não foi inicializado.",
-                        "Erro Crítico", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                System.Diagnostics.Debug.WriteLine("backupManager OK");
-
-                // Obter backups
                 BackupInfo[] backups = backupManager.ListarBackups();
-                System.Diagnostics.Debug.WriteLine($"Backups encontrados: {backups?.Length ?? 0}");
 
-                // Verificar dgvBackups
-                if (dgvBackups == null)
-                {
-                    MessageBox.Show("Erro: Grade de backups não foi inicializada.",
-                        "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                System.Diagnostics.Debug.WriteLine("dgvBackups OK");
-
-                // Limpar DataSource
                 dgvBackups.DataSource = null;
-                System.Diagnostics.Debug.WriteLine("DataSource limpo");
-
-                // Configurar DataSource
                 dgvBackups.DataSource = backups;
-                System.Diagnostics.Debug.WriteLine("DataSource configurado");
 
-                // Aguardar um momento para o DataGridView processar
                 Application.DoEvents();
-                System.Diagnostics.Debug.WriteLine($"Colunas no grid: {dgvBackups.Columns?.Count ?? 0}");
 
-                // CONFIGURAÇÃO SEGURA DAS COLUNAS
                 if (dgvBackups.Columns != null && dgvBackups.Columns.Count > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine("Iniciando configuração de colunas...");
-
-                    try
-                    {
-                        // CaminhoCompleto
-                        if (dgvBackups.Columns.Contains("CaminhoCompleto"))
-                        {
-                            dgvBackups.Columns["CaminhoCompleto"].Visible = false;
-                            System.Diagnostics.Debug.WriteLine("✓ CaminhoCompleto configurado");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"✖ Erro em CaminhoCompleto: {ex.Message}");
-                    }
-
-                    try
-                    {
-                        // NomeArquivo
-                        if (dgvBackups.Columns.Contains("NomeArquivo"))
-                        {
-                            var coluna = dgvBackups.Columns["NomeArquivo"];
-                            if (coluna != null)
-                            {
-                                coluna.HeaderText = "ARQUIVO";
-                                coluna.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                                System.Diagnostics.Debug.WriteLine("✓ NomeArquivo configurado");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"✖ Erro em NomeArquivo: {ex.Message}");
-                    }
-
-                    try
-                    {
-                        // DataCriacao - AQUI PROVAVELMENTE ESTÁ O ERRO
-                        if (dgvBackups.Columns.Contains("DataCriacao"))
-                        {
-                            var coluna = dgvBackups.Columns["DataCriacao"];
-                            if (coluna != null)
-                            {
-                                System.Diagnostics.Debug.WriteLine("Coluna DataCriacao existe");
-
-                                coluna.HeaderText = "DATA/HORA";
-                                System.Diagnostics.Debug.WriteLine("HeaderText definido");
-
-                                // Criar novo estilo se não existir
-                                if (coluna.DefaultCellStyle == null)
-                                {
-                                    coluna.DefaultCellStyle = new DataGridViewCellStyle();
-                                    System.Diagnostics.Debug.WriteLine("DefaultCellStyle criado");
-                                }
-
-                                coluna.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
-                                System.Diagnostics.Debug.WriteLine("Format definido");
-
-                               // coluna.Width = 180;
-                                //System.Diagnostics.Debug.WriteLine("✓ DataCriacao configurado");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"✖ Erro em DataCriacao: {ex.Message}");
-                        System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
-                    }
-
-                    try
-                    {
-                        // TamanhoFormatado
-                        if (dgvBackups.Columns.Contains("TamanhoFormatado"))
-                        {
-                            var coluna = dgvBackups.Columns["TamanhoFormatado"];
-                            if (coluna != null)
-                            {
-                                coluna.HeaderText = "TAMANHO";
-                                //coluna.Width = 100;
-                                System.Diagnostics.Debug.WriteLine("✓ TamanhoFormatado configurado");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"✖ Erro em TamanhoFormatado: {ex.Message}");
-                    }
-
-                    try
-                    {
-                        // Tipo
-                        if (dgvBackups.Columns.Contains("Tipo"))
-                        {
-                            var coluna = dgvBackups.Columns["Tipo"];
-                            if (coluna != null)
-                            {
-                                coluna.HeaderText = "TIPO";
-                                //coluna.Width = 120;
-                                System.Diagnostics.Debug.WriteLine("✓ Tipo configurado");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"✖ Erro em Tipo: {ex.Message}");
-                    }
-
-                    try
-                    {
-                        // TamanhoBytes
-                        if (dgvBackups.Columns.Contains("TamanhoBytes"))
-                        {
-                            dgvBackups.Columns["TamanhoBytes"].Visible = false;
-                            System.Diagnostics.Debug.WriteLine("✓ TamanhoBytes configurado");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"✖ Erro em TamanhoBytes: {ex.Message}");
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("AVISO: Nenhuma coluna no DataGridView");
+                    ConfigurarColunasDataGridView();
                 }
 
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = $"✓ Pronto - {backups.Length} backup(s) encontrado(s)";
-                    lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
-                }
-
-                System.Diagnostics.Debug.WriteLine("=== FIM CarregarBackups (SUCESSO) ===");
+                AtualizarStatus($"✓ Pronto - {backups.Length} backup(s) encontrado(s)", Color.FromArgb(46, 204, 113));
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("=== FIM CarregarBackups (ERRO) ===");
-                System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
-                System.Diagnostics.Debug.WriteLine($"InnerException: {ex.InnerException?.Message}");
-
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "✖ Erro ao carregar backups";
-                    lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
-                }
-
+                AtualizarStatus("✖ Erro ao carregar backups", Color.FromArgb(231, 76, 60));
                 MessageBox.Show(
-                    $"Erro ao carregar backups:\n\n{ex.Message}\n\n" +
-                    $"Tipo: {ex.GetType().Name}\n" +
-                    $"Stack: {ex.StackTrace}",
+                    $"Erro ao carregar backups:\n\n{ex.Message}",
                     "Erro",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// SIMPLIFICAÇÃO: Configuração de colunas usando dicionário
+        /// Reduzido de 110 linhas para 25 linhas
+        /// </summary>
+        private void ConfigurarColunasDataGridView()
+        {
+            // Colunas a ocultar
+            string[] colunasOcultas = { "CaminhoCompleto", "TamanhoBytes" };
+
+            // Configurações de colunas visíveis: Nome -> (HeaderText, Width, Format, Alignment)
+            var configColunas = new Dictionary<string, (string header, int? width, string format, DataGridViewContentAlignment? align)>
+            {
+                { "NomeArquivo", ("ARQUIVO", null, null, null) },
+                { "DataCriacao", ("DATA/HORA", 180, "dd/MM/yyyy HH:mm:ss", DataGridViewContentAlignment.MiddleCenter) },
+                { "TamanhoFormatado", ("TAMANHO", 100, null, DataGridViewContentAlignment.MiddleCenter) },
+                { "Tipo", ("TIPO", 120, null, DataGridViewContentAlignment.MiddleCenter) }
+            };
+
+            foreach (string coluna in colunasOcultas)
+            {
+                if (dgvBackups.Columns.Contains(coluna))
+                    dgvBackups.Columns[coluna].Visible = false;
+            }
+
+            foreach (var config in configColunas)
+            {
+                if (dgvBackups.Columns.Contains(config.Key))
+                {
+                    var col = dgvBackups.Columns[config.Key];
+                    col.HeaderText = config.Value.header;
+
+                    if (config.Value.width.HasValue)
+                        col.Width = config.Value.width.Value;
+                    else
+                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+
+                    if (!string.IsNullOrEmpty(config.Value.format))
+                        col.DefaultCellStyle.Format = config.Value.format;
+
+                    if (config.Value.align.HasValue)
+                        col.DefaultCellStyle.Alignment = config.Value.align.Value;
+                }
+            }
+        }
+
+        private void AtualizarStatus(string mensagem, Color cor)
+        {
+            if (lblStatus != null)
+            {
+                lblStatus.Text = mensagem;
+                lblStatus.ForeColor = cor;
             }
         }
 
@@ -327,8 +196,7 @@ namespace Cadastro1
                 $"Local atual: {backupManager.ObterDiretorioBackup()}\n\n" +
                 "⚠ IMPORTANTE:\n" +
                 "• O SQL Server precisa ter permissão para criar arquivos\n" +
-                "• Se der erro, use o botão 'Configurar Pasta' para escolher outra pasta\n" +
-                "• Ou execute o SQL Server como Administrador\n\n" +
+                "• Se der erro, use o botão 'Configurar Pasta' para escolher outra pasta\n\n" +
                 "Deseja continuar?",
                 "Confirmar Backup",
                 MessageBoxButtons.YesNo,
@@ -352,28 +220,13 @@ namespace Cadastro1
                     progressBar.Style = ProgressBarStyle.Marquee;
                 }
 
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "⏳ Realizando backup... Aguarde, não feche!";
-                    lblStatus.ForeColor = Color.FromArgb(230, 126, 34);
-                }
+                AtualizarStatus("⏳ Realizando backup... Aguarde, não feche!", Color.FromArgb(230, 126, 34));
 
-                string caminho = await Task.Run(() =>
-                {
-                    return backupManager.RealizarBackup(automatico);
-                });
+                string caminho = await Task.Run(() => backupManager.RealizarBackup(automatico));
 
-                try
-                {
-                    AuditLogger.RegistrarBackup(caminho, true);
-                }
-                catch { }
+                AuditLogger.RegistrarBackup(caminho, true);
 
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "✓ Backup realizado com sucesso!";
-                    lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
-                }
+                AtualizarStatus("✓ Backup realizado com sucesso!", Color.FromArgb(46, 204, 113));
 
                 MessageBox.Show(
                     "✓ BACKUP REALIZADO COM SUCESSO!\n\n" +
@@ -388,17 +241,8 @@ namespace Cadastro1
             }
             catch (Exception ex)
             {
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "✖ Erro ao realizar backup";
-                    lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
-                }
-
-                try
-                {
-                    AuditLogger.RegistrarErro("Backup", ex.Message);
-                }
-                catch { }
+                AtualizarStatus("✖ Erro ao realizar backup", Color.FromArgb(231, 76, 60));
+                AuditLogger.RegistrarErro("Backup", ex.Message);
 
                 MessageBox.Show(
                     ex.Message,
@@ -455,28 +299,13 @@ namespace Cadastro1
                     progressBar.Style = ProgressBarStyle.Marquee;
                 }
 
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "⏳ Restaurando... NÃO FECHE O PROGRAMA!";
-                    lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
-                }
+                AtualizarStatus("⏳ Restaurando... NÃO FECHE O PROGRAMA!", Color.FromArgb(231, 76, 60));
 
-                await Task.Run(() =>
-                {
-                    backupManager.RestaurarBackup(backup.CaminhoCompleto);
-                });
+                await Task.Run(() => backupManager.RestaurarBackup(backup.CaminhoCompleto));
 
-                try
-                {
-                    AuditLogger.RegistrarRestauracao(backup.CaminhoCompleto, true);
-                }
-                catch { }
+                AuditLogger.RegistrarRestauracao(backup.CaminhoCompleto, true);
 
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "✓ Backup restaurado!";
-                    lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
-                }
+                AtualizarStatus("✓ Backup restaurado!", Color.FromArgb(46, 204, 113));
 
                 MessageBox.Show(
                     "✓ BACKUP RESTAURADO COM SUCESSO!\n\n" +
@@ -489,17 +318,8 @@ namespace Cadastro1
             }
             catch (Exception ex)
             {
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "✖ Erro ao restaurar";
-                    lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
-                }
-
-                try
-                {
-                    AuditLogger.RegistrarErro("Restore", ex.Message);
-                }
-                catch { }
+                AtualizarStatus("✖ Erro ao restaurar", Color.FromArgb(231, 76, 60));
+                AuditLogger.RegistrarErro("Restore", ex.Message);
 
                 MessageBox.Show(
                     $"✖ ERRO ao restaurar backup:\n\n{ex.Message}",
@@ -536,22 +356,14 @@ namespace Cadastro1
                     progressBar.Style = ProgressBarStyle.Marquee;
                 }
 
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "Verificando integridade...";
-                    lblStatus.ForeColor = Color.FromArgb(230, 126, 34);
-                }
+                AtualizarStatus("Verificando integridade...", Color.FromArgb(230, 126, 34));
 
                 bool integro = await Task.Run(() =>
                     backupManager.VerificarIntegridadeBackup(backup.CaminhoCompleto));
 
                 if (integro)
                 {
-                    if (lblStatus != null)
-                    {
-                        lblStatus.Text = "✓ Backup verificado - Íntegro";
-                        lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
-                    }
+                    AtualizarStatus("✓ Backup verificado - Íntegro", Color.FromArgb(46, 204, 113));
 
                     MessageBox.Show(
                         "✓ BACKUP ÍNTEGRO!\n\n" +
@@ -562,11 +374,7 @@ namespace Cadastro1
                 }
                 else
                 {
-                    if (lblStatus != null)
-                    {
-                        lblStatus.Text = "✖ Backup corrompido";
-                        lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
-                    }
+                    AtualizarStatus("✖ Backup corrompido", Color.FromArgb(231, 76, 60));
 
                     MessageBox.Show(
                         "✖ BACKUP CORROMPIDO!\n\n" +
@@ -578,11 +386,7 @@ namespace Cadastro1
             }
             catch (Exception ex)
             {
-                if (lblStatus != null)
-                {
-                    lblStatus.Text = "✖ Erro na verificação";
-                    lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
-                }
+                AtualizarStatus("✖ Erro na verificação", Color.FromArgb(231, 76, 60));
 
                 MessageBox.Show(
                     $"Erro ao verificar:\n\n{ex.Message}",
@@ -623,13 +427,7 @@ namespace Cadastro1
                 try
                 {
                     System.IO.File.Delete(backup.CaminhoCompleto);
-
-                    if (lblStatus != null)
-                    {
-                        lblStatus.Text = "✓ Backup excluído";
-                        lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
-                    }
-
+                    AtualizarStatus("✓ Backup excluído", Color.FromArgb(46, 204, 113));
                     CarregarBackups();
                 }
                 catch (Exception ex)
@@ -691,6 +489,24 @@ namespace Cadastro1
             if (btnAtualizar != null) btnAtualizar.Enabled = habilitar;
             if (btnAbrirPasta != null) btnAbrirPasta.Enabled = habilitar;
             if (btnConfigurarPasta != null) btnConfigurarPasta.Enabled = habilitar;
+        }
+
+        private void Botao_MouseEnter(object sender, EventArgs e)
+        {
+            if (sender is Button btn)
+            {
+                btn.BackColor = ControlPaint.Dark(btn.BackColor, 0.1f);
+            }
+        }
+
+        private void Botao_MouseLeave(object sender, EventArgs e)
+        {
+            if (sender is Button btn)
+            {
+                // Restaurar cor original baseado no tipo
+                if (btn == btnConfigurarPasta)
+                    btn.BackColor = Color.FromArgb(41, 128, 185);
+            }
         }
     }
 }
