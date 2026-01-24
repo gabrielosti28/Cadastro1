@@ -18,6 +18,7 @@ namespace Cadastro1
                 InitializeComponent();
                 backupManager = BackupManager.Instance;
 
+                // CORREÇÃO: Verificar se dgvBackups foi inicializado
                 if (dgvBackups != null)
                 {
                     dgvBackups.AutoGenerateColumns = true;
@@ -49,34 +50,48 @@ namespace Cadastro1
 
         private void AdicionarBotaoConfigurarPasta()
         {
-            btnConfigurarPasta = new Button
+            try
             {
-                BackColor = Color.FromArgb(41, 128, 185),
-                Cursor = Cursors.Hand,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                ForeColor = Color.White,
-                Location = new Point(10, 500),
-                Name = "btnConfigurarPasta",
-                Size = new Size(180, 40),
-                TabIndex = 7,
-                Text = "📂 Configurar Pasta",
-                UseVisualStyleBackColor = false
-            };
+                // CORREÇÃO: Verificar se panelBotoes existe antes de adicionar botão
+                if (panelBotoes == null)
+                {
+                    MessageBox.Show(
+                        "Erro: Panel de botões não foi inicializado corretamente.",
+                        "Erro de Interface",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
 
-            btnConfigurarPasta.FlatAppearance.BorderSize = 0;
-            btnConfigurarPasta.Click += BtnConfigurarPasta_Click;
-            btnConfigurarPasta.MouseEnter += Botao_MouseEnter;
-            btnConfigurarPasta.MouseLeave += Botao_MouseLeave;
+                btnConfigurarPasta = new Button
+                {
+                    BackColor = Color.FromArgb(41, 128, 185),
+                    Cursor = Cursors.Hand,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    ForeColor = Color.White,
+                    Location = new Point(10, 500),
+                    Name = "btnConfigurarPasta",
+                    Size = new Size(180, 40),
+                    TabIndex = 7,
+                    Text = "📂 Configurar Pasta",
+                    UseVisualStyleBackColor = false
+                };
 
-            if (panelBotoes != null)
-            {
+                btnConfigurarPasta.FlatAppearance.BorderSize = 0;
+                btnConfigurarPasta.Click += BtnConfigurarPasta_Click;
+                btnConfigurarPasta.MouseEnter += Botao_MouseEnter;
+                btnConfigurarPasta.MouseLeave += Botao_MouseLeave;
+
                 panelBotoes.Controls.Add(btnConfigurarPasta);
             }
-            else if (panelContainer != null)
+            catch (Exception ex)
             {
-                panelContainer.Controls.Add(btnConfigurarPasta);
-                btnConfigurarPasta.BringToFront();
+                MessageBox.Show(
+                    $"Erro ao adicionar botão Configurar Pasta:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
             }
         }
 
@@ -107,6 +122,17 @@ namespace Cadastro1
         {
             try
             {
+                // CORREÇÃO: Verificar se os controles existem
+                if (dgvBackups == null)
+                {
+                    MessageBox.Show(
+                        "Erro: DataGridView não foi inicializado.",
+                        "Erro de Interface",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
+
                 AtualizarStatus("Carregando backups...", Color.FromArgb(52, 73, 94));
 
                 BackupInfo[] backups = backupManager.ListarBackups();
@@ -118,7 +144,7 @@ namespace Cadastro1
 
                 if (dgvBackups.Columns != null && dgvBackups.Columns.Count > 0)
                 {
-                    ConfigurarColunasDataGridView();
+                    //ConfigurarColunasDataGridView();
                 }
 
                 AtualizarStatus($"✓ Pronto - {backups.Length} backup(s) encontrado(s)", Color.FromArgb(46, 204, 113));
@@ -127,57 +153,68 @@ namespace Cadastro1
             {
                 AtualizarStatus("✖ Erro ao carregar backups", Color.FromArgb(231, 76, 60));
                 MessageBox.Show(
-                    $"Erro ao carregar backups:\n\n{ex.Message}",
+                    $"Erro ao carregar backups:\n\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}",
                     "Erro",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
         }
 
-        /// <summary>
-        /// SIMPLIFICAÇÃO: Configuração de colunas usando dicionário
-        /// Reduzido de 110 linhas para 25 linhas
-        /// </summary>
-        private void ConfigurarColunasDataGridView()
-        {
-            // Colunas a ocultar
-            string[] colunasOcultas = { "CaminhoCompleto", "TamanhoBytes" };
+        //private void ConfigurarColunasDataGridView()
+        //{
+        //    try
+        //    {
+        //        // CORREÇÃO: Verificação adicional
+        //        if (dgvBackups == null || dgvBackups.Columns == null)
+        //            return;
 
-            // Configurações de colunas visíveis: Nome -> (HeaderText, Width, Format, Alignment)
-            var configColunas = new Dictionary<string, (string header, int? width, string format, DataGridViewContentAlignment? align)>
-            {
-                { "NomeArquivo", ("ARQUIVO", null, null, null) },
-                { "DataCriacao", ("DATA/HORA", 180, "dd/MM/yyyy HH:mm:ss", DataGridViewContentAlignment.MiddleCenter) },
-                { "TamanhoFormatado", ("TAMANHO", 100, null, DataGridViewContentAlignment.MiddleCenter) },
-                { "Tipo", ("TIPO", 120, null, DataGridViewContentAlignment.MiddleCenter) }
-            };
+        //        // Colunas a ocultar
+        //        string[] colunasOcultas = { "CaminhoCompleto", "TamanhoBytes" };
 
-            foreach (string coluna in colunasOcultas)
-            {
-                if (dgvBackups.Columns.Contains(coluna))
-                    dgvBackups.Columns[coluna].Visible = false;
-            }
+        //        // Configurações de colunas visíveis
+        //        var configColunas = new Dictionary<string, (string header, int? width, string format, DataGridViewContentAlignment? align)>
+        //        {
+        //            { "NomeArquivo", ("ARQUIVO", null, null, null) },
+        //            { "DataCriacao", ("DATA/HORA", 180, "dd/MM/yyyy HH:mm:ss", DataGridViewContentAlignment.MiddleCenter) },
+        //            { "TamanhoFormatado", ("TAMANHO", 100, null, DataGridViewContentAlignment.MiddleCenter) },
+        //            { "Tipo", ("TIPO", 120, null, DataGridViewContentAlignment.MiddleCenter) }
+        //        };
 
-            foreach (var config in configColunas)
-            {
-                if (dgvBackups.Columns.Contains(config.Key))
-                {
-                    var col = dgvBackups.Columns[config.Key];
-                    col.HeaderText = config.Value.header;
+        //        foreach (string coluna in colunasOcultas)
+        //        {
+        //            if (dgvBackups.Columns.Contains(coluna))
+        //                dgvBackups.Columns[coluna].Visible = false;
+        //        }
 
-                    if (config.Value.width.HasValue)
-                        col.Width = config.Value.width.Value;
-                    else
-                        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        //        foreach (var config in configColunas)
+        //        {
+        //            if (dgvBackups.Columns.Contains(config.Key))
+        //            {
+        //                var col = dgvBackups.Columns[config.Key];
+        //                col.HeaderText = config.Value.header;
 
-                    if (!string.IsNullOrEmpty(config.Value.format))
-                        col.DefaultCellStyle.Format = config.Value.format;
+        //                if (config.Value.width.HasValue)
+        //                    col.Width = config.Value.width.Value;
+        //                else
+        //                    col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
-                    if (config.Value.align.HasValue)
-                        col.DefaultCellStyle.Alignment = config.Value.align.Value;
-                }
-            }
-        }
+        //                if (!string.IsNullOrEmpty(config.Value.format))
+        //                    col.DefaultCellStyle.Format = config.Value.format;
+
+        //                if (config.Value.align.HasValue)
+        //                    col.DefaultCellStyle.Alignment = config.Value.align.Value;
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(
+        //            $"Erro ao configurar colunas:\n\n{ex.Message}",
+        //            "Erro",
+        //            MessageBoxButtons.OK,
+        //            MessageBoxIcon.Warning);
+        //    }
+        //}
 
         private void AtualizarStatus(string mensagem, Color cor)
         {
@@ -260,6 +297,7 @@ namespace Cadastro1
 
         private async void BtnRestaurar_Click(object sender, EventArgs e)
         {
+            // CORREÇÃO: Verificar se dgvBackups existe
             if (dgvBackups == null || dgvBackups.SelectedRows.Count == 0)
             {
                 MessageBox.Show("Selecione um backup para restaurar!",
@@ -503,7 +541,6 @@ namespace Cadastro1
         {
             if (sender is Button btn)
             {
-                // Restaurar cor original baseado no tipo
                 if (btn == btnConfigurarPasta)
                     btn.BackColor = Color.FromArgb(41, 128, 185);
             }
