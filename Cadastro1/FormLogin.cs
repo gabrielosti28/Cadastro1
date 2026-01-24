@@ -109,11 +109,5 @@ namespace Cadastro1
             this.DialogResult = DialogResult.Cancel;
             Application.Exit();
         }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            FormPrimeiroAcesso form = new FormPrimeiroAcesso();
-            form.ShowDialog();
-        }
     }
 }

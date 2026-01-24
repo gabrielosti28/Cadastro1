@@ -26,26 +26,19 @@ namespace Cadastro1
 
         /// <summary>
         /// Criptografa a senha usando SHA256 + Salt
-        /// Este é um método seguro que impede que a senha seja descoberta
+        /// SIMPLIFICADO: Usa BitConverter ao invés de loop manual
         /// </summary>
         public static string CriptografarSenha(string senha, string salt)
         {
-            // Combinar senha com salt
             string senhaComSalt = senha + salt;
 
-            // Criar hash SHA256
             using (SHA256 sha256 = SHA256.Create())
             {
                 byte[] bytes = Encoding.UTF8.GetBytes(senhaComSalt);
                 byte[] hash = sha256.ComputeHash(bytes);
 
-                // Converter para string hexadecimal
-                StringBuilder resultado = new StringBuilder();
-                foreach (byte b in hash)
-                {
-                    resultado.Append(b.ToString("x2"));
-                }
-                return resultado.ToString().ToUpper();
+                // SIMPLIFICAÇÃO: BitConverter é mais eficiente que StringBuilder em loop
+                return BitConverter.ToString(hash).Replace("-", "").ToUpper();
             }
         }
 
@@ -68,7 +61,6 @@ namespace Cadastro1
                 return false;
             }
 
-            // Verificar se tem pelo menos uma letra
             bool temLetra = false;
             bool temNumero = false;
 
@@ -76,6 +68,9 @@ namespace Cadastro1
             {
                 if (char.IsLetter(c)) temLetra = true;
                 if (char.IsDigit(c)) temNumero = true;
+
+                // OTIMIZAÇÃO: Sair do loop assim que encontrar ambos
+                if (temLetra && temNumero) break;
             }
 
             if (!temLetra)

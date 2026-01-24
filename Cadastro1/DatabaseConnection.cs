@@ -12,5 +12,23 @@ namespace Cadastro1
         {
             return new SqlConnection(connectionString);
         }
+
+        public static bool TestarConexao()
+        {
+            try
+            {
+                using (SqlConnection conn = GetConnection())
+                {
+                    conn.Open();
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
     }
 }

@@ -39,7 +39,6 @@
             this.btnEntrar = new System.Windows.Forms.Button();
             this.btnSair = new System.Windows.Forms.Button();
             this.lblVersao = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
             this.panelContainer.SuspendLayout();
             this.panelLogin.SuspendLayout();
             this.SuspendLayout();
@@ -59,7 +58,6 @@
             // 
             this.panelLogin.BackColor = System.Drawing.Color.White;
             this.panelLogin.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelLogin.Controls.Add(this.button1);
             this.panelLogin.Controls.Add(this.lblTitulo);
             this.panelLogin.Controls.Add(this.lblSubtitulo);
             this.panelLogin.Controls.Add(this.lblUsuario);
@@ -70,7 +68,7 @@
             this.panelLogin.Controls.Add(this.btnSair);
             this.panelLogin.Location = new System.Drawing.Point(50, 80);
             this.panelLogin.Name = "panelLogin";
-            this.panelLogin.Size = new System.Drawing.Size(402, 462);
+            this.panelLogin.Size = new System.Drawing.Size(402, 440);
             this.panelLogin.TabIndex = 0;
             // 
             // lblTitulo
@@ -78,7 +76,7 @@
             this.lblTitulo.AutoSize = true;
             this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 22F, System.Drawing.FontStyle.Bold);
             this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblTitulo.Location = new System.Drawing.Point(80, 30);
+            this.lblTitulo.Location = new System.Drawing.Point(110, 30);
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new System.Drawing.Size(181, 41);
             this.lblTitulo.TabIndex = 0;
@@ -89,7 +87,7 @@
             this.lblSubtitulo.AutoSize = true;
             this.lblSubtitulo.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.lblSubtitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
-            this.lblSubtitulo.Location = new System.Drawing.Point(75, 75);
+            this.lblSubtitulo.Location = new System.Drawing.Point(90, 75);
             this.lblSubtitulo.Name = "lblSubtitulo";
             this.lblSubtitulo.Size = new System.Drawing.Size(222, 20);
             this.lblSubtitulo.TabIndex = 1;
@@ -179,16 +177,6 @@
             this.lblVersao.TabIndex = 1;
             this.lblVersao.Text = "Versão 1.0 - 2026";
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(269, 431);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(128, 26);
-            this.button1.TabIndex = 5;
-            this.button1.Text = "cadastrar";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // FormLogin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -223,6 +211,5 @@
         private System.Windows.Forms.Button btnEntrar;
         private System.Windows.Forms.Button btnSair;
         private System.Windows.Forms.Label lblVersao;
-        private System.Windows.Forms.Button button1;
     }
 }

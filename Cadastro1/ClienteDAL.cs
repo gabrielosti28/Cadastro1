@@ -11,6 +11,11 @@ namespace Cadastro1
 {
     public class ClienteDAL
     {
+       
+        
+        
+        
+        
         public bool InserirCliente(Cliente cliente)
         {
             try
@@ -166,5 +171,10 @@ namespace Cadastro1
 
             return clientes;
         }
+        
+
+    
+    
+    
     }
 }

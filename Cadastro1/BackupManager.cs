@@ -440,6 +440,8 @@ namespace Cadastro1
         /// <summary>
         /// OTIMIZAÇÃO: Limite de 1000 linhas no log para evitar arquivo gigante
         /// </summary>
+        private static int _contadorLog = 0;
+
         private void LogBackup(string mensagem)
         {
             try
@@ -447,11 +449,15 @@ namespace Cadastro1
                 string logFile = Path.Combine(_backupDirectory, "backup_log.txt");
                 string linha = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {mensagem}";
 
-                // Adicionar linha
                 File.AppendAllText(logFile, linha + Environment.NewLine);
 
-                // Limitar tamanho do log (manter últimas 1000 linhas)
-                LimitarTamanhoLog(logFile);
+                // OTIMIZAÇÃO: Só verificar tamanho a cada 100 escritas
+                _contadorLog++;
+                if (_contadorLog >= 100)
+                {
+                    LimitarTamanhoLog(logFile);
+                    _contadorLog = 0;
+                }
 
                 System.Diagnostics.Debug.WriteLine(linha);
             }

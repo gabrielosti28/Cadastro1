@@ -73,18 +73,14 @@ namespace Cadastro1
                 using (SqlCommand cmd = new SqlCommand(procedureName, _connection, _transaction))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-
                     if (parameters != null)
-                    {
                         cmd.Parameters.AddRange(parameters);
-                    }
-
                     return cmd.ExecuteNonQuery();
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Erro ao executar procedure {procedureName}: {ex.Message}", ex);
+                throw new Exception($"Erro ao executar {procedureName}: {ex.Message}", ex);
             }
         }
 

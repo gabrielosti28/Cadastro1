@@ -191,7 +191,6 @@
             this.lblDicas.TabIndex = 10;
             this.lblDicas.Text = "💡 A senha deve ter no mínimo 6 caracteres,\r\npelo menos uma letra e um número.\r\n\r" +
     "\n";
-            this.lblDicas.Click += new System.EventHandler(this.lblDicas_Click);
             // 
             // btnCriar
             // 

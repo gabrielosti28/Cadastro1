@@ -2,10 +2,12 @@
 // SISTEMA DE LOG DE AUDITORIA
 // Arquivo: AuditLogger.cs
 // Sistema Profissional de Cadastro
+// MELHORADO: Tratamento de erros mais robusto
 // =============================================
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 
 namespace Cadastro1
 {
@@ -31,7 +33,41 @@ namespace Cadastro1
         }
 
         /// <summary>
+        /// MELHORADO: Método de log de erro centralizado
+        /// </summary>
+        private static void LogErroAuditoria(string mensagem, Exception ex = null)
+        {
+            string msgCompleta = $"ERRO AUDITORIA: {mensagem}";
+            if (ex != null)
+            {
+                msgCompleta += $" - Exceção: {ex.Message}";
+            }
+            Debug.WriteLine(msgCompleta);
+        }
+
+        /// <summary>
+        /// MELHORADO: Validação de parâmetros antes de registrar
+        /// </summary>
+        private static bool ValidarParametros(TipoOperacao tipo, string tabela, string detalhes)
+        {
+            if (string.IsNullOrWhiteSpace(tabela) && tipo != TipoOperacao.LOGOUT)
+            {
+                LogErroAuditoria("Tabela não pode estar vazia");
+                return false;
+            }
+
+            if (detalhes != null && detalhes.Length > 1000)
+            {
+                LogErroAuditoria($"Detalhes muito longos ({detalhes.Length} caracteres). Limite: 1000");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Registra uma operação de auditoria
+        /// MELHORADO: Validação antes de inserir, melhor tratamento de exceções
         /// </summary>
         public static void RegistrarOperacao(
             TipoOperacao tipo,
@@ -39,39 +75,68 @@ namespace Cadastro1
             string detalhes,
             int? registroID = null)
         {
+            // MELHORIA: Validação de parâmetros
+            if (!ValidarParametros(tipo, tabela, detalhes))
+                return;
+
+            SqlConnection conn = null;
             try
             {
                 string usuario = Usuario.UsuarioLogado?.Nome ?? "Sistema";
                 string login = Usuario.UsuarioLogado?.Login ?? "SYSTEM";
 
-                using (SqlConnection conn = DatabaseConnection.GetConnection())
+                // MELHORIA: Truncar detalhes se muito longos
+                string detalhesTruncados = detalhes?.Length > 1000
+                    ? detalhes.Substring(0, 997) + "..."
+                    : detalhes;
+
+                conn = DatabaseConnection.GetConnection();
+                conn.Open();
+
+                string sql = @"
+                    INSERT INTO AuditLog 
+                    (TipoOperacao, Tabela, RegistroID, Usuario, Login, Detalhes, DataHora)
+                    VALUES 
+                    (@TipoOperacao, @Tabela, @RegistroID, @Usuario, @Login, @Detalhes, GETDATE())";
+
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
                 {
-                    conn.Open();
+                    cmd.Parameters.AddWithValue("@TipoOperacao", tipo.ToString());
+                    cmd.Parameters.AddWithValue("@Tabela", tabela ?? "");
+                    cmd.Parameters.AddWithValue("@RegistroID",
+                        registroID.HasValue ? (object)registroID.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Usuario", usuario);
+                    cmd.Parameters.AddWithValue("@Login", login);
+                    cmd.Parameters.AddWithValue("@Detalhes", detalhesTruncados ?? "");
 
-                    string sql = @"
-                        INSERT INTO AuditLog 
-                        (TipoOperacao, Tabela, RegistroID, Usuario, Login, Detalhes, DataHora)
-                        VALUES 
-                        (@TipoOperacao, @Tabela, @RegistroID, @Usuario, @Login, @Detalhes, GETDATE())";
-
-                    using (SqlCommand cmd = new SqlCommand(sql, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@TipoOperacao", tipo.ToString());
-                        cmd.Parameters.AddWithValue("@Tabela", tabela ?? "");
-                        cmd.Parameters.AddWithValue("@RegistroID",
-                            registroID.HasValue ? (object)registroID.Value : DBNull.Value);
-                        cmd.Parameters.AddWithValue("@Usuario", usuario);
-                        cmd.Parameters.AddWithValue("@Login", login);
-                        cmd.Parameters.AddWithValue("@Detalhes", detalhes ?? "");
-
-                        cmd.ExecuteNonQuery();
-                    }
+                    cmd.ExecuteNonQuery();
                 }
+            }
+            catch (SqlException sqlEx)
+            {
+                // MELHORIA: Tratamento específico para erros SQL
+                LogErroAuditoria($"Erro SQL ao registrar {tipo} em {tabela}", sqlEx);
             }
             catch (Exception ex)
             {
-                // Não propagar erro de auditoria para não impactar operação principal
-                System.Diagnostics.Debug.WriteLine($"Erro ao registrar auditoria: {ex.Message}");
+                // MELHORIA: Tratamento genérico
+                LogErroAuditoria($"Erro ao registrar {tipo}", ex);
+            }
+            finally
+            {
+                // MELHORIA: Garantir fechamento da conexão
+                if (conn != null && conn.State == ConnectionState.Open)
+                {
+                    try
+                    {
+                        conn.Close();
+                        conn.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogErroAuditoria("Erro ao fechar conexão", ex);
+                    }
+                }
             }
         }
 
@@ -142,15 +207,21 @@ namespace Cadastro1
 
         /// <summary>
         /// Registra erro crítico
+        /// MELHORADO: Truncar mensagens de erro muito longas
         /// </summary>
         public static void RegistrarErro(string contexto, string mensagemErro)
         {
-            RegistrarOperacao(TipoOperacao.ERRO, contexto,
-                $"ERRO: {mensagemErro}");
+            // MELHORIA: Truncar mensagem se muito longa
+            string mensagemTruncada = mensagemErro?.Length > 900
+                ? mensagemErro.Substring(0, 897) + "..."
+                : mensagemErro;
+
+            RegistrarOperacao(TipoOperacao.ERRO, contexto, $"ERRO: {mensagemTruncada}");
         }
 
         /// <summary>
         /// Busca logs de auditoria com filtros
+        /// MELHORADO: Tratamento de erro mais específico
         /// </summary>
         public static DataTable BuscarLogs(
             DateTime? dataInicio = null,
@@ -214,8 +285,14 @@ namespace Cadastro1
                     }
                 }
             }
+            catch (SqlException sqlEx)
+            {
+                LogErroAuditoria("Erro SQL ao buscar logs", sqlEx);
+                throw new Exception($"Erro ao buscar logs (SQL): {sqlEx.Message}");
+            }
             catch (Exception ex)
             {
+                LogErroAuditoria("Erro ao buscar logs", ex);
                 throw new Exception($"Erro ao buscar logs: {ex.Message}");
             }
         }
