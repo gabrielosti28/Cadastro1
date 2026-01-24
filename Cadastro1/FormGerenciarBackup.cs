@@ -220,8 +220,8 @@ namespace Cadastro1
                                 coluna.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
                                 System.Diagnostics.Debug.WriteLine("Format definido");
 
-                                coluna.Width = 180;
-                                System.Diagnostics.Debug.WriteLine("✓ DataCriacao configurado");
+                               // coluna.Width = 180;
+                                //System.Diagnostics.Debug.WriteLine("✓ DataCriacao configurado");
                             }
                         }
                     }
@@ -240,7 +240,7 @@ namespace Cadastro1
                             if (coluna != null)
                             {
                                 coluna.HeaderText = "TAMANHO";
-                                coluna.Width = 100;
+                                //coluna.Width = 100;
                                 System.Diagnostics.Debug.WriteLine("✓ TamanhoFormatado configurado");
                             }
                         }
@@ -259,7 +259,7 @@ namespace Cadastro1
                             if (coluna != null)
                             {
                                 coluna.HeaderText = "TIPO";
-                                coluna.Width = 120;
+                                //coluna.Width = 120;
                                 System.Diagnostics.Debug.WriteLine("✓ Tipo configurado");
                             }
                         }

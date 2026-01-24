@@ -18,10 +18,10 @@ namespace Cadastro1
     public class BackupManager
     {
         private static BackupManager _instance;
-        private System.Threading.Timer _backupTimer; // ← ESPECIFICAR O NAMESPACE COMPLETO
+        private System.Threading.Timer _backupTimer;
         private string _backupDirectory;
-        private readonly int _backupIntervalHours = 24;
-        private readonly int _maxBackupsToKeep = 30;
+        private readonly int _backupIntervalHours = 12;
+        private readonly int _maxBackupsToKeep = 15;
         private const string CONFIG_KEY = "BackupDirectory";
 
         // Singleton
@@ -63,7 +63,6 @@ namespace Cadastro1
             catch { }
 
             // Diretório padrão: D:\SQLBckp
-            // Se D: não existir, usa Documentos como fallback
             string diretorioPadrao = @"D:\SQLBckp";
 
             if (Directory.Exists("D:\\"))
@@ -202,7 +201,6 @@ namespace Cadastro1
 
                 TimeSpan intervalo = TimeSpan.FromHours(_backupIntervalHours);
 
-                // ← USAR System.Threading.Timer EXPLICITAMENTE
                 _backupTimer = new System.Threading.Timer(
                     callback: BackupTimerCallback,
                     state: null,
@@ -244,7 +242,8 @@ namespace Cadastro1
         }
 
         /// <summary>
-        /// Realiza o backup do banco de dados
+        /// Realiza o backup do banco de dados - VERSÃO CORRIGIDA
+        /// Agora sempre salva na pasta configurada pelo usuário
         /// </summary>
         public string RealizarBackup(bool automatico = false)
         {
@@ -256,27 +255,18 @@ namespace Cadastro1
                 string tipo = automatico ? "AUTO" : "MANUAL";
                 string nomeArquivo = $"Backup_{tipo}_{timestamp}.bak";
 
-                // IMPORTANTE: Usar diretório que o SQL Server tenha acesso
-                string sqlServerBackupPath = ObterOuCriarDiretorioSQLServer();
-
-                if (!string.IsNullOrEmpty(sqlServerBackupPath))
-                {
-                    caminhoCompleto = Path.Combine(sqlServerBackupPath, nomeArquivo);
-                }
-                else
-                {
-                    // Fallback para o diretório do usuário
-                    caminhoCompleto = Path.Combine(_backupDirectory, nomeArquivo);
-                }
+                // USAR SEMPRE O DIRETÓRIO CONFIGURADO PELO USUÁRIO
+                caminhoCompleto = Path.Combine(_backupDirectory, nomeArquivo);
 
                 LogBackup($"Iniciando backup {tipo}...");
-                LogBackup($"Caminho: {caminhoCompleto}");
+                LogBackup($"Pasta configurada: {_backupDirectory}");
+                LogBackup($"Caminho completo: {caminhoCompleto}");
 
                 using (SqlConnection conn = DatabaseConnection.GetConnection())
                 {
                     conn.Open();
 
-                    // Comando SQL para backup
+                    // Comando SQL para backup DIRETO na pasta escolhida
                     string sqlBackup = $@"
                         BACKUP DATABASE [projeto1]
                         TO DISK = @BackupPath
@@ -296,110 +286,44 @@ namespace Cadastro1
                     }
                 }
 
-                // Copiar para o diretório do usuário se necessário
-                if (sqlServerBackupPath != _backupDirectory && File.Exists(caminhoCompleto))
-                {
-                    string destinoUsuario = Path.Combine(_backupDirectory, nomeArquivo);
-                    try
-                    {
-                        File.Copy(caminhoCompleto, destinoUsuario, true);
-                        LogBackup($"Cópia criada em: {destinoUsuario}");
-                    }
-                    catch (Exception exCopy)
-                    {
-                        LogBackup($"Aviso: Não foi possível copiar para pasta do usuário: {exCopy.Message}");
-                    }
-                }
-
                 SalvarInfoBackup(caminhoCompleto, tipo);
                 LimparBackupsAntigos();
 
-                LogBackup($"Backup {tipo} concluído: {nomeArquivo}");
+                LogBackup($"✓ Backup {tipo} concluído com sucesso!");
+                LogBackup($"Arquivo salvo em: {caminhoCompleto}");
                 return caminhoCompleto;
             }
             catch (Exception ex)
             {
                 LogBackup($"ERRO DETALHADO: {ex.ToString()}");
-                throw new Exception(
-                    $"Falha ao criar backup:\n\n{ex.Message}\n\n" +
-                    "SOLUÇÕES:\n" +
-                    "1. Execute o SQL Server Management Studio como Administrador\n" +
-                    "2. Execute este comando SQL:\n" +
-                    "   EXEC xp_create_subdir 'C:\\SQLBackups'\n" +
-                    "3. Ou escolha uma pasta diferente no botão 'Configurar Pasta'\n" +
-                    $"4. Logs em: {_backupDirectory}\\backup_log.txt"
-                );
-            }
-        }
 
-        /// <summary>
-        /// Obtém ou cria o diretório de backup do SQL Server
-        /// </summary>
-        private string ObterOuCriarDiretorioSQLServer()
-        {
-            try
-            {
-                using (SqlConnection conn = DatabaseConnection.GetConnection())
+                // Mensagem de erro mais clara
+                string mensagemErro = $"Falha ao criar backup:\n\n{ex.Message}\n\n";
+
+                // Se o erro for de permissão, dar instruções específicas
+                if (ex.Message.Contains("permission") || ex.Message.Contains("denied") ||
+                    ex.Message.Contains("acesso negado") || ex.Message.Contains("Operating system error 5"))
                 {
-                    conn.Open();
-
-                    // Primeiro tentar obter o diretório padrão
-                    string sql = @"
-                        DECLARE @BackupDirectory NVARCHAR(4000)
-                        EXEC master.dbo.xp_instance_regread 
-                            N'HKEY_LOCAL_MACHINE',
-                            N'Software\Microsoft\MSSQLServer\MSSQLServer',
-                            N'BackupDirectory', 
-                            @BackupDirectory OUTPUT
-                        SELECT @BackupDirectory AS BackupDirectory";
-
-                    using (SqlCommand cmd = new SqlCommand(sql, conn))
-                    {
-                        object result = cmd.ExecuteScalar();
-                        if (result != null && result != DBNull.Value)
-                        {
-                            string baseDir = result.ToString();
-                            string ourDir = Path.Combine(baseDir, "SistemaCadastro");
-
-                            // Tentar criar pasta via SQL
-                            try
-                            {
-                                string createDirSql = $"EXEC xp_create_subdir '{ourDir}'";
-                                using (SqlCommand createCmd = new SqlCommand(createDirSql, conn))
-                                {
-                                    createCmd.ExecuteNonQuery();
-                                }
-                                LogBackup($"Pasta SQL Server criada: {ourDir}");
-                                return ourDir;
-                            }
-                            catch
-                            {
-                                // Se falhar, tentar usar C:\SQLBackups
-                                try
-                                {
-                                    string fallbackDir = @"C:\SQLBackups";
-                                    string createFallbackSql = $"EXEC xp_create_subdir '{fallbackDir}'";
-                                    using (SqlCommand createCmd = new SqlCommand(createFallbackSql, conn))
-                                    {
-                                        createCmd.ExecuteNonQuery();
-                                    }
-                                    LogBackup($"Pasta alternativa criada: {fallbackDir}");
-                                    return fallbackDir;
-                                }
-                                catch
-                                {
-                                    return baseDir; // Usar diretório padrão
-                                }
-                            }
-                        }
-                    }
+                    mensagemErro += "❌ ERRO DE PERMISSÃO!\n\n" +
+                                   "O SQL Server não tem permissão para criar arquivos nesta pasta.\n\n" +
+                                   "SOLUÇÕES:\n" +
+                                   "1️⃣ Clique em 'Configurar Pasta' e escolha outra pasta (ex: Documentos)\n" +
+                                   "2️⃣ OU execute o SQL Server Management Studio como Administrador e rode:\n" +
+                                   $"   EXEC xp_create_subdir '{_backupDirectory}'\n" +
+                                   $"3️⃣ OU dê permissão manualmente para a conta do SQL Server na pasta:\n" +
+                                   $"   {_backupDirectory}";
                 }
+                else
+                {
+                    mensagemErro += "VERIFIQUE:\n" +
+                                   $"• Se a pasta existe: {_backupDirectory}\n" +
+                                   "• Se o SQL Server está rodando\n" +
+                                   "• Se há espaço em disco\n\n" +
+                                   $"Logs detalhados em: {_backupDirectory}\\backup_log.txt";
+                }
+
+                throw new Exception(mensagemErro);
             }
-            catch (Exception ex)
-            {
-                LogBackup($"Não foi possível configurar pasta SQL Server: {ex.Message}");
-            }
-            return null;
         }
 
         /// <summary>
