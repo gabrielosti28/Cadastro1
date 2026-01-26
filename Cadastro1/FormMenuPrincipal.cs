@@ -83,6 +83,29 @@ namespace Cadastro1
 
             // Modificar o botão sair para fazer logout
             btnSair.Text = "🔒 Sair e Fazer Logout";
+
+            // Adicionar após btnAlterarSenha
+            Button btnMalaDireta = new Button
+            {
+                BackColor = Color.FromArgb(41, 128, 185),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(730, 15),
+                Size = new Size(160, 35),
+                Text = "📮 Mala Direta",
+                Cursor = Cursors.Hand
+            };
+            btnMalaDireta.FlatAppearance.BorderSize = 0;
+            btnMalaDireta.Click += (s, e) => {
+                using (FormMailingEditor form = new FormMailingEditor())
+                {
+                    form.ShowDialog();
+                }
+            };
+            panelContainer.Controls.Add(btnMalaDireta);
+            btnMalaDireta.BringToFront();
+
         }
 
         private void BtnGerenciarBackup_Click(object sender, EventArgs e)
