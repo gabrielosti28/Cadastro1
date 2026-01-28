@@ -171,10 +171,140 @@ namespace Cadastro1
 
             return clientes;
         }
-        
 
-    
-    
-    
+        /// <summary>
+        /// Busca clientes que fazem aniversário hoje
+        /// </summary>
+        public List<Cliente> BuscarAniversariantesHoje()
+        {
+            List<Cliente> clientes = new List<Cliente>();
+
+            try
+            {
+                using (SqlConnection conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+
+                    string query = @"
+                SELECT * FROM Clientes 
+                WHERE Ativo = 1 
+                AND DAY(DataNascimento) = DAY(GETDATE())
+                AND MONTH(DataNascimento) = MONTH(GETDATE())
+                ORDER BY NomeCompleto";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                clientes.Add(new Cliente
+                                {
+                                    ClienteID = Convert.ToInt32(reader["ClienteID"]),
+                                    NomeCompleto = reader["NomeCompleto"].ToString(),
+                                    CPF = reader["CPF"].ToString(),
+                                    DataNascimento = Convert.ToDateTime(reader["DataNascimento"]),
+                                    Endereco = reader["Endereco"].ToString(),
+                                    Cidade = reader["Cidade"].ToString(),
+                                    CEP = reader["CEP"].ToString(),
+                                    Telefone = reader["Telefone"] == DBNull.Value ? "" : reader["Telefone"].ToString(),
+                                    BeneficioINSS = reader["BeneficioINSS"].ToString(),
+                                    BeneficioINSS2 = reader["BeneficioINSS2"] == DBNull.Value ? "" : reader["BeneficioINSS2"].ToString(),
+                                    DataCadastro = Convert.ToDateTime(reader["DataCadastro"]),
+                                    Ativo = Convert.ToBoolean(reader["Ativo"])
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro ao buscar aniversariantes de hoje: " + ex.Message);
+            }
+
+            return clientes;
+        }
+
+        /// <summary>
+        /// Busca clientes que fazem aniversário na semana atual
+        /// </summary>
+        public List<Cliente> BuscarAniversariantesSemana()
+        {
+            List<Cliente> clientes = new List<Cliente>();
+
+            try
+            {
+                using (SqlConnection conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+
+                    string query = @"
+                SELECT * FROM Clientes 
+                WHERE Ativo = 1 
+                AND (
+                    -- Para aniversários na mesma semana do ano
+                    DATEPART(WEEK, DataNascimento) = DATEPART(WEEK, GETDATE())
+                    OR
+                    -- Para casos onde a data de hoje está na mesma semana mas ano diferente
+                    (
+                        DATEDIFF(DAY, 
+                            DATEADD(YEAR, DATEDIFF(YEAR, DataNascimento, GETDATE()), DataNascimento),
+                            GETDATE()
+                        ) BETWEEN 0 AND 6
+                    )
+                )
+                ORDER BY 
+                    MONTH(DataNascimento),
+                    DAY(DataNascimento),
+                    NomeCompleto";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                clientes.Add(new Cliente
+                                {
+                                    ClienteID = Convert.ToInt32(reader["ClienteID"]),
+                                    NomeCompleto = reader["NomeCompleto"].ToString(),
+                                    CPF = reader["CPF"].ToString(),
+                                    DataNascimento = Convert.ToDateTime(reader["DataNascimento"]),
+                                    Endereco = reader["Endereco"].ToString(),
+                                    Cidade = reader["Cidade"].ToString(),
+                                    CEP = reader["CEP"].ToString(),
+                                    Telefone = reader["Telefone"] == DBNull.Value ? "" : reader["Telefone"].ToString(),
+                                    BeneficioINSS = reader["BeneficioINSS"].ToString(),
+                                    BeneficioINSS2 = reader["BeneficioINSS2"] == DBNull.Value ? "" : reader["BeneficioINSS2"].ToString(),
+                                    DataCadastro = Convert.ToDateTime(reader["DataCadastro"]),
+                                    Ativo = Convert.ToBoolean(reader["Ativo"])
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro ao buscar aniversariantes da semana: " + ex.Message);
+            }
+
+            return clientes;
+        }
+
+        /// <summary>
+        /// Calcula a idade atual do cliente
+        /// </summary>
+        public static int CalcularIdade(DateTime dataNascimento)
+        {
+            int idade = DateTime.Now.Year - dataNascimento.Year;
+            if (DateTime.Now.DayOfYear < dataNascimento.DayOfYear)
+                idade--;
+            return idade;
+        }
+
+
+
     }
 }

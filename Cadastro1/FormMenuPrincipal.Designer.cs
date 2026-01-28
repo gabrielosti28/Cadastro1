@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.panelContainer = new System.Windows.Forms.Panel();
+            this.panelAniversariantes = new System.Windows.Forms.Panel();
+            this.lblTituloAniversariantes = new System.Windows.Forms.Label();
             this.panelBotoes = new System.Windows.Forms.Panel();
             this.btnListar = new System.Windows.Forms.Button();
             this.btnBuscar = new System.Windows.Forms.Button();
@@ -37,12 +39,14 @@
             this.lblTitulo = new System.Windows.Forms.Label();
             this.btnSair = new System.Windows.Forms.Button();
             this.panelContainer.SuspendLayout();
+            this.panelAniversariantes.SuspendLayout();
             this.panelBotoes.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelContainer
             // 
             this.panelContainer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
+            this.panelContainer.Controls.Add(this.panelAniversariantes);
             this.panelContainer.Controls.Add(this.panelBotoes);
             this.panelContainer.Controls.Add(this.lblSubtitulo);
             this.panelContainer.Controls.Add(this.lblTitulo);
@@ -50,8 +54,29 @@
             this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelContainer.Location = new System.Drawing.Point(0, 0);
             this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(1003, 653);
+            this.panelContainer.Size = new System.Drawing.Size(1109, 804);
             this.panelContainer.TabIndex = 0;
+            // 
+            // panelAniversariantes
+            // 
+            this.panelAniversariantes.BackColor = System.Drawing.Color.White;
+            this.panelAniversariantes.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelAniversariantes.Controls.Add(this.lblTituloAniversariantes);
+            this.panelAniversariantes.Location = new System.Drawing.Point(12, 140);
+            this.panelAniversariantes.Name = "panelAniversariantes";
+            this.panelAniversariantes.Size = new System.Drawing.Size(341, 403);
+            this.panelAniversariantes.TabIndex = 4;
+            // 
+            // lblTituloAniversariantes
+            // 
+            this.lblTituloAniversariantes.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
+            this.lblTituloAniversariantes.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
+            this.lblTituloAniversariantes.Location = new System.Drawing.Point(10, 10);
+            this.lblTituloAniversariantes.Name = "lblTituloAniversariantes";
+            this.lblTituloAniversariantes.Size = new System.Drawing.Size(330, 30);
+            this.lblTituloAniversariantes.TabIndex = 0;
+            this.lblTituloAniversariantes.Text = "🎂 ANIVERSARIANTES";
+            this.lblTituloAniversariantes.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // panelBotoes
             // 
@@ -60,9 +85,9 @@
             this.panelBotoes.Controls.Add(this.btnListar);
             this.panelBotoes.Controls.Add(this.btnBuscar);
             this.panelBotoes.Controls.Add(this.btnNovo);
-            this.panelBotoes.Location = new System.Drawing.Point(153, 155);
+            this.panelBotoes.Location = new System.Drawing.Point(364, 140);
             this.panelBotoes.Name = "panelBotoes";
-            this.panelBotoes.Size = new System.Drawing.Size(742, 325);
+            this.panelBotoes.Size = new System.Drawing.Size(495, 325);
             this.panelBotoes.TabIndex = 1;
             // 
             // btnListar
@@ -72,7 +97,7 @@
             this.btnListar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnListar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnListar.ForeColor = System.Drawing.Color.White;
-            this.btnListar.Location = new System.Drawing.Point(161, 218);
+            this.btnListar.Location = new System.Drawing.Point(25, 209);
             this.btnListar.Name = "btnListar";
             this.btnListar.Size = new System.Drawing.Size(424, 80);
             this.btnListar.TabIndex = 2;
@@ -89,7 +114,7 @@
             this.btnBuscar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBuscar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnBuscar.ForeColor = System.Drawing.Color.White;
-            this.btnBuscar.Location = new System.Drawing.Point(161, 127);
+            this.btnBuscar.Location = new System.Drawing.Point(25, 112);
             this.btnBuscar.Name = "btnBuscar";
             this.btnBuscar.Size = new System.Drawing.Size(424, 75);
             this.btnBuscar.TabIndex = 1;
@@ -106,7 +131,7 @@
             this.btnNovo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNovo.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnNovo.ForeColor = System.Drawing.Color.White;
-            this.btnNovo.Location = new System.Drawing.Point(161, 22);
+            this.btnNovo.Location = new System.Drawing.Point(25, 10);
             this.btnNovo.Name = "btnNovo";
             this.btnNovo.Size = new System.Drawing.Size(424, 82);
             this.btnNovo.TabIndex = 0;
@@ -121,7 +146,7 @@
             this.lblSubtitulo.AutoSize = true;
             this.lblSubtitulo.Font = new System.Drawing.Font("Segoe UI", 14F);
             this.lblSubtitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
-            this.lblSubtitulo.Location = new System.Drawing.Point(210, 112);
+            this.lblSubtitulo.Location = new System.Drawing.Point(280, 112);
             this.lblSubtitulo.Name = "lblSubtitulo";
             this.lblSubtitulo.Size = new System.Drawing.Size(240, 25);
             this.lblSubtitulo.TabIndex = 2;
@@ -132,7 +157,7 @@
             this.lblTitulo.AutoSize = true;
             this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 24F, System.Drawing.FontStyle.Bold);
             this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblTitulo.Location = new System.Drawing.Point(133, 54);
+            this.lblTitulo.Location = new System.Drawing.Point(100, 49);
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new System.Drawing.Size(387, 45);
             this.lblTitulo.TabIndex = 2;
@@ -145,9 +170,9 @@
             this.btnSair.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSair.Font = new System.Drawing.Font("Segoe UI", 12F);
             this.btnSair.ForeColor = System.Drawing.Color.White;
-            this.btnSair.Location = new System.Drawing.Point(393, 550);
+            this.btnSair.Location = new System.Drawing.Point(425, 484);
             this.btnSair.Name = "btnSair";
-            this.btnSair.Size = new System.Drawing.Size(243, 55);
+            this.btnSair.Size = new System.Drawing.Size(319, 71);
             this.btnSair.TabIndex = 3;
             this.btnSair.Text = "✖ Sair do Sistema";
             this.btnSair.UseVisualStyleBackColor = false;
@@ -159,7 +184,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1003, 653);
+            this.ClientSize = new System.Drawing.Size(1109, 804);
             this.Controls.Add(this.panelContainer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -168,6 +193,7 @@
             this.Text = "Sistema de Cadastro de Clientes";
             this.panelContainer.ResumeLayout(false);
             this.panelContainer.PerformLayout();
+            this.panelAniversariantes.ResumeLayout(false);
             this.panelBotoes.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -183,5 +209,7 @@
         private System.Windows.Forms.Label lblSubtitulo;
         private System.Windows.Forms.Label lblTitulo;
         private System.Windows.Forms.Button btnSair;
+        private System.Windows.Forms.Panel panelAniversariantes;
+        private System.Windows.Forms.Label lblTituloAniversariantes;
     }
 }
