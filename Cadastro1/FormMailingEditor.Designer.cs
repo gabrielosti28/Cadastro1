@@ -320,7 +320,7 @@ namespace Cadastro1
             this.panelClientes.Controls.Add(this.panelStatusImportacao);
             this.panelClientes.Location = new System.Drawing.Point(670, 380);
             this.panelClientes.Name = "panelClientes";
-            this.panelClientes.Size = new System.Drawing.Size(700, 480);
+            this.panelClientes.Size = new System.Drawing.Size(700, 538);
             this.panelClientes.TabIndex = 4;
             // 
             // lblTituloClientes
@@ -446,7 +446,7 @@ namespace Cadastro1
             this.panelStatusImportacao.Controls.Add(this.lblStatusImportacao);
             this.panelStatusImportacao.Location = new System.Drawing.Point(15, 400);
             this.panelStatusImportacao.Name = "panelStatusImportacao";
-            this.panelStatusImportacao.Size = new System.Drawing.Size(670, 70);
+            this.panelStatusImportacao.Size = new System.Drawing.Size(670, 113);
             this.panelStatusImportacao.TabIndex = 9;
             this.panelStatusImportacao.Visible = false;
             // 

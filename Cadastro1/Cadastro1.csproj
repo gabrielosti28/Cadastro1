@@ -129,15 +129,19 @@
     <Compile Include="FormPrimeiroAcesso.Designer.cs">
       <DependentUpon>FormPrimeiroAcesso.cs</DependentUpon>
     </Compile>
+    <Compile Include="Logger.cs" />
     <Compile Include="MailingPdfGenerator.cs" />
     <Compile Include="MailingTemplate.cs" />
     <Compile Include="MailingTemplateDAL.cs" />
+    <Compile Include="Mensagens.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SecurityHelper.cs" />
     <Compile Include="TransactionManager.cs" />
     <Compile Include="Usuario.cs" />
     <Compile Include="UsuarioDAL.cs" />
+    <Compile Include="Validador.cs" />
+    <Compile Include="ValidadorCPF.cs" />
     <EmbeddedResource Include="FormBuscaCliente.resx">
       <DependentUpon>FormBuscaCliente.cs</DependentUpon>
     </EmbeddedResource>
