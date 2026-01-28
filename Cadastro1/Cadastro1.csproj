@@ -62,6 +62,7 @@
     <Compile Include="ClienteAnexoDAL.cs" />
     <Compile Include="ClienteDAL.cs" />
     <Compile Include="DatabaseConnection.cs" />
+    <Compile Include="ExcelImporter.cs" />
     <Compile Include="FormAlterarSenha.cs">
       <SubType>Form</SubType>
     </Compile>

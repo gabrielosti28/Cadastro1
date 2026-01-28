@@ -43,6 +43,11 @@ namespace Cadastro1
         private Label lblTotalSelecionados;
         private Button btnGerar;
 
+        // Controles de importação
+        private Button btnImportarPlanilha;
+        private Panel panelStatusImportacao;
+        private Label lblStatusImportacao;
+
         // Botão fechar
         private Button btnFechar;
 
@@ -82,12 +87,16 @@ namespace Cadastro1
             this.btnMarcar = new System.Windows.Forms.Button();
             this.lblTotalSelecionados = new System.Windows.Forms.Label();
             this.btnGerar = new System.Windows.Forms.Button();
+            this.btnImportarPlanilha = new System.Windows.Forms.Button();
+            this.panelStatusImportacao = new System.Windows.Forms.Panel();
+            this.lblStatusImportacao = new System.Windows.Forms.Label();
             this.btnFechar = new System.Windows.Forms.Button();
             this.panelContainer.SuspendLayout();
             this.panelPreview.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picPreview)).BeginInit();
             this.panelTemplate.SuspendLayout();
             this.panelClientes.SuspendLayout();
+            this.panelStatusImportacao.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelContainer
@@ -101,7 +110,7 @@ namespace Cadastro1
             this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelContainer.Location = new System.Drawing.Point(0, 0);
             this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(1445, 1061);
+            this.panelContainer.Size = new System.Drawing.Size(1400, 974);
             this.panelContainer.TabIndex = 0;
             // 
             // lblTitulo
@@ -137,7 +146,7 @@ namespace Cadastro1
             this.panelPreview.Controls.Add(this.picPreview);
             this.panelPreview.Location = new System.Drawing.Point(30, 180);
             this.panelPreview.Name = "panelPreview";
-            this.panelPreview.Size = new System.Drawing.Size(620, 842);
+            this.panelPreview.Size = new System.Drawing.Size(620, 647);
             this.panelPreview.TabIndex = 2;
             // 
             // lblPreviewTitulo
@@ -155,9 +164,9 @@ namespace Cadastro1
             this.picPreview.BackColor = System.Drawing.Color.White;
             this.picPreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.picPreview.Cursor = System.Windows.Forms.Cursors.Default;
-            this.picPreview.Location = new System.Drawing.Point(3, 33);
+            this.picPreview.Location = new System.Drawing.Point(10, 40);
             this.picPreview.Name = "picPreview";
-            this.picPreview.Size = new System.Drawing.Size(606, 784);
+            this.picPreview.Size = new System.Drawing.Size(595, 591);
             this.picPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picPreview.TabIndex = 1;
             this.picPreview.TabStop = false;
@@ -179,7 +188,7 @@ namespace Cadastro1
             this.panelTemplate.Controls.Add(this.lblStatusPosicoes);
             this.panelTemplate.Location = new System.Drawing.Point(670, 80);
             this.panelTemplate.Name = "panelTemplate";
-            this.panelTemplate.Size = new System.Drawing.Size(700, 294);
+            this.panelTemplate.Size = new System.Drawing.Size(700, 280);
             this.panelTemplate.TabIndex = 3;
             // 
             // lblTituloTemplate
@@ -210,7 +219,7 @@ namespace Cadastro1
             this.txtNomeTemplate.Name = "txtNomeTemplate";
             this.txtNomeTemplate.Size = new System.Drawing.Size(300, 25);
             this.txtNomeTemplate.TabIndex = 2;
-            this.txtNomeTemplate.Text = "Template_20260127";
+            this.txtNomeTemplate.Text = "Template_20260128";
             // 
             // btnCarregar
             // 
@@ -289,9 +298,9 @@ namespace Cadastro1
             // lblStatusPosicoes
             // 
             this.lblStatusPosicoes.Font = new System.Drawing.Font("Consolas", 9F);
-            this.lblStatusPosicoes.Location = new System.Drawing.Point(3, 237);
+            this.lblStatusPosicoes.Location = new System.Drawing.Point(21, 233);
             this.lblStatusPosicoes.Name = "lblStatusPosicoes";
-            this.lblStatusPosicoes.Size = new System.Drawing.Size(670, 59);
+            this.lblStatusPosicoes.Size = new System.Drawing.Size(670, 51);
             this.lblStatusPosicoes.TabIndex = 8;
             this.lblStatusPosicoes.Text = "Endereço: Não definido\nCidade: Não definido\nCEP: Não definido";
             // 
@@ -307,9 +316,11 @@ namespace Cadastro1
             this.panelClientes.Controls.Add(this.btnMarcar);
             this.panelClientes.Controls.Add(this.lblTotalSelecionados);
             this.panelClientes.Controls.Add(this.btnGerar);
+            this.panelClientes.Controls.Add(this.btnImportarPlanilha);
+            this.panelClientes.Controls.Add(this.panelStatusImportacao);
             this.panelClientes.Location = new System.Drawing.Point(670, 380);
             this.panelClientes.Name = "panelClientes";
-            this.panelClientes.Size = new System.Drawing.Size(700, 380);
+            this.panelClientes.Size = new System.Drawing.Size(700, 480);
             this.panelClientes.TabIndex = 4;
             // 
             // lblTituloClientes
@@ -411,6 +422,45 @@ namespace Cadastro1
             this.btnGerar.UseVisualStyleBackColor = false;
             this.btnGerar.Click += new System.EventHandler(this.BtnGerar_Click);
             // 
+            // btnImportarPlanilha
+            // 
+            this.btnImportarPlanilha.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(152)))), ((int)(((byte)(219)))));
+            this.btnImportarPlanilha.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnImportarPlanilha.FlatAppearance.BorderSize = 0;
+            this.btnImportarPlanilha.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnImportarPlanilha.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.btnImportarPlanilha.ForeColor = System.Drawing.Color.White;
+            this.btnImportarPlanilha.Location = new System.Drawing.Point(15, 350);
+            this.btnImportarPlanilha.Name = "btnImportarPlanilha";
+            this.btnImportarPlanilha.Size = new System.Drawing.Size(670, 40);
+            this.btnImportarPlanilha.TabIndex = 8;
+            this.btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV)";
+            this.btnImportarPlanilha.UseVisualStyleBackColor = false;
+            this.btnImportarPlanilha.Click += new System.EventHandler(this.BtnImportarPlanilha_Click);
+            // 
+            // panelStatusImportacao
+            // 
+            this.panelStatusImportacao.AutoScroll = true;
+            this.panelStatusImportacao.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(245)))), ((int)(((byte)(245)))));
+            this.panelStatusImportacao.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelStatusImportacao.Controls.Add(this.lblStatusImportacao);
+            this.panelStatusImportacao.Location = new System.Drawing.Point(15, 400);
+            this.panelStatusImportacao.Name = "panelStatusImportacao";
+            this.panelStatusImportacao.Size = new System.Drawing.Size(670, 70);
+            this.panelStatusImportacao.TabIndex = 9;
+            this.panelStatusImportacao.Visible = false;
+            // 
+            // lblStatusImportacao
+            // 
+            this.lblStatusImportacao.AutoSize = true;
+            this.lblStatusImportacao.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblStatusImportacao.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.lblStatusImportacao.Location = new System.Drawing.Point(5, 5);
+            this.lblStatusImportacao.Name = "lblStatusImportacao";
+            this.lblStatusImportacao.Size = new System.Drawing.Size(146, 15);
+            this.lblStatusImportacao.TabIndex = 0;
+            this.lblStatusImportacao.Text = "Aguardando importação...";
+            // 
             // btnFechar
             // 
             this.btnFechar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(76)))), ((int)(((byte)(60)))));
@@ -430,7 +480,7 @@ namespace Cadastro1
             // FormMailingEditor
             // 
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
-            this.ClientSize = new System.Drawing.Size(1445, 1061);
+            this.ClientSize = new System.Drawing.Size(1400, 974);
             this.Controls.Add(this.panelContainer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -446,6 +496,8 @@ namespace Cadastro1
             this.panelTemplate.PerformLayout();
             this.panelClientes.ResumeLayout(false);
             this.panelClientes.PerformLayout();
+            this.panelStatusImportacao.ResumeLayout(false);
+            this.panelStatusImportacao.PerformLayout();
             this.ResumeLayout(false);
 
         }

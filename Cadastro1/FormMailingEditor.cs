@@ -428,5 +428,116 @@ namespace Cadastro1
         {
             this.Close();
         }
+
+        // ===== IMPORTAÇÃO DE PLANILHA =====
+
+        private void BtnImportarPlanilha_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (OpenFileDialog ofd = new OpenFileDialog())
+                {
+                    ofd.Title = "Selecione a planilha com CPFs";
+                    ofd.Filter = "Arquivos CSV|*.csv|Arquivos Excel|*.xlsx;*.xls|Todos os arquivos|*.*";
+                    ofd.FilterIndex = 1;
+
+                    if (ofd.ShowDialog() == DialogResult.OK)
+                    {
+                        // Mostrar progresso
+                        btnImportarPlanilha.Enabled = false;
+                        btnImportarPlanilha.Text = "⏳ Importando...";
+                        Application.DoEvents();
+
+                        // Importar planilha
+                        ExcelImporter importer = new ExcelImporter();
+                        ResultadoImportacao resultado = importer.ImportarPlanilha(ofd.FileName);
+
+                        // Marcar clientes encontrados
+                        MarcarClientesDaPlanilha(resultado.ClientesEncontrados);
+
+                        // Atualizar status
+                        AtualizarStatusImportacao(resultado);
+
+                        // Mostrar relatório
+                        MessageBox.Show(
+                            resultado.GerarRelatorio(),
+                            "Importação Concluída",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+
+                        // Restaurar botão
+                        btnImportarPlanilha.Enabled = true;
+                        btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV)";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                btnImportarPlanilha.Enabled = true;
+                btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV)";
+
+                MessageBox.Show(
+                    ex.Message,
+                    "Erro na Importação",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void MarcarClientesDaPlanilha(List<Cliente> clientesEncontrados)
+        {
+            // Desmarcar todos primeiro
+            for (int i = 0; i < chkClientes.Items.Count; i++)
+            {
+                chkClientes.SetItemChecked(i, false);
+            }
+
+            // Marcar apenas os clientes da planilha
+            foreach (var cliente in clientesEncontrados)
+            {
+                // Encontrar índice do cliente na lista filtrada
+                int index = clientesFiltrados.FindIndex(c => c.ClienteID == cliente.ClienteID);
+
+                if (index >= 0 && index < chkClientes.Items.Count)
+                {
+                    chkClientes.SetItemChecked(index, true);
+                }
+            }
+
+            AtualizarContador();
+        }
+
+        private void AtualizarStatusImportacao(ResultadoImportacao resultado)
+        {
+            panelStatusImportacao.Visible = true;
+
+            // Montar texto detalhado
+            string status = $"📊 RESULTADO DA IMPORTAÇÃO\n";
+            status += $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+            status += $"📄 Total na planilha: {resultado.TotalCPFs} CPFs  |  ";
+            status += $"🗑️ Duplicatas: {resultado.DuplicatasRemovidas}  |  ";
+            status += $"✅ Únicos: {resultado.CPFsValidos.Count}\n";
+            status += $"✓ Encontrados: {resultado.CPFsEncontrados} clientes marcados  |  ";
+            status += $"✗ Não encontrados: {resultado.CPFsNaoEncontrados} CPFs";
+
+            lblStatusImportacao.Text = status;
+
+            // Colorir conforme resultado
+            if (resultado.CPFsNaoEncontrados == 0)
+            {
+                panelStatusImportacao.BackColor = Color.FromArgb(212, 237, 218); // Verde claro
+                lblStatusImportacao.ForeColor = Color.FromArgb(21, 87, 36); // Verde escuro
+            }
+            else if (resultado.CPFsEncontrados > 0)
+            {
+                panelStatusImportacao.BackColor = Color.FromArgb(255, 243, 205); // Amarelo claro
+                lblStatusImportacao.ForeColor = Color.FromArgb(133, 100, 4); // Amarelo escuro
+            }
+            else
+            {
+                panelStatusImportacao.BackColor = Color.FromArgb(248, 215, 218); // Vermelho claro
+                lblStatusImportacao.ForeColor = Color.FromArgb(114, 28, 36); // Vermelho escuro
+            }
+        }
     }
 }
