@@ -1,13 +1,11 @@
 ﻿// =============================================
 // GERADOR DE PDF PARA MALA DIRETA
 // Arquivo: MailingPdfGenerator.cs
-// Usa iTextSharp para gerar PDFs
+// ATUALIZADO: Usa ConfiguracaoPastas para salvar PDFs
 // =============================================
 using System;
 using System.Collections.Generic;
-using System.Drawing.Printing;
 using System.IO;
-using System.Xml.Linq;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 
@@ -17,13 +15,39 @@ namespace Cadastro1
     {
         private const float MM_TO_POINTS = 2.834645f; // Conversão mm para pontos PDF
 
+        public MailingPdfGenerator()
+        {
+            // Garantir que a pasta existe
+            ConfiguracaoPastas.GarantirPastasExistem();
+        }
+
+        /// <summary>
+        /// Obtém o diretório de PDFs
+        /// </summary>
+        private string ObterDiretorioPDFs()
+        {
+            return ConfiguracaoPastas.PastaPDFs;
+        }
+
         /// <summary>
         /// Gera PDF com mala direta para múltiplos clientes
         /// </summary>
-        public string GerarPDF(MailingTemplate template, List<Cliente> clientes, string caminhoSaida)
+        public string GerarPDF(MailingTemplate template, List<Cliente> clientes, string caminhoSaida = null)
         {
             try
             {
+                // Se não foi especificado caminho, usar o diretório configurado
+                if (string.IsNullOrEmpty(caminhoSaida))
+                {
+                    caminhoSaida = ObterDiretorioPDFs();
+                }
+
+                // Garantir que o diretório existe
+                if (!Directory.Exists(caminhoSaida))
+                {
+                    Directory.CreateDirectory(caminhoSaida);
+                }
+
                 // Criar documento A4
                 Document document = new Document(PageSize.A4, 0, 0, 0, 0);
                 string arquivoSaida = Path.Combine(caminhoSaida,

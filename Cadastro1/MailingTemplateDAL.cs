@@ -1,11 +1,10 @@
 ﻿// =============================================
 // CLASSE DE ACESSO A DADOS - TEMPLATES
 // Arquivo: MailingTemplateDAL.cs
+// ATUALIZADO: Usa ConfiguracaoPastas
 // =============================================
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
 using System.IO;
 using Newtonsoft.Json;
 using JsonFormatting = Newtonsoft.Json.Formatting;
@@ -14,21 +13,18 @@ namespace Cadastro1
 {
     public class MailingTemplateDAL
     {
-        private readonly string diretorioTemplates;
-
         public MailingTemplateDAL()
         {
-            // Diretório para salvar templates
-            diretorioTemplates = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "SistemaCadastroClientes",
-                "Templates"
-            );
+            // Garantir que a pasta existe
+            ConfiguracaoPastas.GarantirPastasExistem();
+        }
 
-            if (!Directory.Exists(diretorioTemplates))
-            {
-                Directory.CreateDirectory(diretorioTemplates);
-            }
+        /// <summary>
+        /// Obtém o diretório de templates
+        /// </summary>
+        private string ObterDiretorioTemplates()
+        {
+            return ConfiguracaoPastas.PastaTemplates;
         }
 
         /// <summary>
@@ -38,8 +34,16 @@ namespace Cadastro1
         {
             try
             {
+                string diretorio = ObterDiretorioTemplates();
+
+                // Garantir que o diretório existe
+                if (!Directory.Exists(diretorio))
+                {
+                    Directory.CreateDirectory(diretorio);
+                }
+
                 string nomeArquivo = $"Template_{DateTime.Now:yyyyMMddHHmmss}.json";
-                string caminhoCompleto = Path.Combine(diretorioTemplates, nomeArquivo);
+                string caminhoCompleto = Path.Combine(diretorio, nomeArquivo);
 
                 string json = JsonConvert.SerializeObject(template, JsonFormatting.Indented);
                 File.WriteAllText(caminhoCompleto, json);
@@ -61,7 +65,14 @@ namespace Cadastro1
 
             try
             {
-                string[] arquivos = Directory.GetFiles(diretorioTemplates, "*.json");
+                string diretorio = ObterDiretorioTemplates();
+
+                if (!Directory.Exists(diretorio))
+                {
+                    return templates;
+                }
+
+                string[] arquivos = Directory.GetFiles(diretorio, "*.json");
 
                 foreach (string arquivo in arquivos)
                 {
@@ -92,7 +103,14 @@ namespace Cadastro1
         {
             try
             {
-                string[] arquivos = Directory.GetFiles(diretorioTemplates, "*.json");
+                string diretorio = ObterDiretorioTemplates();
+
+                if (!Directory.Exists(diretorio))
+                {
+                    return null;
+                }
+
+                string[] arquivos = Directory.GetFiles(diretorio, "*.json");
 
                 foreach (string arquivo in arquivos)
                 {
@@ -113,9 +131,9 @@ namespace Cadastro1
             }
         }
 
-        public string ObterDiretorioTemplates()
+        public string ObterDiretorioTemplatesAtual()
         {
-            return diretorioTemplates;
+            return ObterDiretorioTemplates();
         }
     }
 }

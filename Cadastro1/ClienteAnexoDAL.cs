@@ -1,8 +1,7 @@
 ﻿// =============================================
 // CLASSE DE ACESSO A DADOS - ANEXOS
 // Arquivo: ClienteAnexoDAL.cs
-// Sistema Profissional de Cadastro
-// SIMPLIFICADO: Validações consolidadas
+// ATUALIZADO: Usa ConfiguracaoPastas
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -14,11 +13,9 @@ namespace Cadastro1
 {
     public class ClienteAnexoDAL
     {
-        private readonly string diretorioBase;
         private const long TAMANHO_MAXIMO_MB = 50;
         private const long TAMANHO_MAXIMO_BYTES = TAMANHO_MAXIMO_MB * 1024 * 1024;
 
-        // SIMPLIFICAÇÃO: Array estático em vez de criar toda vez
         private static readonly string[] ExtensoesPermitidas = {
             ".pdf", ".doc", ".docx", ".txt", ".jpg", ".jpeg",
             ".png", ".gif", ".bmp", ".xls", ".xlsx", ".csv"
@@ -26,16 +23,16 @@ namespace Cadastro1
 
         public ClienteAnexoDAL()
         {
-            diretorioBase = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "SistemaCadastroClientes",
-                "Anexos"
-            );
+            // Garantir que a pasta existe
+            ConfiguracaoPastas.GarantirPastasExistem();
+        }
 
-            if (!Directory.Exists(diretorioBase))
-            {
-                Directory.CreateDirectory(diretorioBase);
-            }
+        /// <summary>
+        /// Obtém o diretório base de anexos
+        /// </summary>
+        private string ObterDiretorioBase()
+        {
+            return ConfiguracaoPastas.PastaAnexos;
         }
 
         /// <summary>
@@ -68,6 +65,7 @@ namespace Cadastro1
         /// </summary>
         private string PrepararArquivoDestino(int clienteID, string extensao)
         {
+            string diretorioBase = ObterDiretorioBase();
             string diretorioCliente = Path.Combine(diretorioBase, $"Cliente_{clienteID}");
 
             if (!Directory.Exists(diretorioCliente))
@@ -81,7 +79,6 @@ namespace Cadastro1
 
         /// <summary>
         /// Insere um novo anexo no banco e copia o arquivo físico
-        /// SIMPLIFICADO: Lógica reorganizada para melhor legibilidade
         /// </summary>
         public int InserirAnexo(ClienteAnexo anexo, string arquivoOrigem)
         {
@@ -107,9 +104,6 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// SIMPLIFICADO: Inserção no banco em método separado
-        /// </summary>
         private int InserirAnexoBanco(ClienteAnexo anexo, FileInfo fileInfo, string caminhoDestino)
         {
             using (SqlConnection conn = DatabaseConnection.GetConnection())
@@ -135,9 +129,6 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// Lista todos os anexos de um cliente
-        /// </summary>
         public List<ClienteAnexo> ListarAnexosCliente(int clienteID)
         {
             List<ClienteAnexo> anexos = new List<ClienteAnexo>();
@@ -170,9 +161,6 @@ namespace Cadastro1
             return anexos;
         }
 
-        /// <summary>
-        /// SIMPLIFICADO: Criação de objeto anexo em método separado
-        /// </summary>
         private ClienteAnexo CriarAnexoDoReader(SqlDataReader reader)
         {
             return new ClienteAnexo
@@ -191,9 +179,6 @@ namespace Cadastro1
             };
         }
 
-        /// <summary>
-        /// Exclui um anexo (soft delete no banco e remove arquivo físico)
-        /// </summary>
         public bool ExcluirAnexo(int anexoID)
         {
             try
@@ -228,9 +213,6 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// Obtém informações de um anexo específico
-        /// </summary>
         public ClienteAnexo ObterAnexo(int anexoID)
         {
             try
@@ -261,9 +243,6 @@ namespace Cadastro1
             return null;
         }
 
-        /// <summary>
-        /// Abre um anexo com o programa padrão do Windows
-        /// </summary>
         public void AbrirAnexo(int anexoID)
         {
             try
@@ -283,9 +262,6 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// Conta quantos anexos um cliente possui
-        /// </summary>
         public int ContarAnexosCliente(int clienteID)
         {
             return ListarAnexosCliente(clienteID).Count;

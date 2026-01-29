@@ -4,22 +4,19 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.Win32;
 
 namespace Cadastro1
 {
     /// <summary>
     /// Gerencia backups automáticos e manuais do banco de dados
-    /// OTIMIZADO: Consolidação de lógica de diretório
+    /// ATUALIZADO: Usa ConfiguracaoPastas para diretório configurável
     /// </summary>
     public class BackupManager
     {
         private static BackupManager _instance;
         private System.Threading.Timer _backupTimer;
-        private string _backupDirectory;
         private readonly int _backupIntervalHours = 12;
         private readonly int _maxBackupsToKeep = 15;
-        private const string CONFIG_KEY = "BackupDirectory";
 
         public static BackupManager Instance
         {
@@ -33,149 +30,16 @@ namespace Cadastro1
 
         private BackupManager()
         {
-            _backupDirectory = ObterOuCriarDiretorioBackup();
+            // Garantir que a pasta existe
+            ConfiguracaoPastas.GarantirPastasExistem();
         }
 
         /// <summary>
-        /// SIMPLIFICAÇÃO: Consolidação de 3 métodos em 1
-        /// - CarregarDiretorioSalvo()
-        /// - CriarDiretorioBackup()
-        /// - Validações duplicadas
+        /// Obtém o diretório de backups configurado
         /// </summary>
-        private string ObterOuCriarDiretorioBackup()
+        private string ObterDiretorioBackup()
         {
-            // 1. Tentar carregar do registro
-            string diretorioSalvo = TentarCarregarDoRegistro();
-            if (ValidarDiretorio(diretorioSalvo))
-                return diretorioSalvo;
-
-            // 2. Tentar diretório padrão D:\SQLBckp
-            string diretorioPadrao = @"D:\SQLBckp";
-            if (CriarDiretorioSeNecessario(diretorioPadrao))
-                return diretorioPadrao;
-
-            // 3. Fallback: Documentos do usuário
-            string diretorioFallback = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "SistemaCadastroClientes",
-                "Backups"
-            );
-
-            if (CriarDiretorioSeNecessario(diretorioFallback))
-                return diretorioFallback;
-
-            // 4. Último recurso: Temp
-            string diretorioTemp = Path.Combine(Path.GetTempPath(), "SistemaCadastro", "Backups");
-            CriarDiretorioSeNecessario(diretorioTemp);
-
-            LogBackup($"AVISO: Usando diretório temporário: {diretorioTemp}");
-            return diretorioTemp;
-        }
-
-        private string TentarCarregarDoRegistro()
-        {
-            try
-            {
-                using (RegistryKey key = Registry.CurrentUser.CreateSubKey(@"Software\SistemaCadastro"))
-                {
-                    return key?.GetValue(CONFIG_KEY) as string;
-                }
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private bool ValidarDiretorio(string diretorio)
-        {
-            return !string.IsNullOrEmpty(diretorio) && Directory.Exists(Path.GetDirectoryName(diretorio));
-        }
-
-        private bool CriarDiretorioSeNecessario(string diretorio)
-        {
-            try
-            {
-                if (!Directory.Exists(diretorio))
-                {
-                    Directory.CreateDirectory(diretorio);
-                    LogBackup($"Diretório criado: {diretorio}");
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogBackup($"Não foi possível criar {diretorio}: {ex.Message}");
-                return false;
-            }
-        }
-
-        private void SalvarDiretorio(string diretorio)
-        {
-            try
-            {
-                using (RegistryKey key = Registry.CurrentUser.CreateSubKey(@"Software\SistemaCadastro"))
-                {
-                    key?.SetValue(CONFIG_KEY, diretorio);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogBackup($"Erro ao salvar diretório: {ex.Message}");
-            }
-        }
-
-        public bool EscolherDiretorioBackup()
-        {
-            using (FolderBrowserDialog dialog = new FolderBrowserDialog())
-            {
-                dialog.Description = "Escolha a pasta onde os backups serão salvos:";
-                dialog.SelectedPath = _backupDirectory;
-                dialog.ShowNewFolderButton = true;
-
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    string novaPasta = Path.Combine(dialog.SelectedPath, "Backups");
-
-                    if (CriarDiretorioSeNecessario(novaPasta) && TestarPermissaoEscrita(novaPasta))
-                    {
-                        _backupDirectory = novaPasta;
-                        SalvarDiretorio(_backupDirectory);
-
-                        MessageBox.Show(
-                            $"✓ Pasta de backup configurada com sucesso!\n\n{_backupDirectory}",
-                            "Sucesso",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Information
-                        );
-
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private bool TestarPermissaoEscrita(string diretorio)
-        {
-            try
-            {
-                string testFile = Path.Combine(diretorio, "test.tmp");
-                File.WriteAllText(testFile, "test");
-                File.Delete(testFile);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"✖ Erro ao configurar pasta:\n\n{ex.Message}\n\n" +
-                    "Verifique se você tem permissão de escrita nesta pasta.",
-                    "Erro",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
-                return false;
-            }
+            return ConfiguracaoPastas.PastaBackups;
         }
 
         public void IniciarBackupAutomatico()
@@ -232,11 +96,19 @@ namespace Cadastro1
 
             try
             {
+                string diretorioBackup = ObterDiretorioBackup();
+
+                // Garantir que o diretório existe
+                if (!Directory.Exists(diretorioBackup))
+                {
+                    Directory.CreateDirectory(diretorioBackup);
+                }
+
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 string tipo = automatico ? "AUTO" : "MANUAL";
                 string nomeArquivo = $"Backup_{tipo}_{timestamp}.bak";
 
-                caminhoCompleto = Path.Combine(_backupDirectory, nomeArquivo);
+                caminhoCompleto = Path.Combine(diretorioBackup, nomeArquivo);
 
                 LogBackup($"Iniciando backup {tipo} em: {caminhoCompleto}");
 
@@ -281,8 +153,8 @@ namespace Cadastro1
                     mensagemErro += "❌ ERRO DE PERMISSÃO!\n\n" +
                                    "O SQL Server não tem permissão para criar arquivos nesta pasta.\n\n" +
                                    "SOLUÇÕES:\n" +
-                                   "1️⃣ Clique em 'Configurar Pasta' e escolha outra pasta\n" +
-                                   $"2️⃣ Dê permissão para a conta do SQL Server na pasta:\n   {_backupDirectory}";
+                                   "1️⃣ Clique em 'Configurar Pastas' no menu principal\n" +
+                                   $"2️⃣ Dê permissão para a conta do SQL Server na pasta:\n   {ObterDiretorioBackup()}";
                 }
 
                 throw new Exception(mensagemErro);
@@ -354,13 +226,15 @@ namespace Cadastro1
         {
             try
             {
-                if (!Directory.Exists(_backupDirectory))
+                string diretorioBackup = ObterDiretorioBackup();
+
+                if (!Directory.Exists(diretorioBackup))
                 {
-                    LogBackup($"Diretório não existe: {_backupDirectory}");
+                    LogBackup($"Diretório não existe: {diretorioBackup}");
                     return new BackupInfo[0];
                 }
 
-                string[] arquivos = Directory.GetFiles(_backupDirectory, "*.bak");
+                string[] arquivos = Directory.GetFiles(diretorioBackup, "*.bak");
                 BackupInfo[] backups = new BackupInfo[arquivos.Length];
 
                 for (int i = 0; i < arquivos.Length; i++)
@@ -430,28 +304,24 @@ namespace Cadastro1
             try
             {
                 FileInfo info = new FileInfo(caminhoBackup);
-                string infoFile = Path.Combine(_backupDirectory, "backup_history.txt");
+                string infoFile = Path.Combine(ObterDiretorioBackup(), "backup_history.txt");
                 string linha = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}|{tipo}|{info.Name}|{info.Length} bytes";
                 File.AppendAllText(infoFile, linha + Environment.NewLine);
             }
             catch { }
         }
 
-        /// <summary>
-        /// OTIMIZAÇÃO: Limite de 1000 linhas no log para evitar arquivo gigante
-        /// </summary>
         private static int _contadorLog = 0;
 
         private void LogBackup(string mensagem)
         {
             try
             {
-                string logFile = Path.Combine(_backupDirectory, "backup_log.txt");
+                string logFile = Path.Combine(ObterDiretorioBackup(), "backup_log.txt");
                 string linha = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {mensagem}";
 
                 File.AppendAllText(logFile, linha + Environment.NewLine);
 
-                // OTIMIZAÇÃO: Só verificar tamanho a cada 100 escritas
                 _contadorLog++;
                 if (_contadorLog >= 100)
                 {
@@ -510,9 +380,9 @@ namespace Cadastro1
             }
         }
 
-        public string ObterDiretorioBackup()
+        public string ObterDiretorioBackupAtual()
         {
-            return _backupDirectory;
+            return ObterDiretorioBackup();
         }
     }
 

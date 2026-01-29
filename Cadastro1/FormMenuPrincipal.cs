@@ -1,5 +1,5 @@
 ﻿// =============================================
-// MENU PRINCIPAL - COM ANIVERSARIANTES
+// MENU PRINCIPAL - ATUALIZADO COM CONFIGURAÇÃO DE PASTAS
 // Arquivo: FormMenuPrincipal.cs (ATUALIZADO)
 // LÓGICA E EVENTOS
 // =============================================
@@ -104,8 +104,58 @@ namespace Cadastro1
             panelContainer.Controls.Add(btnMalaDireta);
             btnMalaDireta.BringToFront();
 
+            // ========== NOVO: BOTÃO CONFIGURAR PASTAS ==========
+            Button btnConfigurarPastas = new Button
+            {
+                BackColor = Color.FromArgb(142, 68, 173), // Roxo
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(910, 15),
+                Size = new Size(180, 35),
+                Text = "⚙️ Configurar Pastas",
+                Cursor = Cursors.Hand
+            };
+            btnConfigurarPastas.FlatAppearance.BorderSize = 0;
+            btnConfigurarPastas.Click += BtnConfigurarPastas_Click;
+            btnConfigurarPastas.MouseEnter += Botao_MouseEnter;
+            btnConfigurarPastas.MouseLeave += Botao_MouseLeave;
+            panelContainer.Controls.Add(btnConfigurarPastas);
+            btnConfigurarPastas.BringToFront();
+
             // Modificar o botão sair para fazer logout
             btnSair.Text = "🔒 Sair e Fazer Logout";
+        }
+
+        // ========== NOVO: MÉTODO PARA ABRIR CONFIGURAÇÃO DE PASTAS ==========
+        private void BtnConfigurarPastas_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (FormConfigurarDiretorios form = new FormConfigurarDiretorios())
+                {
+                    DialogResult result = form.ShowDialog();
+
+                    if (result == DialogResult.OK)
+                    {
+                        // Configurações salvas com sucesso
+                        MessageBox.Show(
+                            "✅ As novas configurações de pastas já estão ativas!\n\n" +
+                            "Todos os novos arquivos serão salvos nos locais configurados.",
+                            "Configuração Aplicada",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao abrir configuração de pastas:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void CarregarAniversariantes()
@@ -391,6 +441,9 @@ namespace Cadastro1
                     case string s when s.Contains("Mala Direta"):
                         btn.BackColor = Color.FromArgb(41, 128, 185);
                         break;
+                    case string s when s.Contains("Configurar Pastas"):
+                        btn.BackColor = Color.FromArgb(142, 68, 173);
+                        break;
                     case string s when s.Contains("Sair"):
                         btn.BackColor = Color.FromArgb(231, 76, 60);
                         break;
@@ -444,25 +497,14 @@ namespace Cadastro1
                 Application.Exit();
             }
         }
+
         private void menuItemConfigurarPastas_Click(object sender, EventArgs e)
         {
-            try
-            {
-                FormConfiguracaoPastas form = new FormConfiguracaoPastas();
-                form.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao abrir configuração de pastas:\n{ex.Message}",
-                    "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            BtnConfigurarPastas_Click(sender, e);
         }
 
         private void FormPrincipal_Load(object sender, EventArgs e)
         {
-            // Seu código existente...
-
-            // Adicione no final:
             try
             {
                 ConfiguracaoPastas.GarantirPastasExistem();
@@ -473,8 +515,5 @@ namespace Cadastro1
                     "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
-
-
-
     }
 }
