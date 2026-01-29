@@ -61,6 +61,8 @@
     <Compile Include="ClienteAnexo.cs" />
     <Compile Include="ClienteAnexoDAL.cs" />
     <Compile Include="ClienteDAL.cs" />
+    <Compile Include="ConfiguracaoDiretorios.cs" />
+    <Compile Include="ConfiguracaoPastas.cs" />
     <Compile Include="DatabaseConnection.cs" />
     <Compile Include="ExcelImporter.cs" />
     <Compile Include="FormAlterarSenha.cs">
@@ -86,6 +88,18 @@
     </Compile>
     <Compile Include="FormCadastroCliente.Designer.cs">
       <DependentUpon>FormCadastroCliente.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormConfiguracaoPastas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormConfiguracaoPastas.Designer.cs">
+      <DependentUpon>FormConfiguracaoPastas.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormConfigurarDiretorios.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormConfigurarDiretorios.Designer.cs">
+      <DependentUpon>FormConfigurarDiretorios.cs</DependentUpon>
     </Compile>
     <Compile Include="FormEditarCliente.cs">
       <SubType>Form</SubType>

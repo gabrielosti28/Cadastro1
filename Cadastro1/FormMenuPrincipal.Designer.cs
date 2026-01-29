@@ -6,6 +6,7 @@
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private System.Windows.Forms.ToolStripMenuItem menuItemConfigurarPastas;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -42,6 +43,8 @@
             this.panelAniversariantes.SuspendLayout();
             this.panelBotoes.SuspendLayout();
             this.SuspendLayout();
+            this.menuItemConfigurarPastas = new System.Windows.Forms.ToolStripMenuItem();
+
             // 
             // panelContainer
             // 
@@ -59,6 +62,12 @@
             // 
             // panelAniversariantes
             // 
+            this.menuItemConfigurarPastas.Name = "menuItemConfigurarPastas";
+            this.menuItemConfigurarPastas.Size = new System.Drawing.Size(250, 22);
+            this.menuItemConfigurarPastas.Text = "⚙ Configurar Pastas do Sistema";
+            this.menuItemConfigurarPastas.Click += new System.EventHandler(this.menuItemConfigurarPastas_Click);
+
+
             this.panelAniversariantes.BackColor = System.Drawing.Color.White;
             this.panelAniversariantes.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelAniversariantes.Controls.Add(this.lblTituloAniversariantes);

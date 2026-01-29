@@ -444,5 +444,37 @@ namespace Cadastro1
                 Application.Exit();
             }
         }
+        private void menuItemConfigurarPastas_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FormConfiguracaoPastas form = new FormConfiguracaoPastas();
+                form.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao abrir configuração de pastas:\n{ex.Message}",
+                    "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void FormPrincipal_Load(object sender, EventArgs e)
+        {
+            // Seu código existente...
+
+            // Adicione no final:
+            try
+            {
+                ConfiguracaoPastas.GarantirPastasExistem();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso: Não foi possível criar algumas pastas.\n{ex.Message}",
+                    "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+
+
     }
 }
