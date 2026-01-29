@@ -33,7 +33,7 @@ namespace Cadastro1
 
                 if (lblDiretorio != null)
                 {
-                    lblDiretorio.Text = $"📁 Backups salvos em: {backupManager.ObterDiretorioBackup()}";
+                    lblDiretorio.Text = $"📁 Backups salvos em: {backupManager.ObterDiretorioBackupAtual()}";
                 }
 
                 CarregarBackups();
@@ -99,13 +99,28 @@ namespace Cadastro1
         {
             try
             {
-                if (backupManager.EscolherDiretorioBackup())
+                using (FormConfiguracaoPastas form = new FormConfiguracaoPastas())
                 {
-                    if (lblDiretorio != null)
+                    DialogResult result = form.ShowDialog();
+
+                    if (result == DialogResult.OK)
                     {
-                        lblDiretorio.Text = $"📁 Backups salvos em: {backupManager.ObterDiretorioBackup()}";
+                        // Atualizar label com novo diretório
+                        if (lblDiretorio != null)
+                        {
+                            lblDiretorio.Text = $"📁 Backups salvos em: {backupManager.ObterDiretorioBackupAtual()}";
+                        }
+
+                        // Recarregar lista de backups
+                        CarregarBackups();
+
+                        MessageBox.Show(
+                            "✓ Pasta de backups atualizada!\n\n" +
+                            "Os próximos backups serão salvos no novo local.",
+                            "Configuração Atualizada",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
                     }
-                    CarregarBackups();
                 }
             }
             catch (Exception ex)
@@ -144,7 +159,7 @@ namespace Cadastro1
 
                 if (dgvBackups.Columns != null && dgvBackups.Columns.Count > 0)
                 {
-                    //ConfigurarColunasDataGridView();
+                    ConfigurarColunasDataGridView();
                 }
 
                 AtualizarStatus($"✓ Pronto - {backups.Length} backup(s) encontrado(s)", Color.FromArgb(46, 204, 113));
@@ -160,61 +175,61 @@ namespace Cadastro1
             }
         }
 
-        //private void ConfigurarColunasDataGridView()
-        //{
-        //    try
-        //    {
-        //        // CORREÇÃO: Verificação adicional
-        //        if (dgvBackups == null || dgvBackups.Columns == null)
-        //            return;
+        private void ConfigurarColunasDataGridView()
+        {
+            try
+            {
+                // CORREÇÃO: Verificação adicional
+                if (dgvBackups == null || dgvBackups.Columns == null)
+                    return;
 
-        //        // Colunas a ocultar
-        //        string[] colunasOcultas = { "CaminhoCompleto", "TamanhoBytes" };
+                // Colunas a ocultar
+                string[] colunasOcultas = { "CaminhoCompleto", "TamanhoBytes" };
 
-        //        // Configurações de colunas visíveis
-        //        var configColunas = new Dictionary<string, (string header, int? width, string format, DataGridViewContentAlignment? align)>
-        //        {
-        //            { "NomeArquivo", ("ARQUIVO", null, null, null) },
-        //            { "DataCriacao", ("DATA/HORA", 180, "dd/MM/yyyy HH:mm:ss", DataGridViewContentAlignment.MiddleCenter) },
-        //            { "TamanhoFormatado", ("TAMANHO", 100, null, DataGridViewContentAlignment.MiddleCenter) },
-        //            { "Tipo", ("TIPO", 120, null, DataGridViewContentAlignment.MiddleCenter) }
-        //        };
+                // Configurações de colunas visíveis
+                var configColunas = new Dictionary<string, (string header, int? width, string format, DataGridViewContentAlignment? align)>
+                {
+                    { "NomeArquivo", ("ARQUIVO", null, null, null) },
+                    { "DataCriacao", ("DATA/HORA", 180, "dd/MM/yyyy HH:mm:ss", DataGridViewContentAlignment.MiddleCenter) },
+                    { "TamanhoFormatado", ("TAMANHO", 100, null, DataGridViewContentAlignment.MiddleCenter) },
+                    { "Tipo", ("TIPO", 120, null, DataGridViewContentAlignment.MiddleCenter) }
+                };
 
-        //        foreach (string coluna in colunasOcultas)
-        //        {
-        //            if (dgvBackups.Columns.Contains(coluna))
-        //                dgvBackups.Columns[coluna].Visible = false;
-        //        }
+                foreach (string coluna in colunasOcultas)
+                {
+                    if (dgvBackups.Columns.Contains(coluna))
+                        dgvBackups.Columns[coluna].Visible = false;
+                }
 
-        //        foreach (var config in configColunas)
-        //        {
-        //            if (dgvBackups.Columns.Contains(config.Key))
-        //            {
-        //                var col = dgvBackups.Columns[config.Key];
-        //                col.HeaderText = config.Value.header;
+                foreach (var config in configColunas)
+                {
+                    if (dgvBackups.Columns.Contains(config.Key))
+                    {
+                        var col = dgvBackups.Columns[config.Key];
+                        col.HeaderText = config.Value.header;
 
-        //                if (config.Value.width.HasValue)
-        //                    col.Width = config.Value.width.Value;
-        //                else
-        //                    col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                        if (config.Value.width.HasValue)
+                            col.Width = config.Value.width.Value;
+                        else
+                            col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
-        //                if (!string.IsNullOrEmpty(config.Value.format))
-        //                    col.DefaultCellStyle.Format = config.Value.format;
+                        if (!string.IsNullOrEmpty(config.Value.format))
+                            col.DefaultCellStyle.Format = config.Value.format;
 
-        //                if (config.Value.align.HasValue)
-        //                    col.DefaultCellStyle.Alignment = config.Value.align.Value;
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show(
-        //            $"Erro ao configurar colunas:\n\n{ex.Message}",
-        //            "Erro",
-        //            MessageBoxButtons.OK,
-        //            MessageBoxIcon.Warning);
-        //    }
-        //}
+                        if (config.Value.align.HasValue)
+                            col.DefaultCellStyle.Alignment = config.Value.align.Value;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao configurar colunas:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
 
         private void AtualizarStatus(string mensagem, Color cor)
         {
@@ -230,7 +245,7 @@ namespace Cadastro1
             DialogResult resultado = MessageBox.Show(
                 "📌 CRIAR BACKUP MANUAL?\n\n" +
                 "O backup será salvo na pasta configurada.\n\n" +
-                $"Local atual: {backupManager.ObterDiretorioBackup()}\n\n" +
+                $"Local atual: {backupManager.ObterDiretorioBackupAtual()}\n\n" +
                 "⚠ IMPORTANTE:\n" +
                 "• O SQL Server precisa ter permissão para criar arquivos\n" +
                 "• Se der erro, use o botão 'Configurar Pasta' para escolher outra pasta\n\n" +
@@ -488,7 +503,7 @@ namespace Cadastro1
         {
             try
             {
-                string diretorio = backupManager.ObterDiretorioBackup();
+                string diretorio = backupManager.ObterDiretorioBackupAtual();
 
                 if (System.IO.Directory.Exists(diretorio))
                 {
