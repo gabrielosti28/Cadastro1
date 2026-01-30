@@ -162,6 +162,9 @@
     <EmbeddedResource Include="FormCadastroCliente.resx">
       <DependentUpon>FormCadastroCliente.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormConfigurarDiretorios.resx">
+      <DependentUpon>FormConfigurarDiretorios.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormListaClientes.resx">
       <DependentUpon>FormListaClientes.cs</DependentUpon>
     </EmbeddedResource>

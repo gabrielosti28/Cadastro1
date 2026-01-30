@@ -417,5 +417,11 @@ namespace Cadastro1
                 return caminho;
             }
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            FormConfiguracaoPastas form = new FormConfiguracaoPastas();
+            form.ShowDialog();
+        }
     }
 }

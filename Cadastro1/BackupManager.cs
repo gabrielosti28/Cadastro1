@@ -1,21 +1,25 @@
-﻿using System;
+﻿// =============================================
+// GERENCIADOR DE BACKUPS - VERSÃO CORRIGIDA
+// Arquivo: BackupManager.cs
+// COM TRATAMENTO ROBUSTO DE PERMISSÕES SQL
+// =============================================
+using System;
 using System.Data.SqlClient;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Cadastro1
 {
     /// <summary>
     /// Gerencia backups automáticos e manuais do banco de dados
-    /// ATUALIZADO: Usa ConfiguracaoPastas para diretório configurável
+    /// VERSÃO CORRIGIDA com validação de permissões SQL Server
     /// </summary>
     public class BackupManager
     {
         private static BackupManager _instance;
         private System.Threading.Timer _backupTimer;
-        private readonly int _backupIntervalHours = 12;
+        private readonly int _backupIntervalHours = 24; // Alterado para 24h
         private readonly int _maxBackupsToKeep = 15;
 
         public static BackupManager Instance
@@ -30,8 +34,15 @@ namespace Cadastro1
 
         private BackupManager()
         {
-            // Garantir que a pasta existe
-            ConfiguracaoPastas.GarantirPastasExistem();
+            // Garantir que as pastas existem
+            try
+            {
+                ConfiguracaoPastas.GarantirPastasExistem();
+            }
+            catch (Exception ex)
+            {
+                LogBackup($"Aviso ao inicializar: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -39,17 +50,24 @@ namespace Cadastro1
         /// </summary>
         private string ObterDiretorioBackup()
         {
-            return ConfiguracaoPastas.PastaBackups;
+            try
+            {
+                return ConfiguracaoPastas.PastaBackups;
+            }
+            catch
+            {
+                // Fallback para pasta padrão
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    "SistemaCadastroClientes", "Backups");
+            }
         }
 
         public void IniciarBackupAutomatico()
         {
             try
             {
-                if (!ExisteBackupRecente())
-                {
-                    LogBackup("Sistema iniciado. Próximo backup em 24 horas.");
-                }
+                LogBackup("Sistema de backup automático iniciado (intervalo: 24 horas).");
 
                 TimeSpan intervalo = TimeSpan.FromHours(_backupIntervalHours);
 
@@ -59,8 +77,6 @@ namespace Cadastro1
                     dueTime: intervalo,
                     period: intervalo
                 );
-
-                LogBackup("Sistema de backup automático iniciado.");
             }
             catch (Exception ex)
             {
@@ -98,10 +114,48 @@ namespace Cadastro1
             {
                 string diretorioBackup = ObterDiretorioBackup();
 
+                // VALIDAÇÃO CRÍTICA: Verificar se o diretório é válido
+                if (string.IsNullOrWhiteSpace(diretorioBackup))
+                {
+                    throw new Exception(
+                        "⚠️ PASTA DE BACKUPS NÃO CONFIGURADA!\n\n" +
+                        "Por favor:\n" +
+                        "1. Clique no botão '⚙️ Configurar Pastas' no menu principal\n" +
+                        "2. Configure a pasta de backups\n" +
+                        "3. Teste as permissões SQL antes de continuar");
+                }
+
                 // Garantir que o diretório existe
                 if (!Directory.Exists(diretorioBackup))
                 {
-                    Directory.CreateDirectory(diretorioBackup);
+                    try
+                    {
+                        Directory.CreateDirectory(diretorioBackup);
+                    }
+                    catch (Exception exDir)
+                    {
+                        throw new Exception(
+                            $"❌ NÃO FOI POSSÍVEL CRIAR O DIRETÓRIO:\n\n{diretorioBackup}\n\n" +
+                            $"Erro: {exDir.Message}\n\n" +
+                            "Solução: Configure uma pasta diferente em 'Configurar Pastas'");
+                    }
+                }
+
+                // Testar permissão de escrita do Windows ANTES de tentar o backup SQL
+                try
+                {
+                    string arquivoTeste = Path.Combine(diretorioBackup, $"teste_{Guid.NewGuid()}.tmp");
+                    File.WriteAllText(arquivoTeste, "teste");
+                    File.Delete(arquivoTeste);
+                }
+                catch (Exception exPerm)
+                {
+                    throw new Exception(
+                        $"❌ SEM PERMISSÃO DE ESCRITA (Windows):\n\n{diretorioBackup}\n\n" +
+                        $"Erro: {exPerm.Message}\n\n" +
+                        "Soluções:\n" +
+                        "1. Use a pasta padrão (Documentos)\n" +
+                        "2. Escolha outra pasta em 'Configurar Pastas'");
                 }
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
@@ -141,23 +195,39 @@ namespace Cadastro1
                 LogBackup($"✓ Backup {tipo} concluído: {caminhoCompleto}");
                 return caminhoCompleto;
             }
-            catch (Exception ex)
+            catch (SqlException sqlEx)
             {
-                LogBackup($"ERRO: {ex.Message}");
+                LogBackup($"ERRO SQL: {sqlEx.Message}");
 
-                string mensagemErro = $"Falha ao criar backup:\n\n{ex.Message}\n\n";
+                string mensagemErro = "❌ ERRO AO CRIAR BACKUP NO SQL SERVER\n\n";
 
-                if (ex.Message.Contains("permission") || ex.Message.Contains("denied") ||
-                    ex.Message.Contains("acesso negado") || ex.Message.Contains("Operating system error 5"))
+                if (sqlEx.Message.Contains("Operating system error 5") ||
+                    sqlEx.Message.Contains("Access is denied") ||
+                    sqlEx.Message.Contains("acesso negado") ||
+                    sqlEx.Message.Contains("permission"))
                 {
-                    mensagemErro += "❌ ERRO DE PERMISSÃO!\n\n" +
-                                   "O SQL Server não tem permissão para criar arquivos nesta pasta.\n\n" +
-                                   "SOLUÇÕES:\n" +
-                                   "1️⃣ Clique em 'Configurar Pastas' no menu principal\n" +
-                                   $"2️⃣ Dê permissão para a conta do SQL Server na pasta:\n   {ObterDiretorioBackup()}";
+                    mensagemErro +=
+                        "O SQL Server não tem permissão para gravar nesta pasta.\n\n" +
+                        "🔧 SOLUÇÃO RÁPIDA:\n\n" +
+                        "1️⃣ Clique no botão '⚙️ Configurar Pastas'\n" +
+                        "2️⃣ Clique em 'Restaurar Padrão'\n" +
+                        "3️⃣ Clique em 'Testar Permissões SQL'\n" +
+                        "4️⃣ Se o teste funcionar, salve e tente novamente\n\n" +
+                        $"📁 Pasta atual: {ObterDiretorioBackup()}\n\n" +
+                        "💡 A pasta padrão (Documentos) geralmente funciona sempre!";
+                }
+                else
+                {
+                    mensagemErro += $"Erro técnico:\n{sqlEx.Message}\n\n" +
+                                   "Entre em contato com o suporte técnico.";
                 }
 
                 throw new Exception(mensagemErro);
+            }
+            catch (Exception ex)
+            {
+                LogBackup($"ERRO GERAL: {ex.Message}");
+                throw; // Re-lançar a exceção original se já foi tratada
             }
         }
 

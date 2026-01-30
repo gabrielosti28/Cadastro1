@@ -96,14 +96,14 @@ namespace Cadastro1
             OcultarColuna("CaminhoCompleto");
             OcultarColuna("TamanhoBytes");
 
-            // Configurar colunas visíveis - CORRIGIDO
-            ConfigurarColuna("NomeArquivo", "ARQUIVO", 0, null, null); // 0 = AutoSize
-            ConfigurarColuna("DataCriacao", "DATA/HORA", 180, "dd/MM/yyyy HH:mm:ss",
-                DataGridViewContentAlignment.MiddleCenter);
-            ConfigurarColuna("TamanhoFormatado", "TAMANHO", 100, null,
-                DataGridViewContentAlignment.MiddleCenter);
-            ConfigurarColuna("Tipo", "TIPO", 120, null,
-                DataGridViewContentAlignment.MiddleCenter);
+            //// Configurar colunas visíveis - CORRIGIDO
+            //ConfigurarColuna("NomeArquivo", "ARQUIVO", 0, null, null); // 0 = AutoSize
+            //ConfigurarColuna("DataCriacao", "DATA/HORA", 180, "dd/MM/yyyy HH:mm:ss",
+            //    DataGridViewContentAlignment.MiddleCenter);
+            //ConfigurarColuna("TamanhoFormatado", "TAMANHO", 100, null,
+            //    DataGridViewContentAlignment.MiddleCenter);
+            //ConfigurarColuna("Tipo", "TIPO", 120, null,
+            //    DataGridViewContentAlignment.MiddleCenter);
         }
 
         private void OcultarColuna(string nome)
@@ -112,31 +112,31 @@ namespace Cadastro1
                 dgvBackups.Columns[nome].Visible = false;
         }
 
-        private void ConfigurarColuna(string nome, string header, int width,
-            string format = null, DataGridViewContentAlignment? align = null)
-        {
-            if (!dgvBackups.Columns.Contains(nome)) return;
+        //private void ConfigurarColuna(string nome, string header, int width,
+        //    string format = null, DataGridViewContentAlignment? align = null)
+        //{
+        //    if (!dgvBackups.Columns.Contains(nome)) return;
 
-            var col = dgvBackups.Columns[nome];
-            col.HeaderText = header;
+        //    var col = dgvBackups.Columns[nome];
+        //    col.HeaderText = header;
 
-            // CORREÇÃO: Tratar width corretamente
-            if (width > 0)
-            {
-                col.Width = width;
-                col.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            }
-            else
-            {
-                col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            }
+        //    // CORREÇÃO: Tratar width corretamente
+        //    if (width > 0)
+        //    {
+        //        col.Width = width;
+        //        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+        //    }
+        //    else
+        //    {
+        //        col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        //    }
 
-            if (!string.IsNullOrEmpty(format))
-                col.DefaultCellStyle.Format = format;
+        //    if (!string.IsNullOrEmpty(format))
+        //        col.DefaultCellStyle.Format = format;
 
-            if (align.HasValue)
-                col.DefaultCellStyle.Alignment = align.Value;
-        }
+        //    if (align.HasValue)
+        //        col.DefaultCellStyle.Alignment = align.Value;
+        //}
 
         private void AtualizarStatus(string mensagem, Color cor)
         {
