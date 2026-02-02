@@ -6,7 +6,6 @@
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.ToolStripMenuItem menuItemConfigurarPastas;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -33,6 +32,7 @@
             this.panelAniversariantes = new System.Windows.Forms.Panel();
             this.lblTituloAniversariantes = new System.Windows.Forms.Label();
             this.panelBotoes = new System.Windows.Forms.Panel();
+            this.btnImportarLote = new System.Windows.Forms.Button();
             this.btnListar = new System.Windows.Forms.Button();
             this.btnBuscar = new System.Windows.Forms.Button();
             this.btnNovo = new System.Windows.Forms.Button();
@@ -43,8 +43,6 @@
             this.panelAniversariantes.SuspendLayout();
             this.panelBotoes.SuspendLayout();
             this.SuspendLayout();
-            this.menuItemConfigurarPastas = new System.Windows.Forms.ToolStripMenuItem();
-
             // 
             // panelContainer
             // 
@@ -62,12 +60,6 @@
             // 
             // panelAniversariantes
             // 
-            this.menuItemConfigurarPastas.Name = "menuItemConfigurarPastas";
-            this.menuItemConfigurarPastas.Size = new System.Drawing.Size(250, 22);
-            this.menuItemConfigurarPastas.Text = "⚙ Configurar Pastas do Sistema";
-            this.menuItemConfigurarPastas.Click += new System.EventHandler(this.menuItemConfigurarPastas_Click);
-
-
             this.panelAniversariantes.BackColor = System.Drawing.Color.White;
             this.panelAniversariantes.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelAniversariantes.Controls.Add(this.lblTituloAniversariantes);
@@ -91,17 +83,36 @@
             // 
             this.panelBotoes.BackColor = System.Drawing.Color.White;
             this.panelBotoes.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelBotoes.Controls.Add(this.btnImportarLote);
             this.panelBotoes.Controls.Add(this.btnListar);
             this.panelBotoes.Controls.Add(this.btnBuscar);
             this.panelBotoes.Controls.Add(this.btnNovo);
             this.panelBotoes.Location = new System.Drawing.Point(364, 140);
             this.panelBotoes.Name = "panelBotoes";
-            this.panelBotoes.Size = new System.Drawing.Size(495, 325);
+            this.panelBotoes.Size = new System.Drawing.Size(495, 403);
             this.panelBotoes.TabIndex = 1;
+            // 
+            // btnImportarLote
+            // 
+            this.btnImportarLote.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(155)))), ((int)(((byte)(89)))), ((int)(((byte)(182)))));
+            this.btnImportarLote.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnImportarLote.FlatAppearance.BorderSize = 0;
+            this.btnImportarLote.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnImportarLote.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnImportarLote.ForeColor = System.Drawing.Color.White;
+            this.btnImportarLote.Location = new System.Drawing.Point(25, 308);
+            this.btnImportarLote.Name = "btnImportarLote";
+            this.btnImportarLote.Size = new System.Drawing.Size(424, 80);
+            this.btnImportarLote.TabIndex = 10;
+            this.btnImportarLote.Text = "📥 IMPORTAR CLIENTES\r\n(PLANILHA)";
+            this.btnImportarLote.UseVisualStyleBackColor = false;
+            this.btnImportarLote.Click += new System.EventHandler(this.btnImportarLote_Click);
+            this.btnImportarLote.MouseEnter += new System.EventHandler(this.Botao_MouseEnter);
+            this.btnImportarLote.MouseLeave += new System.EventHandler(this.Botao_MouseLeave);
             // 
             // btnListar
             // 
-            this.btnListar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(155)))), ((int)(((byte)(89)))), ((int)(((byte)(182)))));
+            this.btnListar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(204)))), ((int)(((byte)(113)))));
             this.btnListar.FlatAppearance.BorderSize = 0;
             this.btnListar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnListar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
@@ -135,7 +146,7 @@
             // 
             // btnNovo
             // 
-            this.btnNovo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(204)))), ((int)(((byte)(113)))));
+            this.btnNovo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(126)))), ((int)(((byte)(34)))));
             this.btnNovo.FlatAppearance.BorderSize = 0;
             this.btnNovo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNovo.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
@@ -179,7 +190,7 @@
             this.btnSair.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSair.Font = new System.Drawing.Font("Segoe UI", 12F);
             this.btnSair.ForeColor = System.Drawing.Color.White;
-            this.btnSair.Location = new System.Drawing.Point(425, 484);
+            this.btnSair.Location = new System.Drawing.Point(425, 560);
             this.btnSair.Name = "btnSair";
             this.btnSair.Size = new System.Drawing.Size(319, 71);
             this.btnSair.TabIndex = 3;
@@ -189,6 +200,9 @@
             this.btnSair.MouseEnter += new System.EventHandler(this.Botao_MouseEnter);
             this.btnSair.MouseLeave += new System.EventHandler(this.Botao_MouseLeave);
             // 
+            // menuItemConfigurarPastas
+            // 
+            
             // FormMenuPrincipal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -220,5 +234,6 @@
         private System.Windows.Forms.Button btnSair;
         private System.Windows.Forms.Panel panelAniversariantes;
         private System.Windows.Forms.Label lblTituloAniversariantes;
+        private System.Windows.Forms.Button btnImportarLote;
     }
 }

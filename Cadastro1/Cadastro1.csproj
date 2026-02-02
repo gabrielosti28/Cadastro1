@@ -113,6 +113,12 @@
     <Compile Include="FormGerenciarBackup.Designer.cs">
       <DependentUpon>FormGerenciarBackup.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormImportarClientesLote.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormImportarClientesLote.Designer.cs">
+      <DependentUpon>FormImportarClientesLote.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormListaClientes.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -143,6 +149,13 @@
     <Compile Include="FormPrimeiroAcesso.Designer.cs">
       <DependentUpon>FormPrimeiroAcesso.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormRelatorioImportacao.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormRelatorioImportacao.Designer.cs">
+      <DependentUpon>FormRelatorioImportacao.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ImportadorClientesLote.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MailingPdfGenerator.cs" />
     <Compile Include="MailingTemplate.cs" />

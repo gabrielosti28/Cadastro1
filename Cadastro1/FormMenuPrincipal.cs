@@ -515,5 +515,32 @@ namespace Cadastro1
                     "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+        private void btnImportarLote_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FormImportarClientesLote formImportar = new FormImportarClientesLote();
+
+                if (formImportar.ShowDialog() == DialogResult.OK)
+                {
+                    MessageBox.Show(
+                        "✅ Importação concluída com sucesso!\n\n" +
+                        "Os clientes foram cadastrados no sistema.",
+                        "Sucesso",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao abrir importação:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+
     }
 }
