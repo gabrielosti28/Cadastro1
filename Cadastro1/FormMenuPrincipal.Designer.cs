@@ -65,14 +65,14 @@
             this.panelAniversariantes.Controls.Add(this.lblTituloAniversariantes);
             this.panelAniversariantes.Location = new System.Drawing.Point(12, 140);
             this.panelAniversariantes.Name = "panelAniversariantes";
-            this.panelAniversariantes.Size = new System.Drawing.Size(341, 403);
+            this.panelAniversariantes.Size = new System.Drawing.Size(489, 537);
             this.panelAniversariantes.TabIndex = 4;
             // 
             // lblTituloAniversariantes
             // 
             this.lblTituloAniversariantes.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.lblTituloAniversariantes.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblTituloAniversariantes.Location = new System.Drawing.Point(10, 10);
+            this.lblTituloAniversariantes.Location = new System.Drawing.Point(70, 0);
             this.lblTituloAniversariantes.Name = "lblTituloAniversariantes";
             this.lblTituloAniversariantes.Size = new System.Drawing.Size(330, 30);
             this.lblTituloAniversariantes.TabIndex = 0;
@@ -87,7 +87,7 @@
             this.panelBotoes.Controls.Add(this.btnListar);
             this.panelBotoes.Controls.Add(this.btnBuscar);
             this.panelBotoes.Controls.Add(this.btnNovo);
-            this.panelBotoes.Location = new System.Drawing.Point(364, 140);
+            this.panelBotoes.Location = new System.Drawing.Point(526, 140);
             this.panelBotoes.Name = "panelBotoes";
             this.panelBotoes.Size = new System.Drawing.Size(495, 403);
             this.panelBotoes.TabIndex = 1;
@@ -166,7 +166,7 @@
             this.lblSubtitulo.AutoSize = true;
             this.lblSubtitulo.Font = new System.Drawing.Font("Segoe UI", 14F);
             this.lblSubtitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
-            this.lblSubtitulo.Location = new System.Drawing.Point(280, 112);
+            this.lblSubtitulo.Location = new System.Drawing.Point(632, 112);
             this.lblSubtitulo.Name = "lblSubtitulo";
             this.lblSubtitulo.Size = new System.Drawing.Size(240, 25);
             this.lblSubtitulo.TabIndex = 2;
@@ -177,7 +177,7 @@
             this.lblTitulo.AutoSize = true;
             this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 24F, System.Drawing.FontStyle.Bold);
             this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblTitulo.Location = new System.Drawing.Point(100, 49);
+            this.lblTitulo.Location = new System.Drawing.Point(56, 79);
             this.lblTitulo.Name = "lblTitulo";
             this.lblTitulo.Size = new System.Drawing.Size(387, 45);
             this.lblTitulo.TabIndex = 2;
@@ -190,7 +190,7 @@
             this.btnSair.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSair.Font = new System.Drawing.Font("Segoe UI", 12F);
             this.btnSair.ForeColor = System.Drawing.Color.White;
-            this.btnSair.Location = new System.Drawing.Point(425, 560);
+            this.btnSair.Location = new System.Drawing.Point(624, 584);
             this.btnSair.Name = "btnSair";
             this.btnSair.Size = new System.Drawing.Size(319, 71);
             this.btnSair.TabIndex = 3;
@@ -200,9 +200,6 @@
             this.btnSair.MouseEnter += new System.EventHandler(this.Botao_MouseEnter);
             this.btnSair.MouseLeave += new System.EventHandler(this.Botao_MouseLeave);
             // 
-            // menuItemConfigurarPastas
-            // 
-            
             // FormMenuPrincipal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
