@@ -1,19 +1,101 @@
 ﻿// =============================================
 // GERADOR DE PDF PARA MALA DIRETA
 // Arquivo: MailingPdfGenerator.cs
-// ATUALIZADO: Usa ConfiguracaoPastas para salvar PDFs
+// ATUALIZADO: Divisão automática em múltiplos arquivos
 // =============================================
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 
 namespace Cadastro1
 {
+    /// <summary>
+    /// Resultado da geração de PDFs
+    /// </summary>
+    public class ResultadoGeracaoPDF
+    {
+        public int TotalClientes { get; set; }
+        public int TotalArquivos { get; set; }
+        public List<string> ArquivosGerados { get; set; }
+        public long TamanhoTotalBytes { get; set; }
+
+        public ResultadoGeracaoPDF()
+        {
+            ArquivosGerados = new List<string>();
+        }
+
+        public string TamanhoTotalFormatado
+        {
+            get
+            {
+                string[] tamanhos = { "B", "KB", "MB", "GB" };
+                double tam = TamanhoTotalBytes;
+                int ordem = 0;
+                while (tam >= 1024 && ordem < tamanhos.Length - 1)
+                {
+                    ordem++;
+                    tam = tam / 1024;
+                }
+                return string.Format("{0:0.##} {1}", tam, tamanhos[ordem]);
+            }
+        }
+
+        public string GerarRelatorio()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("╔═══════════════════════════════════════════════════════════╗");
+            sb.AppendLine("║           📄 MALA DIRETA GERADA COM SUCESSO!              ║");
+            sb.AppendLine("╚═══════════════════════════════════════════════════════════╝\n");
+
+            sb.AppendLine("📊 RESUMO DA GERAÇÃO:");
+            sb.AppendLine("─────────────────────────────────────────────────────────");
+            sb.AppendLine($"   Total de clientes:        {TotalClientes}");
+            sb.AppendLine($"   Arquivos PDF gerados:     {TotalArquivos}");
+            sb.AppendLine($"   Páginas por arquivo:      até 20 páginas");
+            sb.AppendLine($"   Tamanho total:            {TamanhoTotalFormatado}\n");
+
+            sb.AppendLine("📁 ARQUIVOS GERADOS:");
+            sb.AppendLine("─────────────────────────────────────────────────────────");
+
+            for (int i = 0; i < ArquivosGerados.Count; i++)
+            {
+                FileInfo info = new FileInfo(ArquivosGerados[i]);
+                string tamanho = FormatarTamanho(info.Length);
+
+                sb.AppendLine($"   {i + 1}. {info.Name}");
+                sb.AppendLine($"      Tamanho: {tamanho}");
+                sb.AppendLine($"      Caminho: {info.DirectoryName}\n");
+            }
+
+            sb.AppendLine("═══════════════════════════════════════════════════════════");
+            sb.AppendLine("💡 DICA: Os arquivos foram divididos para melhor performance!");
+            sb.AppendLine("═══════════════════════════════════════════════════════════");
+
+            return sb.ToString();
+        }
+
+        private string FormatarTamanho(long bytes)
+        {
+            string[] tamanhos = { "B", "KB", "MB", "GB" };
+            double tam = bytes;
+            int ordem = 0;
+            while (tam >= 1024 && ordem < tamanhos.Length - 1)
+            {
+                ordem++;
+                tam = tam / 1024;
+            }
+            return string.Format("{0:0.##} {1}", tam, tamanhos[ordem]);
+        }
+    }
+
     public class MailingPdfGenerator
     {
         private const float MM_TO_POINTS = 2.834645f; // Conversão mm para pontos PDF
+        private const int CLIENTES_POR_ARQUIVO = 20; // Máximo de páginas por PDF
 
         public MailingPdfGenerator()
         {
@@ -30,9 +112,10 @@ namespace Cadastro1
         }
 
         /// <summary>
-        /// Gera PDF com mala direta para múltiplos clientes
+        /// Gera PDFs com mala direta para múltiplos clientes
+        /// ATUALIZADO: Divide automaticamente em arquivos de até 20 páginas
         /// </summary>
-        public string GerarPDF(MailingTemplate template, List<Cliente> clientes, string caminhoSaida = null)
+        public ResultadoGeracaoPDF GerarPDF(MailingTemplate template, List<Cliente> clientes, string caminhoSaida = null)
         {
             try
             {
@@ -48,28 +131,71 @@ namespace Cadastro1
                     Directory.CreateDirectory(caminhoSaida);
                 }
 
-                // Criar documento A4
-                Document document = new Document(PageSize.A4, 0, 0, 0, 0);
-                string arquivoSaida = Path.Combine(caminhoSaida,
-                    $"MailaDireta_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
-
-                PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(arquivoSaida, FileMode.Create));
-                document.Open();
-
-                // Para cada cliente, criar uma página
-                foreach (Cliente cliente in clientes)
+                ResultadoGeracaoPDF resultado = new ResultadoGeracaoPDF
                 {
-                    AdicionarPaginaCliente(document, writer, template, cliente);
+                    TotalClientes = clientes.Count
+                };
 
-                    // Adicionar nova página se não for o último
-                    if (cliente != clientes[clientes.Count - 1])
+                // Calcular quantos arquivos serão necessários
+                int totalArquivos = (int)Math.Ceiling((double)clientes.Count / CLIENTES_POR_ARQUIVO);
+                resultado.TotalArquivos = totalArquivos;
+
+                // Timestamp base para nomenclatura
+                string timestampBase = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+                // Gerar cada arquivo
+                for (int arquivoNum = 0; arquivoNum < totalArquivos; arquivoNum++)
+                {
+                    // Calcular índices dos clientes para este arquivo
+                    int indiceInicio = arquivoNum * CLIENTES_POR_ARQUIVO;
+                    int indiceFim = Math.Min(indiceInicio + CLIENTES_POR_ARQUIVO, clientes.Count);
+                    int clientesNesteArquivo = indiceFim - indiceInicio;
+
+                    // Nome do arquivo
+                    string nomeArquivo;
+                    if (totalArquivos == 1)
                     {
-                        document.NewPage();
+                        // Se for apenas um arquivo, não adicionar numeração
+                        nomeArquivo = $"MailaDireta_{timestampBase}.pdf";
                     }
+                    else
+                    {
+                        // Múltiplos arquivos - adicionar numeração
+                        nomeArquivo = $"MailaDireta_{timestampBase}_Parte{arquivoNum + 1}de{totalArquivos}.pdf";
+                    }
+
+                    string caminhoArquivo = Path.Combine(caminhoSaida, nomeArquivo);
+
+                    // Criar o PDF
+                    Document document = new Document(PageSize.A4, 0, 0, 0, 0);
+                    PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(caminhoArquivo, FileMode.Create));
+                    document.Open();
+
+                    // Adicionar clientes deste lote
+                    for (int i = indiceInicio; i < indiceFim; i++)
+                    {
+                        AdicionarPaginaCliente(document, writer, template, clientes[i]);
+
+                        // Adicionar nova página se não for o último cliente do arquivo
+                        if (i < indiceFim - 1)
+                        {
+                            document.NewPage();
+                        }
+                    }
+
+                    // Fechar documento
+                    document.Close();
+                    writer.Close();
+
+                    // Adicionar ao resultado
+                    resultado.ArquivosGerados.Add(caminhoArquivo);
+
+                    // Calcular tamanho
+                    FileInfo info = new FileInfo(caminhoArquivo);
+                    resultado.TamanhoTotalBytes += info.Length;
                 }
 
-                document.Close();
-                return arquivoSaida;
+                return resultado;
             }
             catch (Exception ex)
             {

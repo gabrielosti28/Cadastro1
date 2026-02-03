@@ -303,8 +303,149 @@ namespace Cadastro1
                 idade--;
             return idade;
         }
+        // ========== NO ClienteDAL.cs ==========
 
+        public class ResultadoPaginado
+        {
+            public List<Cliente> Clientes { get; set; }
+            public int TotalRegistros { get; set; }
+            public int PaginaAtual { get; set; }
+            public int RegistrosPorPagina { get; set; }
+        }
 
+        public ResultadoPaginado ListarClientesPaginado(
+            int pagina,
+            int registrosPorPagina,
+            string cidadeFiltro = null,
+            bool mostrarTodas = false)
+        {
+            List<Cliente> clientes = new List<Cliente>();
+            int totalRegistros = 0;
+
+            try
+            {
+                using (SqlConnection conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+
+                    // CONTAR TOTAL DE REGISTROS
+                    string sqlCount = "SELECT COUNT(*) FROM Clientes WHERE Ativo = 1";
+                    if (!mostrarTodas && !string.IsNullOrEmpty(cidadeFiltro))
+                    {
+                        sqlCount += " AND Cidade = @Cidade";
+                    }
+
+                    using (SqlCommand cmdCount = new SqlCommand(sqlCount, conn))
+                    {
+                        if (!mostrarTodas && !string.IsNullOrEmpty(cidadeFiltro))
+                            cmdCount.Parameters.AddWithValue("@Cidade", cidadeFiltro);
+
+                        totalRegistros = (int)cmdCount.ExecuteScalar();
+                    }
+
+                    // BUSCAR COM PAGINAÇÃO (SQL SERVER 2012+)
+                    string sql = @"
+                SELECT * FROM Clientes 
+                WHERE Ativo = 1";
+
+                    if (!mostrarTodas && !string.IsNullOrEmpty(cidadeFiltro))
+                    {
+                        sql += " AND Cidade = @Cidade";
+                    }
+
+                    sql += @"
+                ORDER BY NomeCompleto
+                OFFSET @Offset ROWS
+                FETCH NEXT @PageSize ROWS ONLY";
+
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        if (!mostrarTodas && !string.IsNullOrEmpty(cidadeFiltro))
+                            cmd.Parameters.AddWithValue("@Cidade", cidadeFiltro);
+
+                        int offset = (pagina - 1) * registrosPorPagina;
+                        cmd.Parameters.AddWithValue("@Offset", offset);
+                        cmd.Parameters.AddWithValue("@PageSize", registrosPorPagina);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                clientes.Add(new Cliente
+                                {
+                                    ClienteID = Convert.ToInt32(reader["ClienteID"]),
+                                    NomeCompleto = reader["NomeCompleto"].ToString(),
+                                    CPF = reader["CPF"].ToString(),
+                                    DataNascimento = Convert.ToDateTime(reader["DataNascimento"]),
+                                    Endereco = reader["Endereco"].ToString(),
+                                    Cidade = reader["Cidade"].ToString(),
+                                    CEP = reader["CEP"].ToString(),
+                                    Telefone = reader["Telefone"] == DBNull.Value ? "" : reader["Telefone"].ToString(),
+                                    BeneficioINSS = reader["BeneficioINSS"].ToString(),
+                                    BeneficioINSS2 = reader["BeneficioINSS2"] == DBNull.Value ? "" : reader["BeneficioINSS2"].ToString(),
+                                    DataCadastro = Convert.ToDateTime(reader["DataCadastro"]),
+                                    Ativo = Convert.ToBoolean(reader["Ativo"])
+                                });
+                            }
+                        }
+                    }
+                }
+
+                return new ResultadoPaginado
+                {
+                    Clientes = clientes,
+                    TotalRegistros = totalRegistros,
+                    PaginaAtual = pagina,
+                    RegistrosPorPagina = registrosPorPagina
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro ao listar clientes paginados: " + ex.Message);
+            }
+        }
+        public List<Cliente> BuscarClientesPorFiltro(string filtro, int limite = 500)
+        {
+            List<Cliente> clientes = new List<Cliente>();
+
+            try
+            {
+                using (SqlConnection conn = DatabaseConnection.GetConnection())
+                {
+                    conn.Open();
+
+                    string sql = @"
+                SELECT TOP (@Limite) * FROM Clientes 
+                WHERE Ativo = 1 
+                AND (
+                    NomeCompleto LIKE @Filtro 
+                    OR CPF LIKE @Filtro 
+                    OR Cidade LIKE @Filtro
+                )
+                ORDER BY NomeCompleto";
+
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Limite", limite);
+                        cmd.Parameters.AddWithValue("@Filtro", $"%{filtro}%");
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                // ... (código de criação do objeto Cliente)
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar: {ex.Message}");
+            }
+
+            return clientes;
+        }
 
     }
 }

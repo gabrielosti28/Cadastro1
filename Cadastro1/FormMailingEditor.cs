@@ -1,7 +1,7 @@
 ﻿// =============================================
 // FORMULARIO - EDITOR DE MALA DIRETA
 // Arquivo: FormMailingEditor.cs
-// VERSÃO CORRIGIDA E SIMPLIFICADA
+// ATUALIZADO: Suporte a múltiplos PDFs
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -9,6 +9,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace Cadastro1
 {
@@ -54,22 +55,39 @@ namespace Cadastro1
             }
         }
 
+        // ========== NO FormMailingEditor.cs ==========
+
+        // SUBSTITUIR O MÉTODO CarregarClientes()
         private void CarregarClientes()
         {
             try
             {
-                todosClientes = clienteDAL.ListarTodosClientes();
-                clientesFiltrados = new List<Cliente>(todosClientes);
-                AtualizarListaClientes();
+                // NÃO carregar todos os clientes
+                // Mostrar apenas mensagem inicial
+                lblInstrucoes.Text = "Use o campo de busca acima para localizar clientes por Nome, CPF ou Cidade";
+                chkClientes.Items.Clear();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Erro ao carregar clientes:\n\n{ex.Message}",
-                    "Erro",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                MessageBox.Show($"Erro: {ex.Message}");
             }
+        }
+
+        // ADICIONAR BUSCA COM FILTRO
+        private void txtBuscaCPF_TextChanged(object sender, EventArgs e)
+        {
+            string filtro = txtBuscaCPF.Text.Trim();
+
+            if (filtro.Length < 3)
+            {
+                chkClientes.Items.Clear();
+                lblInstrucoes.Text = "Digite pelo menos 3 caracteres para buscar";
+                return;
+            }
+
+            // BUSCAR APENAS OS FILTRADOS (máximo 500 resultados)
+            clientesFiltrados = clienteDAL.BuscarClientesPorFiltro(filtro, 500);
+            AtualizarListaClientes();
         }
 
         private void AtualizarListaClientes()
@@ -384,38 +402,52 @@ namespace Cadastro1
                 }
 
                 // Escolher onde salvar
-                using (SaveFileDialog sfd = new SaveFileDialog())
+                using (FolderBrowserDialog fbd = new FolderBrowserDialog())
                 {
-                    sfd.Filter = "PDF|*.pdf";
-                    sfd.FileName = $"MailaDireta_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-                    sfd.Title = "Salvar Mala Direta";
+                    fbd.Description = "Selecione onde salvar os PDFs da mala direta";
+                    fbd.ShowNewFolderButton = true;
 
-                    if (sfd.ShowDialog() == DialogResult.OK)
+                    if (fbd.ShowDialog() == DialogResult.OK)
                     {
-                        // Gerar PDF
-                        MailingPdfGenerator gerador = new MailingPdfGenerator();
-                        string diretorio = Path.GetDirectoryName(sfd.FileName);
-                        string arquivo = gerador.GerarPDF(templateAtual, clientesSelecionados, diretorio);
+                        // Mostrar progresso
+                        btnGerar.Enabled = false;
+                        btnGerar.Text = "⏳ GERANDO PDFs...";
+                        Application.DoEvents();
 
-                        // Perguntar se quer abrir
-                        DialogResult resultado = MessageBox.Show(
-                            $"✓ PDF gerado com sucesso!\n\n" +
-                            $"Total de páginas: {clientesSelecionados.Count}\n" +
-                            $"Arquivo: {Path.GetFileName(arquivo)}\n\n" +
-                            "Deseja abrir o arquivo?",
-                            "Sucesso",
-                            MessageBoxButtons.YesNo,
+                        // Gerar PDFs
+                        MailingPdfGenerator gerador = new MailingPdfGenerator();
+                        ResultadoGeracaoPDF resultado = gerador.GerarPDF(templateAtual, clientesSelecionados, fbd.SelectedPath);
+
+                        // Restaurar botão
+                        btnGerar.Enabled = true;
+                        btnGerar.Text = "GERAR PDF";
+
+                        // Mostrar relatório detalhado
+                        MessageBox.Show(
+                            resultado.GerarRelatorio(),
+                            "Geração Concluída",
+                            MessageBoxButtons.OK,
                             MessageBoxIcon.Information);
 
-                        if (resultado == DialogResult.Yes)
+                        // Perguntar se quer abrir a pasta
+                        DialogResult abrirPasta = MessageBox.Show(
+                            "Deseja abrir a pasta com os arquivos gerados?",
+                            "Abrir Pasta",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question);
+
+                        if (abrirPasta == DialogResult.Yes)
                         {
-                            System.Diagnostics.Process.Start(arquivo);
+                            Process.Start("explorer.exe", fbd.SelectedPath);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
+                btnGerar.Enabled = true;
+                btnGerar.Text = "GERAR PDF";
+
                 MessageBox.Show(
                     $"Erro ao gerar PDF:\n\n{ex.Message}",
                     "Erro",
