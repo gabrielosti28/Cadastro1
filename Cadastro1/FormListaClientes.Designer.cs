@@ -123,11 +123,11 @@
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Italic);
             this.label1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
-            this.label1.Location = new System.Drawing.Point(380, 50);
+            this.label1.Location = new System.Drawing.Point(330, 50);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(480, 21);
+            this.label1.Size = new System.Drawing.Size(690, 21);
             this.label1.TabIndex = 2;
-            this.label1.Text = "🔍 Clique duas vezes em qualquer linha para ver mais informações";
+            this.label1.Text = "💡 Dica: Clique DUAS VEZES em qualquer cliente para ver informações completas e documentos";
             // 
             // dgvClientes
             // 
@@ -169,6 +169,7 @@
             this.dgvClientes.Size = new System.Drawing.Size(1330, 667);
             this.dgvClientes.TabIndex = 0;
             this.dgvClientes.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DgvClientes_CellClick);
+            this.dgvClientes.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DgvClientes_CellDoubleClick);
             // 
             // lblTitulo
             // 

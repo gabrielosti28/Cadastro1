@@ -1,6 +1,6 @@
 ﻿// =============================================
-// FORMULÁRIO - GERENCIAMENTO DE ANEXOS
-// Arquivo: FormAnexosCliente.cs
+// FORMULÁRIO - INFORMAÇÕES E ANEXOS DO CLIENTE
+// Arquivo: FormAnexosCliente.cs (NOVA VERSÃO COM ABAS)
 // Sistema Profissional de Cadastro
 // =============================================
 using System;
@@ -13,20 +13,74 @@ namespace Cadastro1
     {
         private Cliente cliente;
         private ClienteAnexoDAL anexoDAL;
+        private ClienteDAL clienteDAL;
 
         public FormAnexosCliente(Cliente clienteSelecionado)
         {
             InitializeComponent();
             this.cliente = clienteSelecionado;
             this.anexoDAL = new ClienteAnexoDAL();
+            this.clienteDAL = new ClienteDAL();
         }
 
         private void FormAnexosCliente_Load(object sender, EventArgs e)
         {
-            lblNomeCliente.Text = $"Cliente: {cliente.NomeCompleto} | CPF: {cliente.CPF}";
+            // Atualizar título da janela
+            this.Text = $"Cliente: {cliente.NomeCompleto}";
+
+            // Carregar informações do cliente
+            CarregarInformacoesCliente();
+
+            // Carregar anexos
             CarregarAnexos();
+
+            // Selecionar primeira aba
+            tabControl.SelectedIndex = 0;
         }
 
+        // =============================================
+        // ABA 1: INFORMAÇÕES DO CLIENTE
+        // =============================================
+        private void CarregarInformacoesCliente()
+        {
+            try
+            {
+                // Calcular idade
+                int idade = ClienteDAL.CalcularIdade(cliente.DataNascimento);
+
+                // Preencher labels com informações
+                lblNomeValor.Text = cliente.NomeCompleto;
+                lblCPFValor.Text = FormatarCPF(cliente.CPF);
+                lblDataNascValor.Text = $"{cliente.DataNascimento:dd/MM/yyyy} ({idade} anos)";
+                lblEnderecoValor.Text = cliente.Endereco;
+                lblCidadeValor.Text = cliente.Cidade;
+                lblCEPValor.Text = FormatarCEP(cliente.CEP);
+                lblTelefoneValor.Text = string.IsNullOrEmpty(cliente.Telefone) ? "Não informado" : cliente.Telefone;
+                lblINSSValor.Text = cliente.BeneficioINSS;
+                lblINSS2Valor.Text = string.IsNullOrEmpty(cliente.BeneficioINSS2) ? "Não possui" : cliente.BeneficioINSS2;
+                lblDataCadastroValor.Text = cliente.DataCadastro.ToString("dd/MM/yyyy HH:mm");
+                lblCodigoValor.Text = cliente.ClienteID.ToString("D5");
+
+                // Contar anexos
+                int totalAnexos = anexoDAL.ContarAnexosCliente(cliente.ClienteID);
+                lblTotalAnexosValor.Text = totalAnexos.ToString();
+
+                // Atualizar título da aba
+                tabPageInfo.Text = $"ℹ️ Informações ({cliente.NomeCompleto})";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Erro ao carregar informações:\n\n" + ex.Message,
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        // =============================================
+        // ABA 2: DOCUMENTOS E ANEXOS
+        // =============================================
         private void CarregarAnexos()
         {
             try
@@ -42,25 +96,18 @@ namespace Cadastro1
                     // Ocultar colunas desnecessárias
                     if (dgvAnexos.Columns.Contains("AnexoID"))
                         dgvAnexos.Columns["AnexoID"].Visible = false;
-
                     if (dgvAnexos.Columns.Contains("ClienteID"))
                         dgvAnexos.Columns["ClienteID"].Visible = false;
-
                     if (dgvAnexos.Columns.Contains("NomeArquivo"))
                         dgvAnexos.Columns["NomeArquivo"].Visible = false;
-
                     if (dgvAnexos.Columns.Contains("CaminhoArquivo"))
                         dgvAnexos.Columns["CaminhoArquivo"].Visible = false;
-
                     if (dgvAnexos.Columns.Contains("TamanhoBytes"))
                         dgvAnexos.Columns["TamanhoBytes"].Visible = false;
-
                     if (dgvAnexos.Columns.Contains("Ativo"))
                         dgvAnexos.Columns["Ativo"].Visible = false;
-
                     if (dgvAnexos.Columns.Contains("UploadPor"))
                         dgvAnexos.Columns["UploadPor"].Visible = false;
-
                     if (dgvAnexos.Columns.Contains("EhImagem"))
                         dgvAnexos.Columns["EhImagem"].Visible = false;
 
@@ -112,8 +159,8 @@ namespace Cadastro1
                     }
                 }
 
-                // Atualizar título com contagem
-                this.Text = $"Documentos do Cliente ({anexos.Count} arquivo{(anexos.Count != 1 ? "s" : "")})";
+                // Atualizar título da aba com contagem
+                tabPageAnexos.Text = $"📎 Documentos ({anexos.Count})";
 
                 // Habilitar/desabilitar botões
                 bool temAnexos = anexos.Count > 0;
@@ -126,11 +173,13 @@ namespace Cadastro1
                     "Erro ao carregar anexos:\n\n" + ex.Message,
                     "Erro",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                    MessageBoxIcon.Error);
             }
         }
 
+        // =============================================
+        // BOTÕES DE AÇÃO - ANEXOS
+        // =============================================
         private void btnAdicionarAnexo_Click(object sender, EventArgs e)
         {
             try
@@ -167,7 +216,7 @@ namespace Cadastro1
                             ClienteID = cliente.ClienteID,
                             NomeOriginal = System.IO.Path.GetFileName(openFileDialog.FileName),
                             Descricao = descricao,
-                            UploadPor = Environment.UserName // Nome do usuário do Windows
+                            UploadPor = Usuario.UsuarioLogado?.Nome ?? Environment.UserName
                         };
 
                         // Inserir anexo
@@ -180,10 +229,10 @@ namespace Cadastro1
                                 $"Arquivo: {anexo.NomeOriginal}",
                                 "Sucesso",
                                 MessageBoxButtons.OK,
-                                MessageBoxIcon.Information
-                            );
+                                MessageBoxIcon.Information);
 
                             CarregarAnexos();
+                            CarregarInformacoesCliente(); // Atualizar contagem
                         }
                     }
                 }
@@ -194,8 +243,7 @@ namespace Cadastro1
                     "Erro ao adicionar anexo:\n\n" + ex.Message,
                     "Erro",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -214,8 +262,7 @@ namespace Cadastro1
                         "⚠ Selecione um arquivo para excluir!",
                         "Aviso",
                         MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
+                        MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -229,8 +276,7 @@ namespace Cadastro1
                     "Esta ação NÃO pode ser desfeita!",
                     "Confirmar Exclusão",
                     MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning
-                );
+                    MessageBoxIcon.Warning);
 
                 if (resultado == DialogResult.Yes)
                 {
@@ -240,10 +286,10 @@ namespace Cadastro1
                             "✔ Arquivo excluído com sucesso!",
                             "Sucesso",
                             MessageBoxButtons.OK,
-                            MessageBoxIcon.Information
-                        );
+                            MessageBoxIcon.Information);
 
                         CarregarAnexos();
+                        CarregarInformacoesCliente(); // Atualizar contagem
                     }
                 }
             }
@@ -253,14 +299,8 @@ namespace Cadastro1
                     "Erro ao excluir anexo:\n\n" + ex.Message,
                     "Erro",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                    MessageBoxIcon.Error);
             }
-        }
-
-        private void btnFechar_Click(object sender, EventArgs e)
-        {
-            this.Close();
         }
 
         private void dgvAnexos_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -281,8 +321,7 @@ namespace Cadastro1
                         "⚠ Selecione um arquivo para abrir!",
                         "Aviso",
                         MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
+                        MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -295,9 +334,81 @@ namespace Cadastro1
                     "Erro ao abrir arquivo:\n\n" + ex.Message,
                     "Erro",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                    MessageBoxIcon.Error);
             }
+        }
+
+        // =============================================
+        // BOTÕES DE AÇÃO - EDITAR CLIENTE
+        // =============================================
+        private void btnEditarCliente_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (FormEditarCliente formEditar = new FormEditarCliente(cliente))
+                {
+                    if (formEditar.ShowDialog() == DialogResult.OK)
+                    {
+                        // Recarregar dados do cliente
+                        Cliente clienteAtualizado = clienteDAL.ConsultarPorCPF(cliente.CPF);
+                        if (clienteAtualizado != null)
+                        {
+                            this.cliente = clienteAtualizado;
+                            CarregarInformacoesCliente();
+
+                            MessageBox.Show(
+                                "✓ Dados do cliente atualizados com sucesso!",
+                                "Sucesso",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Erro ao editar cliente:\n\n" + ex.Message,
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnFechar_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        // =============================================
+        // MÉTODOS AUXILIARES
+        // =============================================
+        private string FormatarCPF(string cpf)
+        {
+            if (string.IsNullOrEmpty(cpf)) return "";
+
+            cpf = cpf.Replace("-", "").Replace(".", "").Trim();
+
+            if (cpf.Length == 11)
+            {
+                return $"{cpf.Substring(0, 3)}.{cpf.Substring(3, 3)}.{cpf.Substring(6, 3)}-{cpf.Substring(9, 2)}";
+            }
+
+            return cpf;
+        }
+
+        private string FormatarCEP(string cep)
+        {
+            if (string.IsNullOrEmpty(cep)) return "";
+
+            cep = cep.Replace("-", "").Trim();
+
+            if (cep.Length == 8)
+            {
+                return $"{cep.Substring(0, 5)}-{cep.Substring(5, 3)}";
+            }
+
+            return cep;
         }
     }
 

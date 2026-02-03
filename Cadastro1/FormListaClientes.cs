@@ -1,7 +1,7 @@
 ﻿// =============================================
 // FORMULÁRIO - LISTA DE CLIENTES - ATUALIZADO
 // Arquivo: FormListaClientes.cs
-// NOVO: Filtro por cidade antes de exibir
+// NOVO: Duplo clique abre FormAnexosCliente
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -14,12 +14,12 @@ namespace Cadastro1
     public partial class FormListaClientes : Form
     {
         private ClienteDAL clienteDAL;
-        private string cidadeFiltro; // Cidade selecionada para filtro
-        private bool mostrarTodas; // Se deve mostrar todas as cidades
+        private string cidadeFiltro;
+        private bool mostrarTodas;
         private int paginaAtual = 1;
         private const int REGISTROS_POR_PAGINA = 100;
         private int totalPaginas = 0;
-        private int totalRegistros = 0; // Adicionada a variável que estava faltando
+        private int totalRegistros = 0;
 
         public FormListaClientes()
         {
@@ -35,12 +35,8 @@ namespace Cadastro1
 
         private void FormListaClientes_Load(object sender, EventArgs e)
         {
-            // =============================================
-            // NOVO: PRIMEIRO SELECIONAR A CIDADE
-            // =============================================
             try
             {
-                // Buscar todas as cidades cadastradas
                 var todosClientes = clienteDAL.ListarTodosClientes();
 
                 if (todosClientes.Count == 0)
@@ -54,7 +50,6 @@ namespace Cadastro1
                     return;
                 }
 
-                // Obter lista única de cidades
                 var cidades = todosClientes
                     .Select(c => c.Cidade)
                     .Where(c => !string.IsNullOrWhiteSpace(c))
@@ -72,7 +67,6 @@ namespace Cadastro1
                     return;
                 }
 
-                // Mostrar formulário de seleção de cidade
                 using (FormSelecionarCidade formCidade = new FormSelecionarCidade(cidades))
                 {
                     if (formCidade.ShowDialog() == DialogResult.OK)
@@ -80,7 +74,6 @@ namespace Cadastro1
                         cidadeFiltro = formCidade.CidadeSelecionada;
                         mostrarTodas = formCidade.VerTodasCidades;
 
-                        // Atualizar título
                         if (mostrarTodas)
                         {
                             lblTitulo.Text = "📋 TODOS OS CLIENTES";
@@ -90,12 +83,10 @@ namespace Cadastro1
                             lblTitulo.Text = $"📋 CLIENTES DE {cidadeFiltro.ToUpper()}";
                         }
 
-                        // Carregar clientes com o filtro selecionado
                         CarregarClientes();
                     }
                     else
                     {
-                        // Usuário cancelou a seleção
                         this.Close();
                     }
                 }
@@ -115,7 +106,6 @@ namespace Cadastro1
         {
             try
             {
-                // USAR NOVO MÉTODO COM PAGINAÇÃO
                 var resultado = clienteDAL.ListarClientesPaginado(
                     paginaAtual,
                     REGISTROS_POR_PAGINA,
@@ -126,13 +116,10 @@ namespace Cadastro1
                 dgvClientes.DataSource = null;
                 dgvClientes.DataSource = resultado.Clientes;
 
-                totalRegistros = resultado.TotalRegistros; // Corrigido
+                totalRegistros = resultado.TotalRegistros;
                 totalPaginas = (int)Math.Ceiling((double)resultado.TotalRegistros / REGISTROS_POR_PAGINA);
 
-                // Configurar colunas
                 ConfigurarColunasDataGridView();
-
-                // ADICIONAR CONTROLES DE PAGINAÇÃO
                 AtualizarControlePaginacao();
             }
             catch (Exception ex)
@@ -145,13 +132,11 @@ namespace Cadastro1
         {
             if (dgvClientes.Columns.Count > 0)
             {
-                // Esconder colunas desnecessárias
                 dgvClientes.Columns["ClienteID"].Visible = false;
                 dgvClientes.Columns["DataCadastro"].Visible = false;
                 dgvClientes.Columns["BeneficioINSS2"].Visible = false;
                 dgvClientes.Columns["Endereco"].Visible = false;
 
-                // Renomear colunas
                 dgvClientes.Columns["NomeCompleto"].HeaderText = "NOME COMPLETO";
                 dgvClientes.Columns["CPF"].HeaderText = "CPF";
                 dgvClientes.Columns["DataNascimento"].HeaderText = "NASCIMENTO";
@@ -160,7 +145,6 @@ namespace Cadastro1
                 dgvClientes.Columns["Telefone"].HeaderText = "TELEFONE";
                 dgvClientes.Columns["BeneficioINSS"].HeaderText = "INSS";
 
-                // Formatar data
                 dgvClientes.Columns["DataNascimento"].DefaultCellStyle.Format = "dd/MM/yyyy";
             }
         }
@@ -212,8 +196,12 @@ namespace Cadastro1
             }
         }
 
+        // =============================================
+        // ATUALIZAÇÃO: DUPLO CLIQUE ABRE ANEXOS
+        // =============================================
         private void DgvClientes_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            // Mantém compatibilidade com cliques simples em colunas de botão
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 Cliente cliente = (Cliente)dgvClientes.Rows[e.RowIndex].DataBoundItem;
@@ -221,19 +209,7 @@ namespace Cadastro1
 
                 if (nomeColuna == "btnDocumentos")
                 {
-                    try
-                    {
-                        FormAnexosCliente formAnexos = new FormAnexosCliente(cliente);
-                        formAnexos.ShowDialog();
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(
-                            "Erro ao abrir documentos:\n\n" + ex.Message,
-                            "Erro",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Error);
-                    }
+                    AbrirFormAnexosCliente(cliente);
                 }
                 else if (nomeColuna == "btnEditar")
                 {
@@ -260,81 +236,53 @@ namespace Cadastro1
                             MessageBoxIcon.Error);
                     }
                 }
-                else
+            }
+        }
+
+        // NOVO: Evento de duplo clique - substitui a antiga exibição de mensagem
+        private void DgvClientes_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                try
                 {
-                    MostrarDetalhesRapidos(cliente);
+                    Cliente cliente = (Cliente)dgvClientes.Rows[e.RowIndex].DataBoundItem;
+                    AbrirFormAnexosCliente(cliente);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Erro ao abrir detalhes do cliente:\n\n{ex.Message}",
+                        "Erro",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 }
             }
         }
 
-        private void MostrarDetalhesRapidos(Cliente cliente)
+        /// <summary>
+        /// Abre o formulário de anexos/informações do cliente
+        /// </summary>
+        private void AbrirFormAnexosCliente(Cliente cliente)
         {
             try
             {
-                int idade = ClienteDAL.CalcularIdade(cliente.DataNascimento);
+                using (FormAnexosCliente formAnexos = new FormAnexosCliente(cliente))
+                {
+                    formAnexos.ShowDialog();
 
-                string detalhes = $"📋 INFORMAÇÕES DO CLIENTE\n\n";
-                detalhes += $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
-                detalhes += $"👤 Nome: {cliente.NomeCompleto}\n\n";
-                detalhes += $"🆔 CPF: {FormatarCPF(cliente.CPF)}\n\n";
-                detalhes += $"🎂 Nascimento: {cliente.DataNascimento:dd/MM/yyyy} ({idade} anos)\n\n";
-                detalhes += $"🏠 Endereço: {cliente.Endereco}\n\n";
-                detalhes += $"🏙️ Cidade: {cliente.Cidade}\n\n";
-                detalhes += $"📮 CEP: {FormatarCEP(cliente.CEP)}\n\n";
-
-                if (!string.IsNullOrEmpty(cliente.Telefone))
-                    detalhes += $"📞 Telefone: {cliente.Telefone}\n\n";
-
-                detalhes += $"💼 INSS: {cliente.BeneficioINSS}\n\n";
-
-                if (!string.IsNullOrEmpty(cliente.BeneficioINSS2))
-                    detalhes += $"💼 2º INSS: {cliente.BeneficioINSS2}\n\n";
-
-                detalhes += $"📅 Cadastrado em: {cliente.DataCadastro:dd/MM/yyyy HH:mm}\n\n";
-                detalhes += $"🔢 Código: {cliente.ClienteID:D5}";
-
-                MessageBox.Show(
-                    detalhes,
-                    "Detalhes do Cliente",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    // Recarregar lista caso tenha havido alterações
+                    CarregarClientes();
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Erro ao exibir detalhes:\n\n{ex.Message}",
+                    "Erro ao abrir informações do cliente:\n\n" + ex.Message,
                     "Erro",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
-        }
-
-        private string FormatarCPF(string cpf)
-        {
-            if (string.IsNullOrEmpty(cpf)) return "";
-
-            cpf = cpf.Replace("-", "").Replace(".", "").Trim();
-
-            if (cpf.Length == 11)
-            {
-                return $"{cpf.Substring(0, 3)}.{cpf.Substring(3, 3)}.{cpf.Substring(6, 3)}-{cpf.Substring(9, 2)}";
-            }
-
-            return cpf;
-        }
-
-        private string FormatarCEP(string cep)
-        {
-            if (string.IsNullOrEmpty(cep)) return "";
-
-            cep = cep.Replace("-", "").Trim();
-
-            if (cep.Length == 8)
-            {
-                return $"{cep.Substring(0, 5)}-{cep.Substring(5, 3)}";
-            }
-
-            return cep;
         }
 
         private void btnFechar_Click(object sender, EventArgs e)
