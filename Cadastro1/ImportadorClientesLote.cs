@@ -1,7 +1,10 @@
 ﻿// =============================================
-// IMPORTADOR DE CLIENTES EM LOTE
+// IMPORTADOR DE CLIENTES EM LOTE - VERSÃO FINAL
 // Arquivo: ImportadorClientesLote.cs
-// Cadastro automático via planilhas
+// ATUALIZAÇÕES:
+// - Aceita CPFs, CEPs, INSS com qualquer quantidade de dígitos
+// - Preenche automaticamente campos vazios com placeholders
+// - Apenas NOME e CPF são obrigatórios
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -12,9 +15,6 @@ using System.Text;
 
 namespace Cadastro1
 {
-    /// <summary>
-    /// Resultado do cadastro de um único cliente
-    /// </summary>
     public class ResultadoCadastroCliente
     {
         public bool Sucesso { get; set; }
@@ -24,23 +24,23 @@ namespace Cadastro1
         public List<string> CamposFaltantes { get; set; }
         public Dictionary<string, string> DadosExcedentes { get; set; }
         public int? ClienteID { get; set; }
+        public List<string> CamposPreenchidosAutomaticamente { get; set; }
 
         public ResultadoCadastroCliente()
         {
             CamposFaltantes = new List<string>();
             DadosExcedentes = new Dictionary<string, string>();
+            CamposPreenchidosAutomaticamente = new List<string>();
         }
     }
 
-    /// <summary>
-    /// Resultado completo da importação em lote
-    /// </summary>
     public class ResultadoImportacaoLote
     {
         public int TotalLinhas { get; set; }
         public int Sucessos { get; set; }
         public int Falhas { get; set; }
         public int CPFsDuplicados { get; set; }
+        public int CamposPreenchidosAuto { get; set; }
         public List<ResultadoCadastroCliente> Resultados { get; set; }
 
         public ResultadoImportacaoLote()
@@ -61,10 +61,25 @@ namespace Cadastro1
             sb.AppendLine($"   Total de linhas processadas:    {TotalLinhas}");
             sb.AppendLine($"   ✅ Cadastros bem-sucedidos:      {Sucessos}");
             sb.AppendLine($"   ❌ Falhas no cadastro:           {Falhas}");
-            sb.AppendLine($"   🔄 CPFs já existentes (pulados): {CPFsDuplicados}\n");
+            sb.AppendLine($"   🔄 CPFs já existentes (pulados): {CPFsDuplicados}");
+            sb.AppendLine($"   ⚠️  Campos preenchidos auto:     {CamposPreenchidosAuto}\n");
 
             double taxaSucesso = TotalLinhas > 0 ? (double)Sucessos / TotalLinhas * 100 : 0;
             sb.AppendLine($"📊 Taxa de sucesso: {taxaSucesso:F1}%\n");
+
+            if (CamposPreenchidosAuto > 0)
+            {
+                sb.AppendLine("⚠️  ATENÇÃO: DADOS PREENCHIDOS AUTOMATICAMENTE");
+                sb.AppendLine("─────────────────────────────────────────────────────────────────────");
+                sb.AppendLine("   Alguns clientes foram cadastrados com dados placeholder:");
+                sb.AppendLine("   • CEP: 99999-999 (quando não informado)");
+                sb.AppendLine("   • Endereço: 'ENDEREÇO NÃO INFORMADO - ATUALIZAR'");
+                sb.AppendLine("   • Cidade: 'CIDADE NÃO INFORMADA - ATUALIZAR'");
+                sb.AppendLine("   • INSS: 9999999999 (quando não informado)");
+                sb.AppendLine("   • Data Nascimento: 01/01/1900 (quando não informada)");
+                sb.AppendLine();
+                sb.AppendLine("   🔧 IMPORTANTE: Atualize estes dados posteriormente!\n");
+            }
 
             // SUCESSOS
             var sucessos = Resultados.Where(r => r.Sucesso).ToList();
@@ -78,6 +93,11 @@ namespace Cadastro1
                 {
                     var r = sucessos[i];
                     sb.AppendLine($"   {i + 1,3}. {r.Nome.PadRight(40)} | CPF: {FormatarCPF(r.CPF)}");
+
+                    if (r.CamposPreenchidosAutomaticamente.Count > 0)
+                    {
+                        sb.AppendLine($"        ⚠️  Campos auto: {string.Join(", ", r.CamposPreenchidosAutomaticamente)}");
+                    }
 
                     if (r.DadosExcedentes.Count > 0)
                     {
@@ -150,15 +170,11 @@ namespace Cadastro1
         }
     }
 
-    /// <summary>
-    /// Importador de clientes em lote a partir de planilhas
-    /// </summary>
     public class ImportadorClientesLote
     {
         private ClienteDAL clienteDAL;
         private ClienteAnexoDAL anexoDAL;
 
-        // Mapeamento de colunas obrigatórias
         private readonly Dictionary<string, string[]> camposObrigatorios = new Dictionary<string, string[]>
         {
             { "Nome", new[] { "Nome", "NomeCompleto", "Cliente", "NomeCliente" } },
@@ -170,7 +186,6 @@ namespace Cadastro1
             { "BeneficioINSS", new[] { "Beneficio", "BeneficioINSS", "INSS", "NumeroINSS", "NB" } }
         };
 
-        // Campos opcionais
         private readonly Dictionary<string, string[]> camposOpcionais = new Dictionary<string, string[]>
         {
             { "Telefone", new[] { "Telefone", "Fone", "Celular", "telefone_1", "Tel" } },
@@ -183,30 +198,20 @@ namespace Cadastro1
             anexoDAL = new ClienteAnexoDAL();
         }
 
-        /// <summary>
-        /// Importa clientes de arquivo CSV
-        /// </summary>
         public ResultadoImportacaoLote ImportarCSV(string caminhoArquivo)
         {
             ResultadoImportacaoLote resultado = new ResultadoImportacaoLote();
 
             try
             {
-                // Ler todas as linhas
                 string[] linhas = File.ReadAllLines(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1"));
 
                 if (linhas.Length == 0)
-                {
                     throw new Exception("Arquivo vazio!");
-                }
 
-                // Detectar separador
                 string separador = linhas[0].Contains(";") ? ";" : ",";
-
-                // Primeira linha = cabeçalho
                 string[] colunas = linhas[0].Split(new[] { separador }, StringSplitOptions.None);
 
-                // Processar cada linha (pular cabeçalho)
                 for (int i = 1; i < linhas.Length; i++)
                 {
                     string linha = linhas[i].Trim();
@@ -222,6 +227,8 @@ namespace Cadastro1
                         if (resultadoCliente.Sucesso)
                         {
                             resultado.Sucessos++;
+                            if (resultadoCliente.CamposPreenchidosAutomaticamente.Count > 0)
+                                resultado.CamposPreenchidosAuto++;
                         }
                         else
                         {
@@ -252,26 +259,21 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// Processa uma linha do CSV e tenta cadastrar o cliente
-        /// </summary>
         private ResultadoCadastroCliente ProcessarLinhaCSV(string linha, string[] nomeColunas, string separador)
         {
             ResultadoCadastroCliente resultado = new ResultadoCadastroCliente();
 
             try
             {
-                // Dividir valores
                 string[] valores = linha.Split(new[] { separador }, StringSplitOptions.None);
 
-                // Criar dicionário de dados
                 Dictionary<string, string> dadosLinha = new Dictionary<string, string>();
                 for (int i = 0; i < Math.Min(valores.Length, nomeColunas.Length); i++)
                 {
                     dadosLinha[nomeColunas[i].Trim()] = valores[i].Trim();
                 }
 
-                // Extrair campos obrigatórios
+                // Extrair campos
                 string nome = ExtrairCampo(dadosLinha, camposObrigatorios["Nome"]);
                 string cpf = ExtrairCampo(dadosLinha, camposObrigatorios["CPF"]);
                 string dataNascStr = ExtrairCampo(dadosLinha, camposObrigatorios["DataNascimento"]);
@@ -280,45 +282,75 @@ namespace Cadastro1
                 string cep = ExtrairCampo(dadosLinha, camposObrigatorios["CEP"]);
                 string inss = ExtrairCampo(dadosLinha, camposObrigatorios["BeneficioINSS"]);
 
-                resultado.Nome = nome;
-                resultado.CPF = LimparCPF(cpf);
+                // =====================================================
+                // SISTEMA DE PREENCHIMENTO AUTOMÁTICO
+                // =====================================================
 
-                // Validar campos obrigatórios
-                if (string.IsNullOrWhiteSpace(nome))
-                    resultado.CamposFaltantes.Add("Nome");
-
-                if (string.IsNullOrWhiteSpace(cpf))
-                    resultado.CamposFaltantes.Add("CPF");
-
-                if (string.IsNullOrWhiteSpace(dataNascStr))
-                    resultado.CamposFaltantes.Add("DataNascimento");
-
-                if (string.IsNullOrWhiteSpace(endereco))
-                    resultado.CamposFaltantes.Add("Endereco");
-
-                if (string.IsNullOrWhiteSpace(cidade))
-                    resultado.CamposFaltantes.Add("Cidade");
-
+                // CEP - Se vazio, preencher com 99999999
                 if (string.IsNullOrWhiteSpace(cep))
-                    resultado.CamposFaltantes.Add("CEP");
-
-                if (string.IsNullOrWhiteSpace(inss))
-                    resultado.CamposFaltantes.Add("BeneficioINSS");
-
-                // Se faltam campos, não cadastrar
-                if (resultado.CamposFaltantes.Count > 0)
                 {
+                    cep = "99999999";
+                    resultado.CamposPreenchidosAutomaticamente.Add("CEP");
+                }
+
+                // ENDEREÇO - Se vazio, preencher com texto identificável
+                if (string.IsNullOrWhiteSpace(endereco))
+                {
+                    endereco = "ENDEREÇO NÃO INFORMADO - ATUALIZAR";
+                    resultado.CamposPreenchidosAutomaticamente.Add("Endereço");
+                }
+
+                // CIDADE - Se vazia, preencher com texto identificável
+                if (string.IsNullOrWhiteSpace(cidade))
+                {
+                    cidade = "CIDADE NÃO INFORMADA - ATUALIZAR";
+                    resultado.CamposPreenchidosAutomaticamente.Add("Cidade");
+                }
+
+                // BENEFÍCIO INSS - Se vazio, preencher com 9999999999
+                if (string.IsNullOrWhiteSpace(inss))
+                {
+                    inss = "9999999999";
+                    resultado.CamposPreenchidosAutomaticamente.Add("INSS");
+                }
+
+                // DATA DE NASCIMENTO - Se vazia, usar 01/01/1900
+                if (string.IsNullOrWhiteSpace(dataNascStr))
+                {
+                    dataNascStr = "01/01/1900";
+                    resultado.CamposPreenchidosAutomaticamente.Add("Data Nascimento");
+                }
+
+                resultado.Nome = nome;
+
+                // =====================================================
+                // VALIDAÇÃO DE CPF (Obrigatório - não pode ser vazio)
+                // =====================================================
+                string cpfLimpo = LimparCPF(cpf);
+
+                if (string.IsNullOrEmpty(cpfLimpo))
+                {
+                    resultado.CamposFaltantes.Add("CPF");
                     resultado.Sucesso = false;
-                    resultado.MensagemErro = "Campos obrigatórios faltando";
+                    resultado.MensagemErro = "CPF é obrigatório";
                     return resultado;
                 }
 
-                // Limpar e validar CPF
-                string cpfLimpo = LimparCPF(cpf);
-                if (cpfLimpo.Length != 11)
+                if (cpfLimpo.Length < 11)
+                    cpfLimpo = cpfLimpo.PadLeft(11, '0');
+                else if (cpfLimpo.Length > 11)
+                    cpfLimpo = cpfLimpo.Substring(0, 11);
+
+                resultado.CPF = cpfLimpo;
+
+                // =====================================================
+                // VALIDAÇÃO DE NOME (Obrigatório - não pode ser vazio)
+                // =====================================================
+                if (string.IsNullOrWhiteSpace(nome))
                 {
+                    resultado.CamposFaltantes.Add("Nome");
                     resultado.Sucesso = false;
-                    resultado.MensagemErro = "CPF inválido (deve ter 11 dígitos)";
+                    resultado.MensagemErro = "Nome é obrigatório";
                     return resultado;
                 }
 
@@ -335,28 +367,25 @@ namespace Cadastro1
                 DateTime dataNasc;
                 if (!TentarConverterData(dataNascStr, out dataNasc))
                 {
-                    resultado.Sucesso = false;
-                    resultado.MensagemErro = "Data de nascimento inválida";
-                    return resultado;
+                    // Se falhar, usar data padrão
+                    dataNasc = new DateTime(1900, 1, 1);
+                    if (!resultado.CamposPreenchidosAutomaticamente.Contains("Data Nascimento"))
+                        resultado.CamposPreenchidosAutomaticamente.Add("Data Nascimento");
                 }
 
-                // Limpar CEP
+                // Limpar e ajustar CEP
                 string cepLimpo = LimparCEP(cep);
-                if (cepLimpo.Length != 8)
-                {
-                    resultado.Sucesso = false;
-                    resultado.MensagemErro = "CEP inválido (deve ter 8 dígitos)";
-                    return resultado;
-                }
+                if (cepLimpo.Length < 8)
+                    cepLimpo = cepLimpo.PadLeft(8, '9');
+                else if (cepLimpo.Length > 8)
+                    cepLimpo = cepLimpo.Substring(0, 8);
 
-                // Limpar INSS
+                // Limpar e ajustar INSS
                 string inssLimpo = LimparNumeros(inss);
-                if (inssLimpo.Length != 10)
-                {
-                    resultado.Sucesso = false;
-                    resultado.MensagemErro = "Benefício INSS inválido (deve ter 10 dígitos)";
-                    return resultado;
-                }
+                if (inssLimpo.Length < 10)
+                    inssLimpo = inssLimpo.PadLeft(10, '9');
+                else if (inssLimpo.Length > 10)
+                    inssLimpo = inssLimpo.Substring(0, 10);
 
                 // Extrair campos opcionais
                 string telefone = ExtrairCampo(dadosLinha, camposOpcionais["Telefone"]);
@@ -366,16 +395,20 @@ namespace Cadastro1
                 if (!string.IsNullOrWhiteSpace(telefone))
                 {
                     telefoneLimpo = LimparNumeros(telefone);
-                    if (telefoneLimpo.Length < 10 || telefoneLimpo.Length > 11)
-                        telefoneLimpo = null; // Ignorar telefone inválido
+                    if (telefoneLimpo.Length < 10)
+                        telefoneLimpo = telefoneLimpo.PadLeft(10, '0');
+                    else if (telefoneLimpo.Length > 11)
+                        telefoneLimpo = telefoneLimpo.Substring(0, 11);
                 }
 
                 string inss2Limpo = null;
                 if (!string.IsNullOrWhiteSpace(inss2))
                 {
                     inss2Limpo = LimparNumeros(inss2);
-                    if (inss2Limpo.Length != 10)
-                        inss2Limpo = null; // Ignorar 2º INSS inválido
+                    if (inss2Limpo.Length < 10)
+                        inss2Limpo = inss2Limpo.PadLeft(10, '9');
+                    else if (inss2Limpo.Length > 10)
+                        inss2Limpo = inss2Limpo.Substring(0, 10);
                 }
 
                 // Criar objeto Cliente
@@ -396,23 +429,20 @@ namespace Cadastro1
                 // Cadastrar cliente
                 if (clienteDAL.InserirCliente(novoCliente))
                 {
-                    // Obter ID do cliente recém-cadastrado
                     Cliente clienteCadastrado = clienteDAL.ConsultarPorCPF(cpfLimpo);
                     resultado.ClienteID = clienteCadastrado?.ClienteID;
 
                     // Identificar dados excedentes
                     HashSet<string> camposUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                    // Adicionar todos os nomes possíveis dos campos usados
                     foreach (var campo in camposObrigatorios.Values)
-                        foreach (var Nome in campo)
-                            camposUsados.Add(nome);
+                        foreach (var n in campo)
+                            camposUsados.Add(n);
 
                     foreach (var campo in camposOpcionais.Values)
-                        foreach (var Nome in campo)
-                            camposUsados.Add(nome);
+                        foreach (var n in campo)
+                            camposUsados.Add(n);
 
-                    // Coletar dados excedentes
                     foreach (var kvp in dadosLinha)
                     {
                         if (!camposUsados.Contains(kvp.Key) && !string.IsNullOrWhiteSpace(kvp.Value))
@@ -421,7 +451,15 @@ namespace Cadastro1
                         }
                     }
 
-                    // Salvar dados excedentes como anexo se houver
+                    // Adicionar aviso sobre campos preenchidos automaticamente
+                    if (resultado.CamposPreenchidosAutomaticamente.Count > 0)
+                    {
+                        resultado.DadosExcedentes["⚠️_CAMPOS_AUTO"] =
+                            $"ATENÇÃO: {string.Join(", ", resultado.CamposPreenchidosAutomaticamente)} " +
+                            "foram preenchidos automaticamente com valores placeholder. ATUALIZE posteriormente!";
+                    }
+
+                    // Salvar dados excedentes como anexo
                     if (resultado.DadosExcedentes.Count > 0 && resultado.ClienteID.HasValue)
                     {
                         SalvarDadosExcedentesComoAnexo(resultado.ClienteID.Value, resultado.DadosExcedentes, nome);
@@ -445,14 +483,10 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// Salva dados excedentes como arquivo anexo do cliente
-        /// </summary>
         private void SalvarDadosExcedentesComoAnexo(int clienteID, Dictionary<string, string> dadosExcedentes, string nomeCliente)
         {
             try
             {
-                // Criar conteúdo do arquivo
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("═══════════════════════════════════════════════════════");
                 sb.AppendLine("      DADOS ADICIONAIS DA IMPORTAÇÃO");
@@ -468,40 +502,30 @@ namespace Cadastro1
 
                 sb.AppendLine();
                 sb.AppendLine("═══════════════════════════════════════════════════════");
-                sb.AppendLine("Estes dados foram importados da planilha mas não fazem");
-                sb.AppendLine("parte dos campos principais de cadastro do cliente.");
-                sb.AppendLine("═══════════════════════════════════════════════════════");
 
-                // Criar arquivo temporário
                 string arquivoTemp = Path.Combine(Path.GetTempPath(),
                     $"DadosAdicionais_{DateTime.Now:yyyyMMddHHmmss}.txt");
 
                 File.WriteAllText(arquivoTemp, sb.ToString(), Encoding.UTF8);
 
-                // Criar anexo
                 ClienteAnexo anexo = new ClienteAnexo
                 {
                     ClienteID = clienteID,
                     NomeOriginal = "Dados Adicionais da Importação.txt",
-                    Descricao = "Informações extras importadas da planilha",
+                    Descricao = "Informações extras importadas da planilha + avisos de campos auto",
                     UploadPor = "Sistema - Importação Automática"
                 };
 
                 anexoDAL.InserirAnexo(anexo, arquivoTemp);
 
-                // Limpar arquivo temporário
                 try { File.Delete(arquivoTemp); } catch { }
             }
             catch (Exception ex)
             {
-                // Não falhar cadastro se anexo der erro
                 System.Diagnostics.Debug.WriteLine($"Erro ao salvar anexo: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Extrai valor de um campo tentando vários nomes possíveis
-        /// </summary>
         private string ExtrairCampo(Dictionary<string, string> dados, string[] nomespossiveis)
         {
             foreach (string nome in nomespossiveis)
@@ -515,44 +539,24 @@ namespace Cadastro1
             return null;
         }
 
-        /// <summary>
-        /// Limpa CPF removendo formatação
-        /// </summary>
         private string LimparCPF(string cpf)
         {
             if (string.IsNullOrWhiteSpace(cpf)) return "";
-
-            string limpo = new string(cpf.Where(char.IsDigit).ToArray());
-
-            // Completar com zero à esquerda se tiver 10 dígitos
-            if (limpo.Length == 10)
-                limpo = "0" + limpo;
-
-            return limpo;
+            return new string(cpf.Where(char.IsDigit).ToArray());
         }
 
-        /// <summary>
-        /// Limpa CEP removendo formatação
-        /// </summary>
         private string LimparCEP(string cep)
         {
             if (string.IsNullOrWhiteSpace(cep)) return "";
             return new string(cep.Where(char.IsDigit).ToArray());
         }
 
-        /// <summary>
-        /// Remove tudo exceto números
-        /// </summary>
         private string LimparNumeros(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto)) return "";
             return new string(texto.Where(char.IsDigit).ToArray());
         }
 
-        /// <summary>
-        /// Tenta converter string para data
-        /// Aceita formatos: dd/MM/yyyy, yyyy-MM-dd, dd-MM-yyyy
-        /// </summary>
         private bool TentarConverterData(string dataStr, out DateTime data)
         {
             data = DateTime.MinValue;
@@ -560,7 +564,6 @@ namespace Cadastro1
             if (string.IsNullOrWhiteSpace(dataStr))
                 return false;
 
-            // Tentar formatos comuns
             string[] formatos = {
                 "dd/MM/yyyy", "d/M/yyyy", "dd-MM-yyyy", "d-M-yyyy",
                 "yyyy-MM-dd", "yyyy/MM/dd",
@@ -573,7 +576,6 @@ namespace Cadastro1
                     System.Globalization.CultureInfo.InvariantCulture,
                     System.Globalization.DateTimeStyles.None, out data))
                 {
-                    // Validar idade razoável (18-120 anos)
                     int idade = DateTime.Now.Year - data.Year;
                     if (idade >= 18 && idade <= 120)
                         return true;
