@@ -1,13 +1,12 @@
 ﻿// =============================================
-// FORMULÁRIO - IMPORTAÇÃO EM LOTE
+// FORMULÁRIO - IMPORTAÇÃO EM LOTE - ATUALIZADO
 // Arquivo: FormImportarClientesLote.cs
+// NOVO: Exporta automaticamente CSV com falhas
 // =============================================
 using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using Org.BouncyCastle.Asn1.Cmp;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Cadastro1
 {
@@ -15,6 +14,7 @@ namespace Cadastro1
     {
         private ImportadorClientesLote importador;
         private ResultadoImportacaoLote ultimoResultado;
+        private string caminhoArquivoImportado; // NOVO: guardar caminho do arquivo
 
         public FormImportarClientesLote()
         {
@@ -35,6 +35,7 @@ namespace Cadastro1
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         txtCaminhoArquivo.Text = ofd.FileName;
+                        caminhoArquivoImportado = ofd.FileName; // NOVO: salvar caminho
                         btnIniciarImportacao.Enabled = true;
                     }
                 }
@@ -77,8 +78,9 @@ namespace Cadastro1
                 "Esta operação irá:\n" +
                 "• Ler todos os clientes da planilha\n" +
                 "• Cadastrar automaticamente os que tiverem dados completos\n" +
-                "• Salvar informações extras como anexos\n" +
-                "• Pular CPFs duplicados\n\n" +
+                "• Preencher dados vazios com placeholders\n" +
+                "• Pular CPFs duplicados\n" +
+                "• GERAR CSV COM AS FALHAS (se houver)\n\n" +
                 "Deseja continuar?",
                 "Confirmar Importação",
                 MessageBoxButtons.YesNo,
@@ -106,13 +108,62 @@ namespace Cadastro1
                 // Executar importação
                 ultimoResultado = importador.ImportarCSV(txtCaminhoArquivo.Text);
 
+                // =============================================
+                // NOVO: EXPORTAR FALHAS PARA CSV AUTOMATICAMENTE
+                // =============================================
+                string arquivoFalhas = null;
+                if (ultimoResultado.Falhas > 0)
+                {
+                    try
+                    {
+                        arquivoFalhas = ultimoResultado.ExportarFalhasParaCSV(caminhoArquivoImportado);
+
+                        if (!string.IsNullOrEmpty(arquivoFalhas))
+                        {
+                            lblStatus.Text = $"✅ Importação concluída! {ultimoResultado.Sucessos} sucessos. " +
+                                           $"📄 CSV de falhas gerado!";
+                        }
+                    }
+                    catch (Exception exCsv)
+                    {
+                        // Não bloqueia se falhar ao gerar CSV
+                        System.Diagnostics.Debug.WriteLine($"Erro ao gerar CSV de falhas: {exCsv.Message}");
+                    }
+                }
+                else
+                {
+                    lblStatus.Text = $"✅ Importação concluída! {ultimoResultado.Sucessos} cadastros realizados.";
+                }
+                // =============================================
+
                 // Atualizar interface
                 progressBar.Visible = false;
-                lblStatus.Text = $"✅ Importação concluída! {ultimoResultado.Sucessos} cadastros realizados.";
                 lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
 
                 // Mostrar resultados
                 MostrarResultados();
+
+                // NOVO: Avisar sobre CSV de falhas
+                if (!string.IsNullOrEmpty(arquivoFalhas))
+                {
+                    DialogResult abrirCsv = MessageBox.Show(
+                        $"📊 IMPORTAÇÃO CONCLUÍDA\n\n" +
+                        $"✅ Sucessos: {ultimoResultado.Sucessos}\n" +
+                        $"❌ Falhas: {ultimoResultado.Falhas}\n\n" +
+                        $"📄 Foi gerado um arquivo CSV com as falhas:\n" +
+                        $"{Path.GetFileName(arquivoFalhas)}\n\n" +
+                        $"Deseja abrir a pasta onde o arquivo foi salvo?",
+                        "CSV de Falhas Gerado",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information);
+
+                    if (abrirCsv == DialogResult.Yes)
+                    {
+                        // Abrir pasta do arquivo
+                        System.Diagnostics.Process.Start("explorer.exe",
+                            $"/select,\"{arquivoFalhas}\"");
+                    }
+                }
 
                 // Habilitar botões
                 btnVerRelatorio.Enabled = true;
@@ -186,7 +237,11 @@ namespace Cadastro1
                 string detalhes = "";
                 if (resultado.Sucesso)
                 {
-                    if (resultado.DadosExcedentes.Count > 0)
+                    if (resultado.CamposPreenchidosAutomaticamente.Count > 0)
+                    {
+                        detalhes = $"⚠️ Campos auto: {string.Join(", ", resultado.CamposPreenchidosAutomaticamente)}";
+                    }
+                    else if (resultado.DadosExcedentes.Count > 0)
                     {
                         detalhes = $"📎 {resultado.DadosExcedentes.Count} campo(s) salvos em anexo";
                     }
@@ -215,7 +270,8 @@ namespace Cadastro1
                 $"Total processado: {ultimoResultado.TotalLinhas}\r\n" +
                 $"✅ Sucessos: {ultimoResultado.Sucessos}\r\n" +
                 $"❌ Falhas: {ultimoResultado.Falhas}\r\n" +
-                $"🔄 CPFs duplicados: {ultimoResultado.CPFsDuplicados}";
+                $"🔄 CPFs duplicados: {ultimoResultado.CPFsDuplicados}\r\n" +
+                $"⚠️  Campos preenchidos auto: {ultimoResultado.CamposPreenchidosAuto}";
         }
 
         private string FormatarCPF(string cpf)

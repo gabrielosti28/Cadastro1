@@ -1,5 +1,12 @@
-﻿using System;
+﻿// =============================================
+// FORMULÁRIO - LISTA DE CLIENTES - ATUALIZADO
+// Arquivo: FormListaClientes.cs
+// NOVO: Filtro por cidade antes de exibir
+// =============================================
+using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace Cadastro1
@@ -7,6 +14,8 @@ namespace Cadastro1
     public partial class FormListaClientes : Form
     {
         private ClienteDAL clienteDAL;
+        private string cidadeFiltro; // Cidade selecionada para filtro
+        private bool mostrarTodas; // Se deve mostrar todas as cidades
 
         public FormListaClientes()
         {
@@ -17,31 +26,112 @@ namespace Cadastro1
 
         private void ConfigurarInterface()
         {
-            // Configurações visuais básicas
             this.BackColor = Color.FromArgb(240, 248, 255);
         }
 
         private void FormListaClientes_Load(object sender, EventArgs e)
         {
-            CarregarClientes();
+            // =============================================
+            // NOVO: PRIMEIRO SELECIONAR A CIDADE
+            // =============================================
+            try
+            {
+                // Buscar todas as cidades cadastradas
+                var todosClientes = clienteDAL.ListarTodosClientes();
+
+                if (todosClientes.Count == 0)
+                {
+                    MessageBox.Show(
+                        "ℹ Nenhum cliente cadastrado ainda!\n\nCadastre o primeiro cliente no menu principal.",
+                        "Lista Vazia",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                    this.Close();
+                    return;
+                }
+
+                // Obter lista única de cidades
+                var cidades = todosClientes
+                    .Select(c => c.Cidade)
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Distinct()
+                    .ToList();
+
+                if (cidades.Count == 0)
+                {
+                    MessageBox.Show(
+                        "⚠ Nenhuma cidade cadastrada!\n\nCadastre clientes com cidades primeiro.",
+                        "Aviso",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    this.Close();
+                    return;
+                }
+
+                // Mostrar formulário de seleção de cidade
+                using (FormSelecionarCidade formCidade = new FormSelecionarCidade(cidades))
+                {
+                    if (formCidade.ShowDialog() == DialogResult.OK)
+                    {
+                        cidadeFiltro = formCidade.CidadeSelecionada;
+                        mostrarTodas = formCidade.VerTodasCidades;
+
+                        // Carregar clientes com o filtro selecionado
+                        CarregarClientes();
+                    }
+                    else
+                    {
+                        // Usuário cancelou a seleção
+                        this.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao carregar cidades:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                this.Close();
+            }
         }
 
         private void CarregarClientes()
         {
             try
             {
-                var clientes = clienteDAL.ListarTodosClientes();
+                var todosClientes = clienteDAL.ListarTodosClientes();
 
-                if (clientes.Count == 0)
+                // =============================================
+                // APLICAR FILTRO DE CIDADE
+                // =============================================
+                List<Cliente> clientesFiltrados;
+
+                if (mostrarTodas)
                 {
-                    MessageBox.Show("ℹ Nenhum cliente cadastrado ainda!\n\nCadastre o primeiro cliente no menu principal.",
-                        "Lista Vazia", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    clientesFiltrados = todosClientes;
+                }
+                else
+                {
+                    clientesFiltrados = todosClientes
+                        .Where(c => c.Cidade.Equals(cidadeFiltro, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                if (clientesFiltrados.Count == 0)
+                {
+                    MessageBox.Show(
+                        $"ℹ Nenhum cliente encontrado na cidade '{cidadeFiltro}'!",
+                        "Lista Vazia",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                     this.Close();
                     return;
                 }
 
                 dgvClientes.DataSource = null;
-                dgvClientes.DataSource = clientes;
+                dgvClientes.DataSource = clientesFiltrados;
 
                 // ===== CONFIGURAR ORDEM E VISIBILIDADE DAS COLUNAS =====
 
@@ -71,8 +161,8 @@ namespace Cadastro1
                 if (dgvClientes.Columns.Contains("btnEditar"))
                     dgvClientes.Columns.Remove("btnEditar");
 
-                if (dgvClientes.Columns.Contains("btnCodigo"))
-                    dgvClientes.Columns.Remove("btnCodigo");
+                if (dgvClientes.Columns.Contains("colCodigo"))
+                    dgvClientes.Columns.Remove("colCodigo");
 
                 // 3. CONFIGURAR colunas de dados existentes
                 if (dgvClientes.Columns.Contains("NomeCompleto"))
@@ -147,7 +237,7 @@ namespace Cadastro1
                     if (row.DataBoundItem != null)
                     {
                         Cliente cliente = (Cliente)row.DataBoundItem;
-                        row.Cells["colCodigo"].Value = cliente.ClienteID.ToString("D5"); // Formata como 00001, 00002, etc
+                        row.Cells["colCodigo"].Value = cliente.ClienteID.ToString("D5");
                     }
                 }
 
@@ -192,7 +282,7 @@ namespace Cadastro1
                 btnEditar.DisplayIndex = 8;
 
                 // 7. ADICIONAR evento de clique
-                dgvClientes.CellClick -= DgvClientes_CellClick; // Remove se já existir
+                dgvClientes.CellClick -= DgvClientes_CellClick;
                 dgvClientes.CellClick += DgvClientes_CellClick;
 
                 // 8. ESTILIZAÇÃO adicional
@@ -203,28 +293,37 @@ namespace Cadastro1
                 dgvClientes.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                 dgvClientes.ColumnHeadersHeight = 40;
 
-                // Alternating row colors para melhor legibilidade
                 dgvClientes.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(236, 240, 241);
 
-                // Atualizar título com contagem
-                lblTitulo.Text = $"📋 TODOS OS CLIENTES ({clientes.Count})";
+                // =============================================
+                // ATUALIZAR TÍTULO COM FILTRO APLICADO
+                // =============================================
+                if (mostrarTodas)
+                {
+                    lblTitulo.Text = $"📋 TODOS OS CLIENTES ({clientesFiltrados.Count})";
+                }
+                else
+                {
+                    lblTitulo.Text = $"📋 CLIENTES DE {cidadeFiltro.ToUpper()} ({clientesFiltrados.Count})";
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("✖ Erro ao carregar clientes:\n\n" + ex.Message,
-                    "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "✖ Erro ao carregar clientes:\n\n" + ex.Message,
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
         private void DgvClientes_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            // Verificar se clicou em alguma célula válida
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 Cliente cliente = (Cliente)dgvClientes.Rows[e.RowIndex].DataBoundItem;
                 string nomeColuna = dgvClientes.Columns[e.ColumnIndex].Name;
 
-                // Botão DOCUMENTOS
                 if (nomeColuna == "btnDocumentos")
                 {
                     try
@@ -238,11 +337,9 @@ namespace Cadastro1
                             "Erro ao abrir documentos:\n\n" + ex.Message,
                             "Erro",
                             MessageBoxButtons.OK,
-                            MessageBoxIcon.Error
-                        );
+                            MessageBoxIcon.Error);
                     }
                 }
-                // Botão EDITAR
                 else if (nomeColuna == "btnEditar")
                 {
                     try
@@ -250,15 +347,13 @@ namespace Cadastro1
                         FormEditarCliente formEditar = new FormEditarCliente(cliente);
                         if (formEditar.ShowDialog() == DialogResult.OK)
                         {
-                            // Recarregar lista após edição
                             CarregarClientes();
 
                             MessageBox.Show(
                                 "✓ Cliente atualizado com sucesso!",
                                 "Sucesso",
                                 MessageBoxButtons.OK,
-                                MessageBoxIcon.Information
-                            );
+                                MessageBoxIcon.Information);
                         }
                     }
                     catch (Exception ex)
@@ -267,11 +362,9 @@ namespace Cadastro1
                             "Erro ao abrir edição:\n\n" + ex.Message,
                             "Erro",
                             MessageBoxButtons.OK,
-                            MessageBoxIcon.Error
-                        );
+                            MessageBoxIcon.Error);
                     }
                 }
-                // Clique em qualquer outra célula - mostrar detalhes rápidos
                 else
                 {
                     MostrarDetalhesRapidos(cliente);
@@ -309,8 +402,7 @@ namespace Cadastro1
                     detalhes,
                     "Detalhes do Cliente",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Information
-                );
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -318,8 +410,7 @@ namespace Cadastro1
                     $"Erro ao exibir detalhes:\n\n{ex.Message}",
                     "Erro",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                    MessageBoxIcon.Error);
             }
         }
 

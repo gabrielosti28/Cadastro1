@@ -1,7 +1,7 @@
 ﻿// =============================================
 // MENU PRINCIPAL - ATUALIZADO COM CONFIGURAÇÃO DE PASTAS
 // Arquivo: FormMenuPrincipal.cs (ATUALIZADO)
-// LÓGICA E EVENTOS
+// LÓGICA E EVENTOS - APENAS PARTE DINÂMICA
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -14,148 +14,19 @@ namespace Cadastro1
     public partial class FormMenuPrincipal : Form
     {
         private ClienteDAL clienteDAL;
-        private Label lblUsuarioLogado;
-        private Button btnAlterarSenha;
-        private Button btnGerenciarBackup;
 
         public FormMenuPrincipal()
         {
             InitializeComponent();
             clienteDAL = new ClienteDAL();
-            ConfigurarSeguranca();
             CarregarAniversariantes();
+            AtualizarUsuarioLogado();
         }
 
-        private void ConfigurarSeguranca()
+        private void AtualizarUsuarioLogado()
         {
-            // Criar label para mostrar usuário logado
-            lblUsuarioLogado = new Label
-            {
-                AutoSize = true,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(0, 102, 204),
-                Location = new Point(20, 20),
-                Text = $"👤 Usuário: {Usuario.UsuarioLogado?.Nome ?? "Não identificado"}"
-            };
-            panelContainer.Controls.Add(lblUsuarioLogado);
-            lblUsuarioLogado.BringToFront();
-
-            // Criar botão de gerenciar backup
-            btnGerenciarBackup = new Button
-            {
-                BackColor = Color.FromArgb(52, 152, 219),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.White,
-                Location = new Point(350, 15),
-                Size = new Size(180, 35),
-                Text = "💾 Gerenciar Backup",
-                Cursor = Cursors.Hand
-            };
-            btnGerenciarBackup.FlatAppearance.BorderSize = 0;
-            btnGerenciarBackup.Click += BtnGerenciarBackup_Click;
-            btnGerenciarBackup.MouseEnter += Botao_MouseEnter;
-            btnGerenciarBackup.MouseLeave += Botao_MouseLeave;
-
-            panelContainer.Controls.Add(btnGerenciarBackup);
-            btnGerenciarBackup.BringToFront();
-
-            // Criar botão de alterar senha
-            btnAlterarSenha = new Button
-            {
-                BackColor = Color.FromArgb(230, 126, 34),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.White,
-                Location = new Point(550, 15),
-                Size = new Size(160, 35),
-                Text = "🔑 Alterar Senha",
-                Cursor = Cursors.Hand
-            };
-            btnAlterarSenha.FlatAppearance.BorderSize = 0;
-            btnAlterarSenha.Click += BtnAlterarSenha_Click;
-            btnAlterarSenha.MouseEnter += Botao_MouseEnter;
-            btnAlterarSenha.MouseLeave += Botao_MouseLeave;
-
-            panelContainer.Controls.Add(btnAlterarSenha);
-            btnAlterarSenha.BringToFront();
-
-            // Adicionar botão Mala Direta
-            Button btnMalaDireta = new Button
-            {
-                BackColor = Color.FromArgb(41, 128, 185),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.White,
-                Location = new Point(730, 15),
-                Size = new Size(160, 35),
-                Text = "📮 Mala Direta",
-                Cursor = Cursors.Hand
-            };
-            btnMalaDireta.FlatAppearance.BorderSize = 0;
-            btnMalaDireta.Click += (s, e) => {
-                using (FormMailingEditor form = new FormMailingEditor())
-                {
-                    form.ShowDialog();
-                }
-            };
-            btnMalaDireta.MouseEnter += Botao_MouseEnter;
-            btnMalaDireta.MouseLeave += Botao_MouseLeave;
-            panelContainer.Controls.Add(btnMalaDireta);
-            btnMalaDireta.BringToFront();
-
-            // ========== NOVO: BOTÃO CONFIGURAR PASTAS ==========
-            Button btnConfigurarPastas = new Button
-            {
-                BackColor = Color.FromArgb(142, 68, 173), // Roxo
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.White,
-                Location = new Point(910, 15),
-                Size = new Size(180, 35),
-                Text = "⚙️ Configurar Pastas",
-                Cursor = Cursors.Hand
-            };
-            btnConfigurarPastas.FlatAppearance.BorderSize = 0;
-            btnConfigurarPastas.Click += BtnConfigurarPastas_Click;
-            btnConfigurarPastas.MouseEnter += Botao_MouseEnter;
-            btnConfigurarPastas.MouseLeave += Botao_MouseLeave;
-            panelContainer.Controls.Add(btnConfigurarPastas);
-            btnConfigurarPastas.BringToFront();
-
-            // Modificar o botão sair para fazer logout
-            btnSair.Text = "🔒 Sair e Fazer Logout";
-        }
-
-        // ========== NOVO: MÉTODO PARA ABRIR CONFIGURAÇÃO DE PASTAS ==========
-        private void BtnConfigurarPastas_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                using (FormConfigurarDiretorios form = new FormConfigurarDiretorios())
-                {
-                    DialogResult result = form.ShowDialog();
-
-                    if (result == DialogResult.OK)
-                    {
-                        // Configurações salvas com sucesso
-                        MessageBox.Show(
-                            "✅ As novas configurações de pastas já estão ativas!\n\n" +
-                            "Todos os novos arquivos serão salvos nos locais configurados.",
-                            "Configuração Aplicada",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Information);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Erro ao abrir configuração de pastas:\n\n{ex.Message}",
-                    "Erro",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
+            // Atualizar label do usuário logado
+            lblUsuarioLogado.Text = $"👤 Usuário: {Usuario.UsuarioLogado?.Nome ?? "Não identificado"}";
         }
 
         private void CarregarAniversariantes()
@@ -181,7 +52,7 @@ namespace Cadastro1
                 Panel panelHoje = new Panel
                 {
                     Location = new Point(10, yPos),
-                    Size = new Size(325, aniversariantesHoje.Count > 0 ? 30 + (aniversariantesHoje.Count * 25) : 55),
+                    Size = new Size(465, aniversariantesHoje.Count > 0 ? 30 + (aniversariantesHoje.Count * 25) : 55),
                     BackColor = Color.FromArgb(255, 243, 205),
                     BorderStyle = BorderStyle.FixedSingle
                 };
@@ -190,7 +61,7 @@ namespace Cadastro1
                 {
                     Text = "🎉 HOJE",
                     Location = new Point(5, 5),
-                    Size = new Size(315, 20),
+                    Size = new Size(455, 20),
                     Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                     ForeColor = Color.FromArgb(133, 100, 4),
                     TextAlign = ContentAlignment.MiddleLeft
@@ -203,7 +74,7 @@ namespace Cadastro1
                     {
                         Text = "Nenhum aniversariante hoje",
                         Location = new Point(5, 30),
-                        Size = new Size(315, 20),
+                        Size = new Size(455, 20),
                         Font = new Font("Segoe UI", 9F, FontStyle.Italic),
                         ForeColor = Color.Gray,
                         TextAlign = ContentAlignment.MiddleLeft
@@ -220,7 +91,7 @@ namespace Cadastro1
                         {
                             Text = $"• {cliente.NomeCompleto} ({idade} anos)",
                             Location = new Point(10, yPosHoje),
-                            Size = new Size(310, 20),
+                            Size = new Size(450, 20),
                             Font = new Font("Segoe UI", 9F),
                             ForeColor = Color.FromArgb(52, 73, 94),
                             Cursor = Cursors.Hand,
@@ -244,7 +115,7 @@ namespace Cadastro1
                 Panel panelSemana = new Panel
                 {
                     Location = new Point(10, yPos),
-                    Size = new Size(325, Math.Min(300, aniversariantesSemanaFiltrados.Count > 0 ? 30 + (aniversariantesSemanaFiltrados.Count * 30) : 55)),
+                    Size = new Size(465, Math.Min(400, aniversariantesSemanaFiltrados.Count > 0 ? 30 + (aniversariantesSemanaFiltrados.Count * 30) : 55)),
                     BackColor = Color.FromArgb(212, 237, 218),
                     BorderStyle = BorderStyle.FixedSingle,
                     AutoScroll = aniversariantesSemanaFiltrados.Count > 9
@@ -254,7 +125,7 @@ namespace Cadastro1
                 {
                     Text = "📅 ESTA SEMANA",
                     Location = new Point(5, 5),
-                    Size = new Size(315, 20),
+                    Size = new Size(455, 20),
                     Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                     ForeColor = Color.FromArgb(21, 87, 36),
                     TextAlign = ContentAlignment.MiddleLeft
@@ -267,7 +138,7 @@ namespace Cadastro1
                     {
                         Text = "Nenhum aniversariante esta semana",
                         Location = new Point(5, 30),
-                        Size = new Size(315, 20),
+                        Size = new Size(455, 20),
                         Font = new Font("Segoe UI", 9F, FontStyle.Italic),
                         ForeColor = Color.Gray,
                         TextAlign = ContentAlignment.MiddleLeft
@@ -295,7 +166,7 @@ namespace Cadastro1
                         {
                             Text = $"• {cliente.NomeCompleto}",
                             Location = new Point(10, yPosSemana),
-                            Size = new Size(295, 15),
+                            Size = new Size(445, 15),
                             Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                             ForeColor = Color.FromArgb(52, 73, 94),
                             Cursor = Cursors.Hand,
@@ -307,7 +178,7 @@ namespace Cadastro1
                         {
                             Text = $"  {diaSemana}, {proximoAniversario:dd/MM} ({idade} anos)",
                             Location = new Point(10, yPosSemana + 15),
-                            Size = new Size(295, 15),
+                            Size = new Size(445, 15),
                             Font = new Font("Segoe UI", 8F, FontStyle.Italic),
                             ForeColor = Color.FromArgb(100, 100, 100)
                         };
@@ -408,6 +279,44 @@ namespace Cadastro1
             }
         }
 
+        private void BtnMalaDireta_Click(object sender, EventArgs e)
+        {
+            using (FormMailingEditor form = new FormMailingEditor())
+            {
+                form.ShowDialog();
+            }
+        }
+
+        private void BtnConfigurarPastas_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (FormConfigurarDiretorios form = new FormConfigurarDiretorios())
+                {
+                    DialogResult result = form.ShowDialog();
+
+                    if (result == DialogResult.OK)
+                    {
+                        // Configurações salvas com sucesso
+                        MessageBox.Show(
+                            "✅ As novas configurações de pastas já estão ativas!\n\n" +
+                            "Todos os novos arquivos serão salvos nos locais configurados.",
+                            "Configuração Aplicada",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao abrir configuração de pastas:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
         private void Botao_MouseEnter(object sender, EventArgs e)
         {
             if (sender is Button btn)
@@ -424,12 +333,15 @@ namespace Cadastro1
                 switch (btn.Text)
                 {
                     case string s when s.Contains("CADASTRAR"):
-                        btn.BackColor = Color.FromArgb(46, 204, 113);
+                        btn.BackColor = Color.FromArgb(230, 126, 34);
                         break;
                     case string s when s.Contains("BUSCAR"):
                         btn.BackColor = Color.FromArgb(52, 152, 219);
                         break;
                     case string s when s.Contains("VER TODOS"):
+                        btn.BackColor = Color.FromArgb(46, 204, 113);
+                        break;
+                    case string s when s.Contains("IMPORTAR"):
                         btn.BackColor = Color.FromArgb(155, 89, 182);
                         break;
                     case string s when s.Contains("Gerenciar Backup"):
@@ -471,6 +383,35 @@ namespace Cadastro1
             form.ShowDialog();
         }
 
+        private void btnImportarLote_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FormImportarClientesLote formImportar = new FormImportarClientesLote();
+
+                if (formImportar.ShowDialog() == DialogResult.OK)
+                {
+                    MessageBox.Show(
+                        "✅ Importação concluída com sucesso!\n\n" +
+                        "Os clientes foram cadastrados no sistema.",
+                        "Sucesso",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+
+                    // Recarregar aniversariantes após importação
+                    CarregarAniversariantes();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao abrir importação:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
         private void btnSair_Click(object sender, EventArgs e)
         {
             DialogResult resultado = MessageBox.Show(
@@ -498,12 +439,7 @@ namespace Cadastro1
             }
         }
 
-        private void menuItemConfigurarPastas_Click(object sender, EventArgs e)
-        {
-            BtnConfigurarPastas_Click(sender, e);
-        }
-
-        private void FormPrincipal_Load(object sender, EventArgs e)
+        private void FormMenuPrincipal_Load(object sender, EventArgs e)
         {
             try
             {
@@ -515,32 +451,5 @@ namespace Cadastro1
                     "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
-        private void btnImportarLote_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                FormImportarClientesLote formImportar = new FormImportarClientesLote();
-
-                if (formImportar.ShowDialog() == DialogResult.OK)
-                {
-                    MessageBox.Show(
-                        "✅ Importação concluída com sucesso!\n\n" +
-                        "Os clientes foram cadastrados no sistema.",
-                        "Sucesso",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Erro ao abrir importação:\n\n{ex.Message}",
-                    "Erro",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
-
-
     }
 }

@@ -155,6 +155,58 @@ namespace Cadastro1
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Exporta clientes com falha para um arquivo CSV
+        /// Retorna o caminho do arquivo gerado ou null se não houver falhas
+        /// </summary>
+        public string ExportarFalhasParaCSV(string caminhoArquivoOriginal)
+        {
+            var falhas = Resultados.Where(r => !r.Sucesso).ToList();
+
+            if (falhas.Count == 0)
+                return null; // Sem falhas, não cria arquivo
+
+            try
+            {
+                // Criar nome do arquivo de saída
+                string diretorio = Path.GetDirectoryName(caminhoArquivoOriginal);
+                string nomeArquivo = Path.GetFileNameWithoutExtension(caminhoArquivoOriginal);
+                string arquivoSaida = Path.Combine(diretorio,
+                    $"{nomeArquivo}_FALHAS_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+
+                using (StreamWriter sw = new StreamWriter(arquivoSaida, false, Encoding.UTF8))
+                {
+                    // CABEÇALHO
+                    sw.WriteLine("Nome;CPF;DataNascimento;Endereco;Cidade;CEP;BeneficioINSS;Telefone;BeneficioINSS2;MOTIVO_DO_ERRO;CAMPOS_COM_PROBLEMA");
+
+                    // DADOS DAS FALHAS
+                    foreach (var falha in falhas)
+                    {
+                        // Campos básicos (podem estar vazios)
+                        string nome = falha.Nome ?? "";
+                        string cpf = falha.CPF ?? "";
+
+                        // Motivo do erro
+                        string motivo = falha.MensagemErro ?? "Erro desconhecido";
+
+                        // Campos com problema
+                        string camposProblema = falha.CamposFaltantes.Count > 0
+                            ? string.Join(", ", falha.CamposFaltantes)
+                            : "N/A";
+
+                        // Escrever linha - campos vazios para reaproveitamento
+                        sw.WriteLine($"{nome};{cpf};;;;;;;;{motivo};{camposProblema}");
+                    }
+                }
+
+                return arquivoSaida;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao exportar falhas para CSV: {ex.Message}");
+            }
+        }
+
         private string FormatarCPF(string cpf)
         {
             if (string.IsNullOrEmpty(cpf)) return "";
