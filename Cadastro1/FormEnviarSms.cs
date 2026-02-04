@@ -2,6 +2,7 @@
 // FORMULÁRIO - ENVIO DE SMS EM MASSA
 // Arquivo: FormEnviarSms.cs
 // Sistema profissional de envio de mensagens
+// CORRIGIDO: Removido PlaceholderText (incompatível com .NET Framework 4.7.2)
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -509,12 +510,23 @@ namespace Cadastro1
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold)
             };
 
+            // CORRIGIDO: Removido PlaceholderText
             txtNumeroTwilio = new TextBox
             {
                 Location = new Point(180, 240),
                 Size = new Size(200, 25),
-                Font = new Font("Segoe UI", 10F),
-                PlaceholderText = "+5511999999999"
+                Font = new Font("Segoe UI", 10F)
+                // PlaceholderText NÃO EXISTE no .NET Framework 4.7.2
+            };
+
+            // Adicionar Label de ajuda em vez de PlaceholderText
+            Label lblNumeroAjuda = new Label
+            {
+                Text = "Formato: +5511999999999",
+                Location = new Point(390, 240),
+                Size = new Size(200, 25),
+                Font = new Font("Segoe UI", 9F, FontStyle.Italic),
+                ForeColor = Color.Gray
             };
 
             btnSalvarConfig = new Button
@@ -554,6 +566,7 @@ namespace Cadastro1
             tabConfig.Controls.AddRange(new Control[] {
                 lblTitulo, lblInstrucoes, lblAccountSID, txtAccountSID,
                 lblAuthToken, txtAuthToken, lblNumero, txtNumeroTwilio,
+                lblNumeroAjuda, // ← ADICIONADO: Label de ajuda
                 btnSalvarConfig, btnTestarConexao, lblStatusConfig
             });
 
@@ -1096,19 +1109,6 @@ namespace Cadastro1
                 MessageBox.Show($"Erro: {ex.Message}", "Erro",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        // ========== MÉTODO AUXILIAR ==========
-
-        private int CalcularSegmentos(string mensagem)
-        {
-            if (string.IsNullOrEmpty(mensagem))
-                return 0;
-
-            bool temEspeciais = mensagem.Any(c => c > 127);
-            int limitePorSms = temEspeciais ? 70 : 160;
-
-            return (int)Math.Ceiling((double)mensagem.Length / limitePorSms);
         }
     }
 }

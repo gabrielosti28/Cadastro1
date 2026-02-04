@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.panelContainer = new System.Windows.Forms.Panel();
+            this.btnEnviarSms = new System.Windows.Forms.Button();
             this.btnConfigurarPastas = new System.Windows.Forms.Button();
             this.btnMalaDireta = new System.Windows.Forms.Button();
             this.btnAlterarSenha = new System.Windows.Forms.Button();
@@ -52,6 +53,7 @@
             // panelContainer
             // 
             this.panelContainer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
+            this.panelContainer.Controls.Add(this.btnEnviarSms);
             this.panelContainer.Controls.Add(this.btnConfigurarPastas);
             this.panelContainer.Controls.Add(this.btnMalaDireta);
             this.panelContainer.Controls.Add(this.btnAlterarSenha);
@@ -65,8 +67,26 @@
             this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelContainer.Location = new System.Drawing.Point(0, 0);
             this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(1200, 850);
+            this.panelContainer.Size = new System.Drawing.Size(1277, 850);
             this.panelContainer.TabIndex = 0;
+            // 
+            // btnEnviarSms
+            // 
+            this.btnEnviarSms.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(155)))), ((int)(((byte)(89)))), ((int)(((byte)(182)))));
+            this.btnEnviarSms.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnEnviarSms.FlatAppearance.BorderSize = 0;
+            this.btnEnviarSms.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnEnviarSms.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnEnviarSms.ForeColor = System.Drawing.Color.White;
+            this.btnEnviarSms.Location = new System.Drawing.Point(1106, 15);
+            this.btnEnviarSms.Name = "btnEnviarSms";
+            this.btnEnviarSms.Size = new System.Drawing.Size(160, 35);
+            this.btnEnviarSms.TabIndex = 10;
+            this.btnEnviarSms.Text = "📱 Enviar SMS";
+            this.btnEnviarSms.UseVisualStyleBackColor = false;
+            this.btnEnviarSms.Click += new System.EventHandler(this.BtnEnviarSms_Click);
+            this.btnEnviarSms.MouseEnter += new System.EventHandler(this.Botao_MouseEnter);
+            this.btnEnviarSms.MouseLeave += new System.EventHandler(this.Botao_MouseLeave);
             // 
             // btnConfigurarPastas
             // 
@@ -147,7 +167,7 @@
             this.lblUsuarioLogado.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
             this.lblUsuarioLogado.Location = new System.Drawing.Point(20, 23);
             this.lblUsuarioLogado.Name = "lblUsuarioLogado";
-            this.lblUsuarioLogado.Size = new System.Drawing.Size(115, 19);
+            this.lblUsuarioLogado.Size = new System.Drawing.Size(116, 19);
             this.lblUsuarioLogado.TabIndex = 5;
             this.lblUsuarioLogado.Text = "👤 Usuário: N/A";
             // 
@@ -297,7 +317,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1200, 850);
+            this.ClientSize = new System.Drawing.Size(1277, 850);
             this.Controls.Add(this.panelContainer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -331,5 +351,6 @@
         private System.Windows.Forms.Button btnAlterarSenha;
         private System.Windows.Forms.Button btnMalaDireta;
         private System.Windows.Forms.Button btnConfigurarPastas;
+        private System.Windows.Forms.Button btnEnviarSms;
     }
 }

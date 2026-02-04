@@ -2,6 +2,7 @@
 // SERVIÇO DE ENVIO DE SMS VIA TWILIO
 // Arquivo: SmsService.cs
 // Integração profissional com Twilio
+// CORRIGIDO: Método CalcularSegmentos tornado público
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -273,8 +274,9 @@ namespace Cadastro1
 
         /// <summary>
         /// Calcula quantidade de segmentos SMS necessários
+        /// CORRIGIDO: Alterado de private para public
         /// </summary>
-        private int CalcularSegmentos(string mensagem)
+        public int CalcularSegmentos(string mensagem)
         {
             if (string.IsNullOrEmpty(mensagem))
                 return 0;

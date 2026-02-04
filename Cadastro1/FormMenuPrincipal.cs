@@ -1,5 +1,5 @@
 ﻿// =============================================
-// MENU PRINCIPAL - ATUALIZADO COM CONFIGURAÇÃO DE PASTAS
+// MENU PRINCIPAL - ATUALIZADO COM BOTÃO SMS
 // Arquivo: FormMenuPrincipal.cs (ATUALIZADO)
 // LÓGICA E EVENTOS - APENAS PARTE DINÂMICA
 // =============================================
@@ -14,43 +14,17 @@ namespace Cadastro1
     public partial class FormMenuPrincipal : Form
     {
         private ClienteDAL clienteDAL;
-        private Button btnEnviarSms; // Declaração do novo botão
 
         public FormMenuPrincipal()
         {
             InitializeComponent();
             clienteDAL = new ClienteDAL();
-            InicializarBotaoSms(); // Adiciona o botão após a inicialização
+            // Removido InicializarBotaoSms() pois o botão já está no Designer
             CarregarAniversariantes();
             AtualizarUsuarioLogado();
         }
 
-        private void InicializarBotaoSms()
-        {
-            // Criar o botão Enviar SMS
-            btnEnviarSms = new Button
-            {
-                Text = "📱 Enviar SMS",
-                Location = new Point(370, 15),
-                Size = new Size(160, 35),
-                BackColor = Color.FromArgb(155, 89, 182),
-                Cursor = Cursors.Hand,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.White,
-                TabIndex = 5 // Mantém a ordem de tabulação
-            };
-
-            // Adicionar eventos
-            btnEnviarSms.Click += BtnEnviarSms_Click;
-            btnEnviarSms.MouseEnter += Botao_MouseEnter;
-            btnEnviarSms.MouseLeave += Botao_MouseLeave;
-
-            // Adicionar ao painel container
-            panelContainer.Controls.Add(btnEnviarSms);
-        }
-
-        // NOVO MÉTODO: Evento do botão Enviar SMS
+        // EVENTO DO BOTÃO ENVIAR SMS
         private void BtnEnviarSms_Click(object sender, EventArgs e)
         {
             try

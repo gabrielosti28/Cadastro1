@@ -2,11 +2,12 @@
 // CLASSE DE ACESSO A DADOS - HISTÓRICO SMS
 // Arquivo: EnvioSmsHistoricoDAL.cs
 // Gerencia histórico de envios em JSON
+// CORRIGIDO: Adicionado using System.Linq
 // =============================================
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Linq; // ← ADICIONADO: Necessário para usar Where, OrderBy, etc
 using Newtonsoft.Json;
 
 namespace Cadastro1
