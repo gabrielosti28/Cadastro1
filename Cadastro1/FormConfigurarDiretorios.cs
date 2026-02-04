@@ -15,6 +15,11 @@ namespace Cadastro1
     {
         private bool alteracoesFeitas = false;
 
+        // Declaração dos novos controles para Logs SMS
+        private TextBox txtLogsSms;
+        private Button btnEscolherLogsSms;
+        private Button btnAbrirLogsSms;
+
         public FormConfigurarDiretorios()
         {
             InitializeComponent();
@@ -37,6 +42,7 @@ namespace Cadastro1
                 txtTemplates.Text = ConfiguracaoPastas.PastaTemplates;
                 txtPDFs.Text = ConfiguracaoPastas.PastaPDFs;
                 txtLogs.Text = ConfiguracaoPastas.PastaLogs;
+                txtLogsSms.Text = ConfiguracaoPastas.PastaLogsSms; // Nova linha
 
                 alteracoesFeitas = false;
             }
@@ -117,6 +123,20 @@ namespace Cadastro1
             }
         }
 
+        // NOVO MÉTODO: Botão Escolher Logs SMS
+        private void BtnEscolherLogsSms_Click(object sender, EventArgs e)
+        {
+            string pasta = EscolherPasta(
+                "Escolha a pasta para LOGS de SMS",
+                txtLogsSms.Text);
+
+            if (!string.IsNullOrEmpty(pasta))
+            {
+                txtLogsSms.Text = pasta;
+                alteracoesFeitas = true;
+            }
+        }
+
         /// <summary>
         /// Método auxiliar para escolher pasta
         /// </summary>
@@ -169,6 +189,12 @@ namespace Cadastro1
             AbrirPastaNoExplorador(txtLogs.Text, "Logs");
         }
 
+        // NOVO MÉTODO: Botão Abrir Logs SMS
+        private void BtnAbrirLogsSms_Click(object sender, EventArgs e)
+        {
+            AbrirPastaNoExplorador(txtLogsSms.Text, "LogsSMS");
+        }
+
         /// <summary>
         /// Abre a pasta no Windows Explorer
         /// </summary>
@@ -211,12 +237,13 @@ namespace Cadastro1
         {
             try
             {
-                // Validar se todas as pastas foram preenchidas
+                // Validar se todas as pastas foram preenchidas (incluindo nova pasta)
                 if (string.IsNullOrWhiteSpace(txtBackups.Text) ||
                     string.IsNullOrWhiteSpace(txtAnexos.Text) ||
                     string.IsNullOrWhiteSpace(txtTemplates.Text) ||
                     string.IsNullOrWhiteSpace(txtPDFs.Text) ||
-                    string.IsNullOrWhiteSpace(txtLogs.Text))
+                    string.IsNullOrWhiteSpace(txtLogs.Text) ||
+                    string.IsNullOrWhiteSpace(txtLogsSms.Text)) // Nova validação
                 {
                     MessageBox.Show(
                         "⚠️ ATENÇÃO\n\n" +
@@ -228,7 +255,7 @@ namespace Cadastro1
                     return;
                 }
 
-                // Testar permissões antes de salvar
+                // Testar permissões antes de salvar (incluindo nova pasta)
                 if (!TestarTodasPermissoes())
                 {
                     DialogResult result = MessageBox.Show(
@@ -244,12 +271,13 @@ namespace Cadastro1
                         return;
                 }
 
-                // Salvar configurações
+                // Salvar configurações (incluindo nova pasta)
                 ConfiguracaoPastas.PastaBackups = txtBackups.Text;
                 ConfiguracaoPastas.PastaAnexos = txtAnexos.Text;
                 ConfiguracaoPastas.PastaTemplates = txtTemplates.Text;
                 ConfiguracaoPastas.PastaPDFs = txtPDFs.Text;
                 ConfiguracaoPastas.PastaLogs = txtLogs.Text;
+                ConfiguracaoPastas.PastaLogsSms = txtLogsSms.Text; // Nova linha
 
                 // Criar todas as pastas
                 ConfiguracaoPastas.GarantirPastasExistem();
@@ -261,7 +289,8 @@ namespace Cadastro1
                     "📎 Anexos: " + Path.GetFileName(txtAnexos.Text) + "\n" +
                     "📄 Templates: " + Path.GetFileName(txtTemplates.Text) + "\n" +
                     "📮 PDFs: " + Path.GetFileName(txtPDFs.Text) + "\n" +
-                    "📝 Logs: " + Path.GetFileName(txtLogs.Text),
+                    "📝 Logs: " + Path.GetFileName(txtLogs.Text) + "\n" +
+                    "📱 Logs SMS: " + Path.GetFileName(txtLogsSms.Text), // Nova linha
                     "Sucesso",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -339,7 +368,7 @@ namespace Cadastro1
         // ========== MÉTODOS AUXILIARES ==========
 
         /// <summary>
-        /// Testa permissões de escrita em todas as pastas
+        /// Testa permissões de escrita em todas as pastas (incluindo nova pasta)
         /// </summary>
         private bool TestarTodasPermissoes()
         {
@@ -350,6 +379,7 @@ namespace Cadastro1
             todasOK &= TestarPermissao(txtTemplates.Text);
             todasOK &= TestarPermissao(txtPDFs.Text);
             todasOK &= TestarPermissao(txtLogs.Text);
+            todasOK &= TestarPermissao(txtLogsSms.Text); // Nova linha
 
             return todasOK;
         }
@@ -422,6 +452,13 @@ namespace Cadastro1
         {
             FormConfiguracaoPastas form = new FormConfiguracaoPastas();
             form.ShowDialog();
+        }
+
+        // NOVO MÉTODO: Atualiza o status da pasta LogsSMS (opcional)
+        private void AtualizarStatusLogsSms()
+        {
+            string status = ObterIconeStatus(txtLogsSms.Text);
+            // Você pode adicionar um label para mostrar o status se quiser
         }
     }
 }

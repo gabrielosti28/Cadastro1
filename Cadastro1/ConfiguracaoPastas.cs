@@ -1,7 +1,8 @@
 ﻿// =============================================
-// CLASSE DE CONFIGURAÇÃO DE PASTAS
+// CLASSE DE CONFIGURAÇÃO DE PASTAS - ATUALIZADA
 // Arquivo: ConfiguracaoPastas.cs
 // Gerencia centralmente todas as pastas do sistema
+// ADICIONADO: PastaLogsSms
 // =============================================
 using Microsoft.Win32;
 using System;
@@ -45,6 +46,13 @@ namespace Cadastro1
         {
             get => ObterPasta("PastaLogs", Path.Combine(PastaPadrao, "Logs"));
             set => SalvarPasta("PastaLogs", value);
+        }
+
+        // NOVO: Pasta para logs de SMS
+        public static string PastaLogsSms
+        {
+            get => ObterPasta("PastaLogsSms", Path.Combine(PastaPadrao, "LogsSMS"));
+            set => SalvarPasta("PastaLogsSms", value);
         }
 
         // Obter pasta do registro ou usar padrão
@@ -111,6 +119,7 @@ namespace Cadastro1
                         key.DeleteValue("PastaTemplates", false);
                         key.DeleteValue("PastaPDFs", false);
                         key.DeleteValue("PastaLogs", false);
+                        key.DeleteValue("PastaLogsSms", false);
                     }
                 }
             }
@@ -128,6 +137,7 @@ namespace Cadastro1
             CriarSeNaoExistir(PastaTemplates);
             CriarSeNaoExistir(PastaPDFs);
             CriarSeNaoExistir(PastaLogs);
+            CriarSeNaoExistir(PastaLogsSms);
         }
 
         // Criar pasta se não existir
@@ -153,7 +163,8 @@ namespace Cadastro1
                    !string.IsNullOrWhiteSpace(PastaAnexos) &&
                    !string.IsNullOrWhiteSpace(PastaTemplates) &&
                    !string.IsNullOrWhiteSpace(PastaPDFs) &&
-                   !string.IsNullOrWhiteSpace(PastaLogs);
+                   !string.IsNullOrWhiteSpace(PastaLogs) &&
+                   !string.IsNullOrWhiteSpace(PastaLogsSms);
         }
     }
 }

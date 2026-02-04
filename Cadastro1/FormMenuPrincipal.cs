@@ -14,13 +14,60 @@ namespace Cadastro1
     public partial class FormMenuPrincipal : Form
     {
         private ClienteDAL clienteDAL;
+        private Button btnEnviarSms; // Declaração do novo botão
 
         public FormMenuPrincipal()
         {
             InitializeComponent();
             clienteDAL = new ClienteDAL();
+            InicializarBotaoSms(); // Adiciona o botão após a inicialização
             CarregarAniversariantes();
             AtualizarUsuarioLogado();
+        }
+
+        private void InicializarBotaoSms()
+        {
+            // Criar o botão Enviar SMS
+            btnEnviarSms = new Button
+            {
+                Text = "📱 Enviar SMS",
+                Location = new Point(370, 15),
+                Size = new Size(160, 35),
+                BackColor = Color.FromArgb(155, 89, 182),
+                Cursor = Cursors.Hand,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.White,
+                TabIndex = 5 // Mantém a ordem de tabulação
+            };
+
+            // Adicionar eventos
+            btnEnviarSms.Click += BtnEnviarSms_Click;
+            btnEnviarSms.MouseEnter += Botao_MouseEnter;
+            btnEnviarSms.MouseLeave += Botao_MouseLeave;
+
+            // Adicionar ao painel container
+            panelContainer.Controls.Add(btnEnviarSms);
+        }
+
+        // NOVO MÉTODO: Evento do botão Enviar SMS
+        private void BtnEnviarSms_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (FormEnviarSms form = new FormEnviarSms())
+                {
+                    form.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao abrir tela de envio de SMS:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void AtualizarUsuarioLogado()
@@ -355,6 +402,9 @@ namespace Cadastro1
                         break;
                     case string s when s.Contains("Configurar Pastas"):
                         btn.BackColor = Color.FromArgb(142, 68, 173);
+                        break;
+                    case string s when s.Contains("Enviar SMS"):
+                        btn.BackColor = Color.FromArgb(155, 89, 182);
                         break;
                     case string s when s.Contains("Sair"):
                         btn.BackColor = Color.FromArgb(231, 76, 60);
