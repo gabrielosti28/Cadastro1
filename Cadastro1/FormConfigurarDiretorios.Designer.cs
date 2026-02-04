@@ -2,6 +2,7 @@
 // FORMULÁRIO DE CONFIGURAÇÃO DE DIRETÓRIOS
 // Arquivo: FormConfigurarDiretorios.Designer.cs
 // Interface para configurar todos os caminhos do sistema
+// CORRIGIDO: Adicionados controles de Logs SMS
 // =============================================
 using System.Drawing;
 using System.Windows.Forms;
@@ -47,6 +48,10 @@ namespace Cadastro1
             this.txtLogs = new System.Windows.Forms.TextBox();
             this.btnEscolherLogs = new System.Windows.Forms.Button();
             this.btnAbrirLogs = new System.Windows.Forms.Button();
+            this.lblLogsSms = new System.Windows.Forms.Label();
+            this.txtLogsSms = new System.Windows.Forms.TextBox();
+            this.btnEscolherLogsSms = new System.Windows.Forms.Button();
+            this.btnAbrirLogsSms = new System.Windows.Forms.Button();
             this.btnSalvar = new System.Windows.Forms.Button();
             this.btnRestaurar = new System.Windows.Forms.Button();
             this.btnFechar = new System.Windows.Forms.Button();
@@ -68,7 +73,7 @@ namespace Cadastro1
             this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelContainer.Location = new System.Drawing.Point(0, 0);
             this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(900, 700);
+            this.panelContainer.Size = new System.Drawing.Size(900, 750);
             this.panelContainer.TabIndex = 0;
             // 
             // lblTitulo
@@ -122,9 +127,13 @@ namespace Cadastro1
             this.panelDiretorios.Controls.Add(this.txtLogs);
             this.panelDiretorios.Controls.Add(this.btnEscolherLogs);
             this.panelDiretorios.Controls.Add(this.btnAbrirLogs);
+            this.panelDiretorios.Controls.Add(this.lblLogsSms);
+            this.panelDiretorios.Controls.Add(this.txtLogsSms);
+            this.panelDiretorios.Controls.Add(this.btnEscolherLogsSms);
+            this.panelDiretorios.Controls.Add(this.btnAbrirLogsSms);
             this.panelDiretorios.Location = new System.Drawing.Point(20, 145);
             this.panelDiretorios.Name = "panelDiretorios";
-            this.panelDiretorios.Size = new System.Drawing.Size(860, 470);
+            this.panelDiretorios.Size = new System.Drawing.Size(860, 520);
             this.panelDiretorios.TabIndex = 2;
             // 
             // lblBackups
@@ -387,6 +396,58 @@ namespace Cadastro1
             this.btnAbrirLogs.UseVisualStyleBackColor = false;
             this.btnAbrirLogs.Click += new System.EventHandler(this.BtnAbrirLogs_Click);
             // 
+            // lblLogsSms
+            // 
+            this.lblLogsSms.AutoSize = true;
+            this.lblLogsSms.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.lblLogsSms.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            this.lblLogsSms.Location = new System.Drawing.Point(20, 420);
+            this.lblLogsSms.Name = "lblLogsSms";
+            this.lblLogsSms.Size = new System.Drawing.Size(127, 20);
+            this.lblLogsSms.TabIndex = 20;
+            this.lblLogsSms.Text = "📱 LOGS DE SMS:";
+            // 
+            // txtLogsSms
+            // 
+            this.txtLogsSms.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.txtLogsSms.Location = new System.Drawing.Point(20, 445);
+            this.txtLogsSms.Name = "txtLogsSms";
+            this.txtLogsSms.ReadOnly = true;
+            this.txtLogsSms.Size = new System.Drawing.Size(540, 25);
+            this.txtLogsSms.TabIndex = 21;
+            // 
+            // btnEscolherLogsSms
+            // 
+            this.btnEscolherLogsSms.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(152)))), ((int)(((byte)(219)))));
+            this.btnEscolherLogsSms.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnEscolherLogsSms.FlatAppearance.BorderSize = 0;
+            this.btnEscolherLogsSms.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnEscolherLogsSms.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnEscolherLogsSms.ForeColor = System.Drawing.Color.White;
+            this.btnEscolherLogsSms.Location = new System.Drawing.Point(570, 443);
+            this.btnEscolherLogsSms.Name = "btnEscolherLogsSms";
+            this.btnEscolherLogsSms.Size = new System.Drawing.Size(130, 30);
+            this.btnEscolherLogsSms.TabIndex = 22;
+            this.btnEscolherLogsSms.Text = "📁 Escolher";
+            this.btnEscolherLogsSms.UseVisualStyleBackColor = false;
+            this.btnEscolherLogsSms.Click += new System.EventHandler(this.BtnEscolherLogsSms_Click);
+            // 
+            // btnAbrirLogsSms
+            // 
+            this.btnAbrirLogsSms.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(155)))), ((int)(((byte)(89)))), ((int)(((byte)(182)))));
+            this.btnAbrirLogsSms.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnAbrirLogsSms.FlatAppearance.BorderSize = 0;
+            this.btnAbrirLogsSms.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAbrirLogsSms.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnAbrirLogsSms.ForeColor = System.Drawing.Color.White;
+            this.btnAbrirLogsSms.Location = new System.Drawing.Point(710, 443);
+            this.btnAbrirLogsSms.Name = "btnAbrirLogsSms";
+            this.btnAbrirLogsSms.Size = new System.Drawing.Size(130, 30);
+            this.btnAbrirLogsSms.TabIndex = 23;
+            this.btnAbrirLogsSms.Text = "🗂️ Abrir Pasta";
+            this.btnAbrirLogsSms.UseVisualStyleBackColor = false;
+            this.btnAbrirLogsSms.Click += new System.EventHandler(this.BtnAbrirLogsSms_Click);
+            // 
             // btnSalvar
             // 
             this.btnSalvar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(204)))), ((int)(((byte)(113)))));
@@ -395,10 +456,10 @@ namespace Cadastro1
             this.btnSalvar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSalvar.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
             this.btnSalvar.ForeColor = System.Drawing.Color.White;
-            this.btnSalvar.Location = new System.Drawing.Point(150, 630);
+            this.btnSalvar.Location = new System.Drawing.Point(150, 680);
             this.btnSalvar.Name = "btnSalvar";
             this.btnSalvar.Size = new System.Drawing.Size(200, 45);
-            this.btnSalvar.TabIndex = 20;
+            this.btnSalvar.TabIndex = 24;
             this.btnSalvar.Text = "✔️ SALVAR TUDO";
             this.btnSalvar.UseVisualStyleBackColor = false;
             this.btnSalvar.Click += new System.EventHandler(this.BtnSalvar_Click);
@@ -411,10 +472,10 @@ namespace Cadastro1
             this.btnRestaurar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRestaurar.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
             this.btnRestaurar.ForeColor = System.Drawing.Color.White;
-            this.btnRestaurar.Location = new System.Drawing.Point(370, 630);
+            this.btnRestaurar.Location = new System.Drawing.Point(370, 680);
             this.btnRestaurar.Name = "btnRestaurar";
             this.btnRestaurar.Size = new System.Drawing.Size(200, 45);
-            this.btnRestaurar.TabIndex = 21;
+            this.btnRestaurar.TabIndex = 25;
             this.btnRestaurar.Text = "🔄 RESTAURAR PADRÃO";
             this.btnRestaurar.UseVisualStyleBackColor = false;
             this.btnRestaurar.Click += new System.EventHandler(this.BtnRestaurar_Click);
@@ -427,21 +488,21 @@ namespace Cadastro1
             this.btnFechar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnFechar.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
             this.btnFechar.ForeColor = System.Drawing.Color.White;
-            this.btnFechar.Location = new System.Drawing.Point(590, 630);
+            this.btnFechar.Location = new System.Drawing.Point(590, 680);
             this.btnFechar.Name = "btnFechar";
             this.btnFechar.Size = new System.Drawing.Size(160, 45);
-            this.btnFechar.TabIndex = 22;
+            this.btnFechar.TabIndex = 26;
             this.btnFechar.Text = "✖️ FECHAR";
             this.btnFechar.UseVisualStyleBackColor = false;
             this.btnFechar.Click += new System.EventHandler(this.BtnFechar_Click);
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(772, 625);
+            this.button1.Location = new System.Drawing.Point(811, 705);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(108, 50);
-            this.button1.TabIndex = 23;
-            this.button1.Text = "Diretório";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 27;
+            this.button1.Text = "diretorio";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -449,7 +510,7 @@ namespace Cadastro1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(900, 700);
+            this.ClientSize = new System.Drawing.Size(900, 750);
             this.Controls.Add(this.panelContainer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -499,6 +560,12 @@ namespace Cadastro1
         private TextBox txtLogs;
         private Button btnEscolherLogs;
         private Button btnAbrirLogs;
+
+        // Logs SMS (NOVOS CONTROLES ADICIONADOS)
+        private Label lblLogsSms;
+        private TextBox txtLogsSms;
+        private Button btnEscolherLogsSms;
+        private Button btnAbrirLogsSms;
 
         // Botões de ação
         private Button btnSalvar;
