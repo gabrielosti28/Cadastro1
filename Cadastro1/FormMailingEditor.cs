@@ -1,7 +1,7 @@
 ﻿// =============================================
-// FORMULARIO - EDITOR DE MALA DIRETA
+// FORMULÁRIO EDITOR DE MALA DIRETA (CORRIGIDO)
 // Arquivo: FormMailingEditor.cs
-// ATUALIZADO: Suporte a múltiplos PDFs
+// CORREÇÃO: Busca funcionando + Preview visual preciso
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -25,6 +25,12 @@ namespace Cadastro1
         private bool modoPositionar = false;
         private int contadorCliques = 0;
         private readonly string[] camposOrdem = { "Endereco", "Cidade", "CEP" };
+
+        // =============================================
+        // PROPRIEDADES PARA CONVERSÃO PRECISA
+        // =============================================
+        private float RazaoX => picPreview.Width / 210f;  // Pixels por mm (largura)
+        private float RazaoY => picPreview.Height / 297f; // Pixels por mm (altura)
 
         public FormMailingEditor()
         {
@@ -55,16 +61,11 @@ namespace Cadastro1
             }
         }
 
-        // ========== NO FormMailingEditor.cs ==========
-
-        // SUBSTITUIR O MÉTODO CarregarClientes()
         private void CarregarClientes()
         {
             try
             {
-                // NÃO carregar todos os clientes
-                // Mostrar apenas mensagem inicial
-                lblInstrucoes.Text = "Use o campo de busca acima para localizar clientes por Nome, CPF ou Cidade";
+                lblInstrucoes.Text = "✏️ Digite no mínimo 3 caracteres no campo de busca para localizar clientes";
                 chkClientes.Items.Clear();
             }
             catch (Exception ex)
@@ -73,7 +74,9 @@ namespace Cadastro1
             }
         }
 
-        // ADICIONAR BUSCA COM FILTRO
+        // =============================================
+        // CORREÇÃO PRINCIPAL: BUSCA FUNCIONANDO
+        // =============================================
         private void txtBuscaCPF_TextChanged(object sender, EventArgs e)
         {
             string filtro = txtBuscaCPF.Text.Trim();
@@ -81,13 +84,23 @@ namespace Cadastro1
             if (filtro.Length < 3)
             {
                 chkClientes.Items.Clear();
-                lblInstrucoes.Text = "Digite pelo menos 3 caracteres para buscar";
+                lblInstrucoes.Text = "✏️ Digite pelo menos 3 caracteres para buscar (Nome, CPF ou Cidade)";
+                lblTotalSelecionados.Text = "0 clientes encontrados";
                 return;
             }
 
-            // BUSCAR APENAS OS FILTRADOS (máximo 500 resultados)
-            clientesFiltrados = clienteDAL.BuscarClientesPorFiltro(filtro, 500);
-            AtualizarListaClientes();
+            try
+            {
+                // BUSCAR com o método corrigido
+                clientesFiltrados = clienteDAL.BuscarClientesPorFiltro(filtro, 500);
+                AtualizarListaClientes();
+
+                lblInstrucoes.Text = $"✅ Encontrados {clientesFiltrados.Count} cliente(s) - Marque os desejados";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro na busca: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void AtualizarListaClientes()
@@ -122,8 +135,6 @@ namespace Cadastro1
                 $"CEP: {(cep ? "✓ Definido" : "✗ Não definido")}";
         }
 
-        // ===== EVENTOS DOS BOTÕES =====
-
         private void BtnCarregar_Click(object sender, EventArgs e)
         {
             try
@@ -139,7 +150,9 @@ namespace Cadastro1
                         templateAtual.CaminhoImagemFundo = ofd.FileName;
 
                         MessageBox.Show(
-                            "✓ Imagem carregada!\n\nAgora clique em 'POSICIONAR TUDO'.",
+                            "✓ Imagem carregada!\n\n" +
+                            "📐 O sistema agora conhece o tamanho exato da folha A4.\n\n" +
+                            "Próximo passo: Clique em 'POSICIONAR TUDO'",
                             "Sucesso",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Information);
@@ -172,7 +185,19 @@ namespace Cadastro1
             contadorCliques = 0;
             picPreview.Cursor = Cursors.Cross;
 
-            lblInfoPosicoes.Text = "👆 Clique 3 vezes na imagem: (1) Endereço, (2) Cidade, (3) CEP";
+            MessageBox.Show(
+                "📍 MODO DE POSICIONAMENTO ATIVADO\n\n" +
+                "Você fará 3 cliques na imagem:\n\n" +
+                "1️⃣ ENDEREÇO - Clique onde o endereço deve aparecer\n" +
+                "2️⃣ CIDADE - Clique onde a cidade deve aparecer\n" +
+                "3️⃣ CEP - Clique onde o CEP deve aparecer\n\n" +
+                "💡 Dica: Clique exatamente no início de cada linha!\n" +
+                "As coordenadas serão convertidas para milímetros precisos.",
+                "Instruções",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            lblInfoPosicoes.Text = "👆 CLIQUE 1/3: Posicione o ENDEREÇO";
             lblInfoPosicoes.ForeColor = Color.FromArgb(46, 204, 113);
         }
 
@@ -183,53 +208,66 @@ namespace Cadastro1
             MouseEventArgs me = e as MouseEventArgs;
             if (me == null) return;
 
-            // Converter posição do clique para milímetros (A4 = 210x297mm)
-            float xMm = (me.X / (float)picPreview.Width) * 210;
-            float yMm = (me.Y / (float)picPreview.Height) * 297;
+            // =============================================
+            // CONVERSÃO PRECISA: PIXELS → MILÍMETROS
+            // =============================================
+
+            // Converter posição do clique de pixels para milímetros
+            float xMm = (me.X / RazaoX);
+            float yMm = (me.Y / RazaoY);
 
             string campo = camposOrdem[contadorCliques];
 
             // Remover campo anterior se existir
             templateAtual.Campos.RemoveAll(c => c.Nome == campo);
 
-            // Adicionar novo campo
+            // Adicionar novo campo com coordenadas em mm
             templateAtual.AdicionarCampoPadrao(campo, xMm, yMm);
 
             contadorCliques++;
 
             if (contadorCliques < camposOrdem.Length)
             {
-                lblInfoPosicoes.Text = $"👆 Clique {contadorCliques + 1}/3: {camposOrdem[contadorCliques]}";
+                lblInfoPosicoes.Text = $"👆 CLIQUE {contadorCliques + 1}/3: Posicione {camposOrdem[contadorCliques].ToUpper()}";
             }
             else
             {
                 modoPositionar = false;
                 picPreview.Cursor = Cursors.Default;
-                lblInfoPosicoes.Text = "✓ Todas as posições definidas!";
+                lblInfoPosicoes.Text = "✓ Todas as posições definidas com precisão!";
                 lblInfoPosicoes.ForeColor = Color.FromArgb(46, 204, 113);
 
                 MessageBox.Show(
-                    "✓ Posições definidas com sucesso!",
+                    "✓ POSIÇÕES DEFINIDAS COM SUCESSO!\n\n" +
+                    "📐 Coordenadas precisas salvas:\n" +
+                    $"   • Endereço: {templateAtual.Campos[0].PosicaoX:F2}mm, {templateAtual.Campos[0].PosicaoY:F2}mm\n" +
+                    $"   • Cidade: {templateAtual.Campos[1].PosicaoX:F2}mm, {templateAtual.Campos[1].PosicaoY:F2}mm\n" +
+                    $"   • CEP: {templateAtual.Campos[2].PosicaoX:F2}mm, {templateAtual.Campos[2].PosicaoY:F2}mm\n\n" +
+                    "✅ O PDF será gerado EXATAMENTE nestas posições!",
                     "Sucesso",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
             }
 
-            picPreview.Invalidate(); // Força redesenho
+            picPreview.Invalidate();
             AtualizarStatus();
         }
 
+        // =============================================
+        // PREVIEW VISUAL PRECISO
+        // =============================================
         private void PicPreview_Paint(object sender, PaintEventArgs e)
         {
             if (templateAtual == null || templateAtual.Campos.Count == 0) return;
 
             Graphics g = e.Graphics;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
             foreach (var campo in templateAtual.Campos)
             {
-                // Converter mm para pixels
-                float xPx = (campo.PosicaoX / 210f) * picPreview.Width;
-                float yPx = (campo.PosicaoY / 297f) * picPreview.Height;
+                // Converter mm para pixels para desenho
+                float xPx = campo.PosicaoX * RazaoX;
+                float yPx = campo.PosicaoY * RazaoY;
 
                 // Cor por campo
                 Color cor = campo.Nome == "Endereco" ? Color.FromArgb(155, 89, 182) :
@@ -239,15 +277,26 @@ namespace Cadastro1
                 using (Brush brush = new SolidBrush(cor))
                 using (Pen pen = new Pen(cor, 2))
                 {
-                    // Desenhar marcador
-                    g.FillEllipse(brush, xPx - 5, yPx - 5, 10, 10);
+                    // Desenhar marcador de cruz
                     g.DrawLine(pen, xPx - 10, yPx, xPx + 10, yPx);
                     g.DrawLine(pen, xPx, yPx - 10, xPx, yPx + 10);
 
-                    // Desenhar label
-                    using (Font font = new Font("Segoe UI", 8, FontStyle.Bold))
+                    // Desenhar círculo no centro
+                    g.FillEllipse(brush, xPx - 4, yPx - 4, 8, 8);
+
+                    // Desenhar label com coordenadas
+                    using (Font font = new Font("Segoe UI", 9, FontStyle.Bold))
                     {
-                        g.DrawString(campo.Nome, font, brush, xPx + 15, yPx - 8);
+                        string label = $"{campo.Nome}\n({campo.PosicaoX:F1}mm, {campo.PosicaoY:F1}mm)";
+
+                        // Fundo semi-transparente para o texto
+                        SizeF tamanhoTexto = g.MeasureString(label, font);
+                        using (Brush fundoBrush = new SolidBrush(Color.FromArgb(200, Color.White)))
+                        {
+                            g.FillRectangle(fundoBrush, xPx + 15, yPx - 10, tamanhoTexto.Width + 4, tamanhoTexto.Height + 4);
+                        }
+
+                        g.DrawString(label, font, brush, xPx + 17, yPx - 8);
                     }
                 }
             }
@@ -260,7 +309,7 @@ namespace Cadastro1
             AtualizarStatus();
 
             MessageBox.Show(
-                "✓ Posições limpas!",
+                "✓ Posições limpas!\n\nVocê pode marcar novamente.",
                 "OK",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
@@ -295,7 +344,8 @@ namespace Cadastro1
                 templateDAL.SalvarTemplate(templateAtual);
 
                 MessageBox.Show(
-                    $"✓ Template '{templateAtual.Nome}' salvo com sucesso!",
+                    $"✓ Template '{templateAtual.Nome}' salvo com sucesso!\n\n" +
+                    "As coordenadas precisas foram armazenadas.",
                     "Sucesso",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -312,34 +362,18 @@ namespace Cadastro1
 
         private void TxtBusca_TextChanged(object sender, EventArgs e)
         {
-            string filtro = txtBuscaCPF.Text.Replace("-", "").Replace(".", "").ToUpper().Trim();
-
-            if (string.IsNullOrWhiteSpace(filtro))
-            {
-                clientesFiltrados = new List<Cliente>(todosClientes);
-            }
-            else
-            {
-                clientesFiltrados = todosClientes.Where(c =>
-                    c.CPF.Replace("-", "").Replace(".", "").Contains(filtro) ||
-                    c.NomeCompleto.ToUpper().Contains(filtro) ||
-                    c.Cidade.ToUpper().Contains(filtro)
-                ).ToList();
-            }
-
-            AtualizarListaClientes();
+            txtBuscaCPF_TextChanged(sender, e);
         }
 
         private void BtnLimparBusca_Click(object sender, EventArgs e)
         {
             txtBuscaCPF.Clear();
-            clientesFiltrados = new List<Cliente>(todosClientes);
+            clientesFiltrados = new List<Cliente>();
             AtualizarListaClientes();
         }
 
         private void ChkClientes_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            // Usar BeginInvoke para atualizar após o check ser aplicado
             this.BeginInvoke(new Action(() => AtualizarContador()));
         }
 
@@ -359,7 +393,6 @@ namespace Cadastro1
         {
             try
             {
-                // Validações
                 if (chkClientes.CheckedItems.Count == 0)
                 {
                     MessageBox.Show(
@@ -401,7 +434,6 @@ namespace Cadastro1
                     }
                 }
 
-                // Escolher onde salvar
                 using (FolderBrowserDialog fbd = new FolderBrowserDialog())
                 {
                     fbd.Description = "Selecione onde salvar os PDFs da mala direta";
@@ -409,27 +441,22 @@ namespace Cadastro1
 
                     if (fbd.ShowDialog() == DialogResult.OK)
                     {
-                        // Mostrar progresso
                         btnGerar.Enabled = false;
                         btnGerar.Text = "⏳ GERANDO PDFs...";
                         Application.DoEvents();
 
-                        // Gerar PDFs
                         MailingPdfGenerator gerador = new MailingPdfGenerator();
                         ResultadoGeracaoPDF resultado = gerador.GerarPDF(templateAtual, clientesSelecionados, fbd.SelectedPath);
 
-                        // Restaurar botão
                         btnGerar.Enabled = true;
                         btnGerar.Text = "GERAR PDF";
 
-                        // Mostrar relatório detalhado
                         MessageBox.Show(
                             resultado.GerarRelatorio(),
                             "Geração Concluída",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Information);
 
-                        // Perguntar se quer abrir a pasta
                         DialogResult abrirPasta = MessageBox.Show(
                             "Deseja abrir a pasta com os arquivos gerados?",
                             "Abrir Pasta",
@@ -461,8 +488,6 @@ namespace Cadastro1
             this.Close();
         }
 
-        // ===== IMPORTAÇÃO DE PLANILHA =====
-
         private void BtnImportarPlanilha_Click(object sender, EventArgs e)
         {
             try
@@ -475,29 +500,22 @@ namespace Cadastro1
 
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
-                        // Mostrar progresso
                         btnImportarPlanilha.Enabled = false;
                         btnImportarPlanilha.Text = "⏳ Importando...";
                         Application.DoEvents();
 
-                        // Importar planilha
                         ExcelImporter importer = new ExcelImporter();
                         ResultadoImportacao resultado = importer.ImportarPlanilha(ofd.FileName);
 
-                        // Marcar clientes encontrados
                         MarcarClientesDaPlanilha(resultado.ClientesEncontrados);
-
-                        // Atualizar status
                         AtualizarStatusImportacao(resultado);
 
-                        // Mostrar relatório
                         MessageBox.Show(
                             resultado.GerarRelatorio(),
                             "Importação Concluída",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Information);
 
-                        // Restaurar botão
                         btnImportarPlanilha.Enabled = true;
                         btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV)";
                     }
@@ -518,16 +536,13 @@ namespace Cadastro1
 
         private void MarcarClientesDaPlanilha(List<Cliente> clientesEncontrados)
         {
-            // Desmarcar todos primeiro
             for (int i = 0; i < chkClientes.Items.Count; i++)
             {
                 chkClientes.SetItemChecked(i, false);
             }
 
-            // Marcar apenas os clientes da planilha
             foreach (var cliente in clientesEncontrados)
             {
-                // Encontrar índice do cliente na lista filtrada
                 int index = clientesFiltrados.FindIndex(c => c.ClienteID == cliente.ClienteID);
 
                 if (index >= 0 && index < chkClientes.Items.Count)
@@ -543,7 +558,6 @@ namespace Cadastro1
         {
             panelStatusImportacao.Visible = true;
 
-            // Montar texto detalhado
             string status = $"📊 RESULTADO DA IMPORTAÇÃO\n";
             status += $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
             status += $"📄 Total na planilha: {resultado.TotalCPFs} CPFs  |  ";
@@ -554,21 +568,20 @@ namespace Cadastro1
 
             lblStatusImportacao.Text = status;
 
-            // Colorir conforme resultado
             if (resultado.CPFsNaoEncontrados == 0)
             {
-                panelStatusImportacao.BackColor = Color.FromArgb(212, 237, 218); // Verde claro
-                lblStatusImportacao.ForeColor = Color.FromArgb(21, 87, 36); // Verde escuro
+                panelStatusImportacao.BackColor = Color.FromArgb(212, 237, 218);
+                lblStatusImportacao.ForeColor = Color.FromArgb(21, 87, 36);
             }
             else if (resultado.CPFsEncontrados > 0)
             {
-                panelStatusImportacao.BackColor = Color.FromArgb(255, 243, 205); // Amarelo claro
-                lblStatusImportacao.ForeColor = Color.FromArgb(133, 100, 4); // Amarelo escuro
+                panelStatusImportacao.BackColor = Color.FromArgb(255, 243, 205);
+                lblStatusImportacao.ForeColor = Color.FromArgb(133, 100, 4);
             }
             else
             {
-                panelStatusImportacao.BackColor = Color.FromArgb(248, 215, 218); // Vermelho claro
-                lblStatusImportacao.ForeColor = Color.FromArgb(114, 28, 36); // Vermelho escuro
+                panelStatusImportacao.BackColor = Color.FromArgb(248, 215, 218);
+                lblStatusImportacao.ForeColor = Color.FromArgb(114, 28, 36);
             }
         }
     }

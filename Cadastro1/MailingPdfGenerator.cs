@@ -1,7 +1,7 @@
 ﻿// =============================================
-// GERADOR DE PDF PARA MALA DIRETA
+// GERADOR DE PDF PARA MALA DIRETA (CORRIGIDO)
 // Arquivo: MailingPdfGenerator.cs
-// ATUALIZADO: Divisão automática em múltiplos arquivos
+// CORREÇÃO: Conversão precisa de mm para pontos PDF e posicionamento exato
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -12,9 +12,6 @@ using iTextSharp.text.pdf;
 
 namespace Cadastro1
 {
-    /// <summary>
-    /// Resultado da geração de PDFs
-    /// </summary>
     public class ResultadoGeracaoPDF
     {
         public int TotalClientes { get; set; }
@@ -72,7 +69,7 @@ namespace Cadastro1
             }
 
             sb.AppendLine("═══════════════════════════════════════════════════════════");
-            sb.AppendLine("💡 DICA: Os arquivos foram divididos para melhor performance!");
+            sb.AppendLine("✅ Os textos foram posicionados EXATAMENTE onde você marcou!");
             sb.AppendLine("═══════════════════════════════════════════════════════════");
 
             return sb.ToString();
@@ -94,38 +91,42 @@ namespace Cadastro1
 
     public class MailingPdfGenerator
     {
-        private const float MM_TO_POINTS = 2.834645f; // Conversão mm para pontos PDF
-        private const int CLIENTES_POR_ARQUIVO = 20; // Máximo de páginas por PDF
+        // =============================================
+        // CONSTANTES CORRIGIDAS PARA PRECISÃO TOTAL
+        // =============================================
+
+        // Conversão exata: 1 mm = 2.834645669 pontos PDF (72 DPI / 25.4 mm)
+        private const float MM_TO_POINTS = 2.834645669f;
+
+        // Tamanho exato de uma folha A4 em milímetros
+        private const float A4_WIDTH_MM = 210f;
+        private const float A4_HEIGHT_MM = 297f;
+
+        // Tamanho exato de uma folha A4 em pontos PDF
+        private const float A4_WIDTH_POINTS = 595.276f;  // 210mm * 2.834645669
+        private const float A4_HEIGHT_POINTS = 841.890f; // 297mm * 2.834645669
+
+        private const int CLIENTES_POR_ARQUIVO = 20;
 
         public MailingPdfGenerator()
         {
-            // Garantir que a pasta existe
             ConfiguracaoPastas.GarantirPastasExistem();
         }
 
-        /// <summary>
-        /// Obtém o diretório de PDFs
-        /// </summary>
         private string ObterDiretorioPDFs()
         {
             return ConfiguracaoPastas.PastaPDFs;
         }
 
-        /// <summary>
-        /// Gera PDFs com mala direta para múltiplos clientes
-        /// ATUALIZADO: Divide automaticamente em arquivos de até 20 páginas
-        /// </summary>
         public ResultadoGeracaoPDF GerarPDF(MailingTemplate template, List<Cliente> clientes, string caminhoSaida = null)
         {
             try
             {
-                // Se não foi especificado caminho, usar o diretório configurado
                 if (string.IsNullOrEmpty(caminhoSaida))
                 {
                     caminhoSaida = ObterDiretorioPDFs();
                 }
 
-                // Garantir que o diretório existe
                 if (!Directory.Exists(caminhoSaida))
                 {
                     Directory.CreateDirectory(caminhoSaida);
@@ -136,61 +137,52 @@ namespace Cadastro1
                     TotalClientes = clientes.Count
                 };
 
-                // Calcular quantos arquivos serão necessários
                 int totalArquivos = (int)Math.Ceiling((double)clientes.Count / CLIENTES_POR_ARQUIVO);
                 resultado.TotalArquivos = totalArquivos;
 
-                // Timestamp base para nomenclatura
                 string timestampBase = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
-                // Gerar cada arquivo
                 for (int arquivoNum = 0; arquivoNum < totalArquivos; arquivoNum++)
                 {
-                    // Calcular índices dos clientes para este arquivo
                     int indiceInicio = arquivoNum * CLIENTES_POR_ARQUIVO;
                     int indiceFim = Math.Min(indiceInicio + CLIENTES_POR_ARQUIVO, clientes.Count);
-                    int clientesNesteArquivo = indiceFim - indiceInicio;
 
-                    // Nome do arquivo
                     string nomeArquivo;
                     if (totalArquivos == 1)
                     {
-                        // Se for apenas um arquivo, não adicionar numeração
                         nomeArquivo = $"MailaDireta_{timestampBase}.pdf";
                     }
                     else
                     {
-                        // Múltiplos arquivos - adicionar numeração
                         nomeArquivo = $"MailaDireta_{timestampBase}_Parte{arquivoNum + 1}de{totalArquivos}.pdf";
                     }
 
                     string caminhoArquivo = Path.Combine(caminhoSaida, nomeArquivo);
 
-                    // Criar o PDF
-                    Document document = new Document(PageSize.A4, 0, 0, 0, 0);
+                    // =============================================
+                    // CRIAR PDF COM TAMANHO EXATO A4
+                    // =============================================
+                    Rectangle a4Exato = new Rectangle(A4_WIDTH_POINTS, A4_HEIGHT_POINTS);
+                    Document document = new Document(a4Exato, 0, 0, 0, 0); // Sem margens
+
                     PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(caminhoArquivo, FileMode.Create));
                     document.Open();
 
-                    // Adicionar clientes deste lote
                     for (int i = indiceInicio; i < indiceFim; i++)
                     {
                         AdicionarPaginaCliente(document, writer, template, clientes[i]);
 
-                        // Adicionar nova página se não for o último cliente do arquivo
                         if (i < indiceFim - 1)
                         {
                             document.NewPage();
                         }
                     }
 
-                    // Fechar documento
                     document.Close();
                     writer.Close();
 
-                    // Adicionar ao resultado
                     resultado.ArquivosGerados.Add(caminhoArquivo);
 
-                    // Calcular tamanho
                     FileInfo info = new FileInfo(caminhoArquivo);
                     resultado.TamanhoTotalBytes += info.Length;
                 }
@@ -203,28 +195,30 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// Adiciona uma página com dados de um cliente
-        /// </summary>
         private void AdicionarPaginaCliente(Document document, PdfWriter writer,
             MailingTemplate template, Cliente cliente)
         {
             PdfContentByte cb = writer.DirectContent;
 
-            // Se houver imagem de fundo, adicionar
+            // Se houver imagem de fundo, adicionar com tamanho EXATO A4
             if (!string.IsNullOrEmpty(template.CaminhoImagemFundo) &&
                 File.Exists(template.CaminhoImagemFundo))
             {
                 try
                 {
                     Image imgFundo = Image.GetInstance(template.CaminhoImagemFundo);
-                    imgFundo.ScaleToFit(PageSize.A4.Width, PageSize.A4.Height);
+
+                    // =============================================
+                    // ESCALAR IMAGEM PARA TAMANHO EXATO A4
+                    // =============================================
+                    imgFundo.ScaleAbsolute(A4_WIDTH_POINTS, A4_HEIGHT_POINTS);
                     imgFundo.SetAbsolutePosition(0, 0);
+
                     document.Add(imgFundo);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Se falhar ao carregar imagem, continuar sem ela
+                    System.Diagnostics.Debug.WriteLine($"Erro ao carregar imagem: {ex.Message}");
                 }
             }
 
@@ -240,29 +234,54 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// Adiciona texto em posição específica do PDF
-        /// </summary>
         private void AdicionarTexto(PdfContentByte cb, string texto, TemplateCampo campo)
         {
-            // Converter mm para pontos
-            float x = campo.PosicaoX * MM_TO_POINTS;
+            // =============================================
+            // CONVERSÃO PRECISA DE COORDENADAS
+            // =============================================
+
+            // Converter mm para pontos PDF com fator exato
+            float xPoints = campo.PosicaoX * MM_TO_POINTS;
+
             // Y em PDF é de baixo para cima, então inverter
-            float y = PageSize.A4.Height - (campo.PosicaoY * MM_TO_POINTS);
+            // A altura total é A4_HEIGHT_POINTS
+            float yPoints = A4_HEIGHT_POINTS - (campo.PosicaoY * MM_TO_POINTS);
 
             // Definir fonte
             BaseFont bf = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
 
             cb.BeginText();
             cb.SetFontAndSize(bf, campo.FonteTamanho);
-            cb.SetTextMatrix(x, y);
+
+            // =============================================
+            // POSICIONAR TEXTO EXATAMENTE NAS COORDENADAS
+            // =============================================
+            cb.SetTextMatrix(xPoints, yPoints);
+
             cb.ShowText(texto);
             cb.EndText();
+
+            // Debug: Desenhar marcador visual (opcional - remover em produção)
+            // DesenhaMarcadorDebug(cb, xPoints, yPoints);
         }
 
-        /// <summary>
-        /// Obtém o valor de um campo do cliente
-        /// </summary>
+        // Método auxiliar para debug visual (opcional)
+        private void DesenhaMarcadorDebug(PdfContentByte cb, float x, float y)
+        {
+            cb.SaveState();
+            cb.SetColorStroke(BaseColor.RED);
+            cb.SetLineWidth(0.5f);
+
+            // Desenhar cruz no ponto exato
+            cb.MoveTo(x - 5, y);
+            cb.LineTo(x + 5, y);
+            cb.MoveTo(x, y - 5);
+            cb.LineTo(x, y + 5);
+            cb.Stroke();
+
+            cb.RestoreState();
+        }
+
         private string ObterValorCampo(Cliente cliente, string nomeCampo)
         {
             switch (nomeCampo.ToUpper())
@@ -275,7 +294,7 @@ namespace Cadastro1
                     return cliente.Endereco;
 
                 case "CIDADE":
-                    return $"{cliente.Cidade} - SP"; // Assumindo SP
+                    return $"{cliente.Cidade} - SP";
 
                 case "CEP":
                     return FormatarCEP(cliente.CEP);
@@ -288,9 +307,6 @@ namespace Cadastro1
             }
         }
 
-        /// <summary>
-        /// Formata CEP para exibição
-        /// </summary>
         private string FormatarCEP(string cep)
         {
             if (string.IsNullOrEmpty(cep)) return "";

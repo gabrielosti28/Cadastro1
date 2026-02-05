@@ -1,6 +1,7 @@
 ﻿// =============================================
-// CLASSE DE ACESSO A DADOS - ATUALIZADA
+// CLASSE DE ACESSO A DADOS - CLIENTE (CORRIGIDA)
 // Arquivo: ClienteDAL.cs
+// CORREÇÃO: Busca por CPF agora funciona corretamente
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -11,11 +12,6 @@ namespace Cadastro1
 {
     public class ClienteDAL
     {
-       
-        
-        
-        
-        
         public bool InserirCliente(Cliente cliente)
         {
             try
@@ -172,9 +168,6 @@ namespace Cadastro1
             return clientes;
         }
 
-        /// <summary>
-        /// Busca clientes que fazem aniversário hoje
-        /// </summary>
         public List<Cliente> BuscarAniversariantesHoje()
         {
             List<Cliente> clientes = new List<Cliente>();
@@ -226,9 +219,6 @@ namespace Cadastro1
             return clientes;
         }
 
-        /// <summary>
-        /// Busca clientes que fazem aniversário na semana atual
-        /// </summary>
         public List<Cliente> BuscarAniversariantesSemana()
         {
             List<Cliente> clientes = new List<Cliente>();
@@ -243,10 +233,8 @@ namespace Cadastro1
                 SELECT * FROM Clientes 
                 WHERE Ativo = 1 
                 AND (
-                    -- Para aniversários na mesma semana do ano
                     DATEPART(WEEK, DataNascimento) = DATEPART(WEEK, GETDATE())
                     OR
-                    -- Para casos onde a data de hoje está na mesma semana mas ano diferente
                     (
                         DATEDIFF(DAY, 
                             DATEADD(YEAR, DATEDIFF(YEAR, DataNascimento, GETDATE()), DataNascimento),
@@ -293,9 +281,6 @@ namespace Cadastro1
             return clientes;
         }
 
-        /// <summary>
-        /// Calcula a idade atual do cliente
-        /// </summary>
         public static int CalcularIdade(DateTime dataNascimento)
         {
             int idade = DateTime.Now.Year - dataNascimento.Year;
@@ -303,7 +288,6 @@ namespace Cadastro1
                 idade--;
             return idade;
         }
-        // ========== NO ClienteDAL.cs ==========
 
         public class ResultadoPaginado
         {
@@ -328,7 +312,6 @@ namespace Cadastro1
                 {
                     conn.Open();
 
-                    // CONTAR TOTAL DE REGISTROS
                     string sqlCount = "SELECT COUNT(*) FROM Clientes WHERE Ativo = 1";
                     if (!mostrarTodas && !string.IsNullOrEmpty(cidadeFiltro))
                     {
@@ -343,7 +326,6 @@ namespace Cadastro1
                         totalRegistros = (int)cmdCount.ExecuteScalar();
                     }
 
-                    // BUSCAR COM PAGINAÇÃO (SQL SERVER 2012+)
                     string sql = @"
                 SELECT * FROM Clientes 
                 WHERE Ativo = 1";
@@ -404,6 +386,10 @@ namespace Cadastro1
                 throw new Exception("Erro ao listar clientes paginados: " + ex.Message);
             }
         }
+
+        // =============================================
+        // CORREÇÃO PRINCIPAL: BUSCA POR FILTRO COMPLETA
+        // =============================================
         public List<Cliente> BuscarClientesPorFiltro(string filtro, int limite = 500)
         {
             List<Cliente> clientes = new List<Cliente>();
@@ -433,7 +419,21 @@ namespace Cadastro1
                         {
                             while (reader.Read())
                             {
-                                // ... (código de criação do objeto Cliente)
+                                clientes.Add(new Cliente
+                                {
+                                    ClienteID = Convert.ToInt32(reader["ClienteID"]),
+                                    NomeCompleto = reader["NomeCompleto"].ToString(),
+                                    CPF = reader["CPF"].ToString(),
+                                    DataNascimento = Convert.ToDateTime(reader["DataNascimento"]),
+                                    Endereco = reader["Endereco"].ToString(),
+                                    Cidade = reader["Cidade"].ToString(),
+                                    CEP = reader["CEP"].ToString(),
+                                    Telefone = reader["Telefone"] == DBNull.Value ? "" : reader["Telefone"].ToString(),
+                                    BeneficioINSS = reader["BeneficioINSS"].ToString(),
+                                    BeneficioINSS2 = reader["BeneficioINSS2"] == DBNull.Value ? "" : reader["BeneficioINSS2"].ToString(),
+                                    DataCadastro = Convert.ToDateTime(reader["DataCadastro"]),
+                                    Ativo = Convert.ToBoolean(reader["Ativo"])
+                                });
                             }
                         }
                     }
@@ -446,6 +446,5 @@ namespace Cadastro1
 
             return clientes;
         }
-
     }
 }
