@@ -1,14 +1,12 @@
 ﻿// =============================================
-// IMPORTADOR DE CLIENTES EM LOTE - VERSÃO FINAL
-// Arquivo: ImportadorClientesLote.cs
-// ATUALIZAÇÕES:
-// - Aceita CPFs, CEPs, INSS com qualquer quantidade de dígitos
-// - Preenche automaticamente campos vazios com placeholders
-// - Apenas NOME e CPF são obrigatórios
+// IMPORTADOR DE CLIENTES EM LOTE - VERSÃO UNIVERSAL
+// Arquivo: ImportadorClientesLote.cs (ATUALIZADO)
+// SUPORTA: CSV, XLSX, XLS, TXT, TSV
 // =============================================
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.OleDb;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -155,20 +153,15 @@ namespace Cadastro1
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Exporta clientes com falha para um arquivo CSV
-        /// Retorna o caminho do arquivo gerado ou null se não houver falhas
-        /// </summary>
         public string ExportarFalhasParaCSV(string caminhoArquivoOriginal)
         {
             var falhas = Resultados.Where(r => !r.Sucesso).ToList();
 
             if (falhas.Count == 0)
-                return null; // Sem falhas, não cria arquivo
+                return null;
 
             try
             {
-                // Criar nome do arquivo de saída
                 string diretorio = Path.GetDirectoryName(caminhoArquivoOriginal);
                 string nomeArquivo = Path.GetFileNameWithoutExtension(caminhoArquivoOriginal);
                 string arquivoSaida = Path.Combine(diretorio,
@@ -176,25 +169,17 @@ namespace Cadastro1
 
                 using (StreamWriter sw = new StreamWriter(arquivoSaida, false, Encoding.UTF8))
                 {
-                    // CABEÇALHO
                     sw.WriteLine("Nome;CPF;DataNascimento;Endereco;Cidade;CEP;BeneficioINSS;Telefone;BeneficioINSS2;MOTIVO_DO_ERRO;CAMPOS_COM_PROBLEMA");
 
-                    // DADOS DAS FALHAS
                     foreach (var falha in falhas)
                     {
-                        // Campos básicos (podem estar vazios)
                         string nome = falha.Nome ?? "";
                         string cpf = falha.CPF ?? "";
-
-                        // Motivo do erro
                         string motivo = falha.MensagemErro ?? "Erro desconhecido";
-
-                        // Campos com problema
                         string camposProblema = falha.CamposFaltantes.Count > 0
                             ? string.Join(", ", falha.CamposFaltantes)
                             : "N/A";
 
-                        // Escrever linha - campos vazios para reaproveitamento
                         sw.WriteLine($"{nome};{cpf};;;;;;;;{motivo};{camposProblema}");
                     }
                 }
@@ -250,18 +235,48 @@ namespace Cadastro1
             anexoDAL = new ClienteAnexoDAL();
         }
 
+        // =============================================
+        // MÉTODO PRINCIPAL - SUPORTA MÚLTIPLOS FORMATOS
+        // =============================================
+        public ResultadoImportacaoLote ImportarArquivo(string caminhoArquivo)
+        {
+            string extensao = Path.GetExtension(caminhoArquivo).ToLower();
+
+            switch (extensao)
+            {
+                case ".csv":
+                case ".txt":
+                case ".tsv":
+                    return ImportarCSV(caminhoArquivo);
+
+                case ".xlsx":
+                case ".xls":
+                    return ImportarExcel(caminhoArquivo);
+
+                default:
+                    throw new Exception(
+                        $"❌ FORMATO NÃO SUPORTADO: {extensao}\n\n" +
+                        "Formatos aceitos:\n" +
+                        "✓ .CSV (separado por vírgula ou ponto-e-vírgula)\n" +
+                        "✓ .TXT (texto delimitado)\n" +
+                        "✓ .TSV (separado por tabulação)\n" +
+                        "✓ .XLSX (Excel moderno)\n" +
+                        "✓ .XLS (Excel antigo)");
+            }
+        }
+
         public ResultadoImportacaoLote ImportarCSV(string caminhoArquivo)
         {
             ResultadoImportacaoLote resultado = new ResultadoImportacaoLote();
 
             try
             {
-                string[] linhas = File.ReadAllLines(caminhoArquivo, Encoding.GetEncoding("ISO-8859-1"));
+                string[] linhas = LerArquivoComEncodingCorreto(caminhoArquivo);
 
                 if (linhas.Length == 0)
                     throw new Exception("Arquivo vazio!");
 
-                string separador = linhas[0].Contains(";") ? ";" : ",";
+                string separador = DetectarSeparador(linhas[0]);
                 string[] colunas = linhas[0].Split(new[] { separador }, StringSplitOptions.None);
 
                 for (int i = 1; i < linhas.Length; i++)
@@ -307,24 +322,203 @@ namespace Cadastro1
             }
             catch (Exception ex)
             {
-                throw new Exception($"Erro ao importar CSV: {ex.Message}");
+                throw new Exception($"Erro ao importar arquivo: {ex.Message}");
             }
         }
 
+        // =============================================
+        // NOVO: IMPORTAR EXCEL (XLSX/XLS)
+        // =============================================
+        public ResultadoImportacaoLote ImportarExcel(string caminhoArquivo)
+        {
+            ResultadoImportacaoLote resultado = new ResultadoImportacaoLote();
+
+            try
+            {
+                DataTable dt = LerExcelOleDb(caminhoArquivo);
+
+                if (dt == null || dt.Rows.Count == 0)
+                    throw new Exception("Planilha vazia!");
+
+                // Obter nomes das colunas
+                string[] colunas = new string[dt.Columns.Count];
+                for (int i = 0; i < dt.Columns.Count; i++)
+                {
+                    colunas[i] = dt.Columns[i].ColumnName;
+                }
+
+                // Processar cada linha
+                foreach (DataRow row in dt.Rows)
+                {
+                    // Verificar se a linha está vazia
+                    bool linhaVazia = true;
+                    foreach (var item in row.ItemArray)
+                    {
+                        if (item != null && item != DBNull.Value && !string.IsNullOrWhiteSpace(item.ToString()))
+                        {
+                            linhaVazia = false;
+                            break;
+                        }
+                    }
+
+                    if (linhaVazia) continue;
+
+                    resultado.TotalLinhas++;
+
+                    try
+                    {
+                        // Criar dicionário de dados da linha
+                        Dictionary<string, string> dadosLinha = new Dictionary<string, string>();
+                        for (int i = 0; i < colunas.Length && i < row.ItemArray.Length; i++)
+                        {
+                            var valor = row.ItemArray[i];
+                            dadosLinha[colunas[i]] = valor == null || valor == DBNull.Value ? "" : valor.ToString().Trim();
+                        }
+
+                        ResultadoCadastroCliente resultadoCliente = ProcessarDadosLinha(dadosLinha);
+                        resultado.Resultados.Add(resultadoCliente);
+
+                        if (resultadoCliente.Sucesso)
+                        {
+                            resultado.Sucessos++;
+                            if (resultadoCliente.CamposPreenchidosAutomaticamente.Count > 0)
+                                resultado.CamposPreenchidosAuto++;
+                        }
+                        else
+                        {
+                            if (resultadoCliente.MensagemErro != null &&
+                                resultadoCliente.MensagemErro.Contains("já cadastrado"))
+                            {
+                                resultado.CPFsDuplicados++;
+                            }
+                            resultado.Falhas++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        resultado.Falhas++;
+                        resultado.Resultados.Add(new ResultadoCadastroCliente
+                        {
+                            Sucesso = false,
+                            MensagemErro = $"Erro ao processar linha: {ex.Message}"
+                        });
+                    }
+                }
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("not registered") || ex.Message.Contains("não registrado"))
+                {
+                    throw new Exception(
+                        "❌ DRIVER DE EXCEL NÃO INSTALADO\n\n" +
+                        "SOLUÇÃO RÁPIDA:\n" +
+                        "→ Abra o arquivo no Excel\n" +
+                        "→ Salve como 'CSV (separado por vírgulas)'\n" +
+                        "→ Importe o arquivo .CSV gerado\n\n" +
+                        "SOLUÇÃO PERMANENTE:\n" +
+                        "→ Instale 'Microsoft Access Database Engine'\n" +
+                        "→ Link: https://www.microsoft.com/download/details.aspx?id=54920");
+                }
+
+                throw new Exception($"Erro ao importar Excel: {ex.Message}");
+            }
+        }
+
+        private DataTable LerExcelOleDb(string caminhoArquivo)
+        {
+            string extensao = Path.GetExtension(caminhoArquivo).ToLower();
+            string connectionString;
+
+            if (extensao == ".xlsx")
+            {
+                connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={caminhoArquivo};" +
+                                  "Extended Properties='Excel 12.0 Xml;HDR=YES;IMEX=1'";
+            }
+            else
+            {
+                connectionString = $"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={caminhoArquivo};" +
+                                  "Extended Properties='Excel 8.0;HDR=YES;IMEX=1'";
+            }
+
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            {
+                conn.Open();
+
+                DataTable dtSchema = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
+                if (dtSchema == null || dtSchema.Rows.Count == 0)
+                {
+                    throw new Exception("Planilha não contém dados.");
+                }
+
+                string nomePlanilha = dtSchema.Rows[0]["TABLE_NAME"].ToString();
+
+                string query = $"SELECT * FROM [{nomePlanilha}]";
+                using (OleDbDataAdapter adapter = new OleDbDataAdapter(query, conn))
+                {
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
+                    return dt;
+                }
+            }
+        }
+
+        private string[] LerArquivoComEncodingCorreto(string caminhoArquivo)
+        {
+            string[] encodings = { "UTF-8", "ISO-8859-1", "Windows-1252" };
+
+            foreach (string enc in encodings)
+            {
+                try
+                {
+                    return File.ReadAllLines(caminhoArquivo, Encoding.GetEncoding(enc));
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            throw new Exception("Não foi possível ler o arquivo com nenhum encoding suportado.");
+        }
+
+        private string DetectarSeparador(string linha)
+        {
+            if (string.IsNullOrWhiteSpace(linha))
+                return ";";
+
+            int virgulas = linha.Count(c => c == ',');
+            int pontosVirgula = linha.Count(c => c == ';');
+            int tabs = linha.Count(c => c == '\t');
+
+            if (tabs > virgulas && tabs > pontosVirgula)
+                return "\t";
+            else if (pontosVirgula > virgulas)
+                return ";";
+            else
+                return ",";
+        }
+
         private ResultadoCadastroCliente ProcessarLinhaCSV(string linha, string[] nomeColunas, string separador)
+        {
+            string[] valores = linha.Split(new[] { separador }, StringSplitOptions.None);
+
+            Dictionary<string, string> dadosLinha = new Dictionary<string, string>();
+            for (int i = 0; i < Math.Min(valores.Length, nomeColunas.Length); i++)
+            {
+                dadosLinha[nomeColunas[i].Trim()] = valores[i].Trim();
+            }
+
+            return ProcessarDadosLinha(dadosLinha);
+        }
+
+        private ResultadoCadastroCliente ProcessarDadosLinha(Dictionary<string, string> dadosLinha)
         {
             ResultadoCadastroCliente resultado = new ResultadoCadastroCliente();
 
             try
             {
-                string[] valores = linha.Split(new[] { separador }, StringSplitOptions.None);
-
-                Dictionary<string, string> dadosLinha = new Dictionary<string, string>();
-                for (int i = 0; i < Math.Min(valores.Length, nomeColunas.Length); i++)
-                {
-                    dadosLinha[nomeColunas[i].Trim()] = valores[i].Trim();
-                }
-
                 // Extrair campos
                 string nome = ExtrairCampo(dadosLinha, camposObrigatorios["Nome"]);
                 string cpf = ExtrairCampo(dadosLinha, camposObrigatorios["CPF"]);
@@ -334,39 +528,31 @@ namespace Cadastro1
                 string cep = ExtrairCampo(dadosLinha, camposObrigatorios["CEP"]);
                 string inss = ExtrairCampo(dadosLinha, camposObrigatorios["BeneficioINSS"]);
 
-                // =====================================================
-                // SISTEMA DE PREENCHIMENTO AUTOMÁTICO
-                // =====================================================
-
-                // CEP - Se vazio, preencher com 99999999
+                // Preenchimento automático
                 if (string.IsNullOrWhiteSpace(cep))
                 {
                     cep = "99999999";
                     resultado.CamposPreenchidosAutomaticamente.Add("CEP");
                 }
 
-                // ENDEREÇO - Se vazio, preencher com texto identificável
                 if (string.IsNullOrWhiteSpace(endereco))
                 {
                     endereco = "ENDEREÇO NÃO INFORMADO - ATUALIZAR";
                     resultado.CamposPreenchidosAutomaticamente.Add("Endereço");
                 }
 
-                // CIDADE - Se vazia, preencher com texto identificável
                 if (string.IsNullOrWhiteSpace(cidade))
                 {
                     cidade = "CIDADE NÃO INFORMADA - ATUALIZAR";
                     resultado.CamposPreenchidosAutomaticamente.Add("Cidade");
                 }
 
-                // BENEFÍCIO INSS - Se vazio, preencher com 9999999999
                 if (string.IsNullOrWhiteSpace(inss))
                 {
                     inss = "9999999999";
                     resultado.CamposPreenchidosAutomaticamente.Add("INSS");
                 }
 
-                // DATA DE NASCIMENTO - Se vazia, usar 01/01/1900
                 if (string.IsNullOrWhiteSpace(dataNascStr))
                 {
                     dataNascStr = "01/01/1900";
@@ -375,9 +561,7 @@ namespace Cadastro1
 
                 resultado.Nome = nome;
 
-                // =====================================================
-                // VALIDAÇÃO DE CPF (Obrigatório - não pode ser vazio)
-                // =====================================================
+                // Validar CPF
                 string cpfLimpo = LimparCPF(cpf);
 
                 if (string.IsNullOrEmpty(cpfLimpo))
@@ -395,9 +579,7 @@ namespace Cadastro1
 
                 resultado.CPF = cpfLimpo;
 
-                // =====================================================
-                // VALIDAÇÃO DE NOME (Obrigatório - não pode ser vazio)
-                // =====================================================
+                // Validar Nome
                 if (string.IsNullOrWhiteSpace(nome))
                 {
                     resultado.CamposFaltantes.Add("Nome");
@@ -406,7 +588,7 @@ namespace Cadastro1
                     return resultado;
                 }
 
-                // Verificar se CPF já existe
+                // Verificar duplicado
                 Cliente clienteExistente = clienteDAL.ConsultarPorCPF(cpfLimpo);
                 if (clienteExistente != null)
                 {
@@ -415,31 +597,29 @@ namespace Cadastro1
                     return resultado;
                 }
 
-                // Converter data de nascimento
+                // Converter data
                 DateTime dataNasc;
                 if (!TentarConverterData(dataNascStr, out dataNasc))
                 {
-                    // Se falhar, usar data padrão
                     dataNasc = new DateTime(1900, 1, 1);
                     if (!resultado.CamposPreenchidosAutomaticamente.Contains("Data Nascimento"))
                         resultado.CamposPreenchidosAutomaticamente.Add("Data Nascimento");
                 }
 
-                // Limpar e ajustar CEP
+                // Limpar campos
                 string cepLimpo = LimparCEP(cep);
                 if (cepLimpo.Length < 8)
                     cepLimpo = cepLimpo.PadLeft(8, '9');
                 else if (cepLimpo.Length > 8)
                     cepLimpo = cepLimpo.Substring(0, 8);
 
-                // Limpar e ajustar INSS
                 string inssLimpo = LimparNumeros(inss);
                 if (inssLimpo.Length < 10)
                     inssLimpo = inssLimpo.PadLeft(10, '9');
                 else if (inssLimpo.Length > 10)
                     inssLimpo = inssLimpo.Substring(0, 10);
 
-                // Extrair campos opcionais
+                // Campos opcionais
                 string telefone = ExtrairCampo(dadosLinha, camposOpcionais["Telefone"]);
                 string inss2 = ExtrairCampo(dadosLinha, camposOpcionais["BeneficioINSS2"]);
 
@@ -463,7 +643,7 @@ namespace Cadastro1
                         inss2Limpo = inss2Limpo.Substring(0, 10);
                 }
 
-                // Criar objeto Cliente
+                // Criar cliente
                 Cliente novoCliente = new Cliente
                 {
                     NomeCompleto = nome,
@@ -478,19 +658,17 @@ namespace Cadastro1
                     Ativo = true
                 };
 
-                // Cadastrar cliente
+                // Cadastrar
                 if (clienteDAL.InserirCliente(novoCliente))
                 {
                     Cliente clienteCadastrado = clienteDAL.ConsultarPorCPF(cpfLimpo);
                     resultado.ClienteID = clienteCadastrado?.ClienteID;
 
-                    // Identificar dados excedentes
+                    // Dados excedentes
                     HashSet<string> camposUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
                     foreach (var campo in camposObrigatorios.Values)
                         foreach (var n in campo)
                             camposUsados.Add(n);
-
                     foreach (var campo in camposOpcionais.Values)
                         foreach (var n in campo)
                             camposUsados.Add(n);
@@ -503,7 +681,6 @@ namespace Cadastro1
                         }
                     }
 
-                    // Adicionar aviso sobre campos preenchidos automaticamente
                     if (resultado.CamposPreenchidosAutomaticamente.Count > 0)
                     {
                         resultado.DadosExcedentes["⚠️_CAMPOS_AUTO"] =
@@ -511,7 +688,6 @@ namespace Cadastro1
                             "foram preenchidos automaticamente com valores placeholder. ATUALIZE posteriormente!";
                     }
 
-                    // Salvar dados excedentes como anexo
                     if (resultado.DadosExcedentes.Count > 0 && resultado.ClienteID.HasValue)
                     {
                         SalvarDadosExcedentesComoAnexo(resultado.ClienteID.Value, resultado.DadosExcedentes, nome);

@@ -1,7 +1,7 @@
 ﻿// =============================================
-// FORMULÁRIO - IMPORTAÇÃO EM LOTE - ATUALIZADO
-// Arquivo: FormImportarClientesLote.cs
-// NOVO: Exporta automaticamente CSV com falhas
+// FORMULÁRIO - IMPORTAÇÃO EM LOTE - UNIVERSAL
+// Arquivo: FormImportarClientesLote.cs (ATUALIZADO)
+// SUPORTA: CSV, XLSX, XLS, TXT, TSV
 // =============================================
 using System;
 using System.Drawing;
@@ -14,7 +14,7 @@ namespace Cadastro1
     {
         private ImportadorClientesLote importador;
         private ResultadoImportacaoLote ultimoResultado;
-        private string caminhoArquivoImportado; // NOVO: guardar caminho do arquivo
+        private string caminhoArquivoImportado;
 
         public FormImportarClientesLote()
         {
@@ -29,14 +29,27 @@ namespace Cadastro1
                 using (OpenFileDialog ofd = new OpenFileDialog())
                 {
                     ofd.Title = "Selecione a planilha com os clientes";
-                    ofd.Filter = "Arquivos CSV|*.csv|Todos os arquivos|*.*";
+
+                    // =============================================
+                    // ATUALIZADO: Aceitar múltiplos formatos
+                    // =============================================
+                    ofd.Filter = "Todos os formatos suportados|*.csv;*.xlsx;*.xls;*.txt;*.tsv|" +
+                                "Arquivos CSV|*.csv|" +
+                                "Arquivos Excel|*.xlsx;*.xls|" +
+                                "Arquivos de Texto|*.txt;*.tsv|" +
+                                "Todos os arquivos|*.*";
                     ofd.FilterIndex = 1;
 
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         txtCaminhoArquivo.Text = ofd.FileName;
-                        caminhoArquivoImportado = ofd.FileName; // NOVO: salvar caminho
+                        caminhoArquivoImportado = ofd.FileName;
                         btnIniciarImportacao.Enabled = true;
+
+                        // Mostrar tipo de arquivo detectado
+                        string extensao = Path.GetExtension(ofd.FileName).ToUpper();
+                        lblStatus.Text = $"✅ Arquivo {extensao} selecionado - Pronto para importar";
+                        lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
                     }
                 }
             }
@@ -73,14 +86,16 @@ namespace Cadastro1
             }
 
             // Confirmar
+            string extensao = Path.GetExtension(txtCaminhoArquivo.Text).ToUpper();
             DialogResult confirmacao = MessageBox.Show(
-                "🚀 CONFIRMAR IMPORTAÇÃO EM LOTE\n\n" +
+                $"🚀 CONFIRMAR IMPORTAÇÃO EM LOTE ({extensao})\n\n" +
                 "Esta operação irá:\n" +
                 "• Ler todos os clientes da planilha\n" +
                 "• Cadastrar automaticamente os que tiverem dados completos\n" +
                 "• Preencher dados vazios com placeholders\n" +
                 "• Pular CPFs duplicados\n" +
                 "• GERAR CSV COM AS FALHAS (se houver)\n\n" +
+                $"📁 Arquivo: {Path.GetFileName(txtCaminhoArquivo.Text)}\n\n" +
                 "Deseja continuar?",
                 "Confirmar Importação",
                 MessageBoxButtons.YesNo,
@@ -101,16 +116,18 @@ namespace Cadastro1
                 btnIniciarImportacao.Enabled = false;
                 progressBar.Visible = true;
                 progressBar.Style = ProgressBarStyle.Marquee;
-                lblStatus.Text = "⏳ Processando planilha...";
+
+                string extensao = Path.GetExtension(txtCaminhoArquivo.Text).ToUpper();
+                lblStatus.Text = $"⏳ Processando arquivo {extensao}...";
                 lblStatus.ForeColor = Color.FromArgb(52, 152, 219);
                 Application.DoEvents();
 
-                // Executar importação
-                ultimoResultado = importador.ImportarCSV(txtCaminhoArquivo.Text);
+                // =============================================
+                // ATUALIZADO: Usar método universal
+                // =============================================
+                ultimoResultado = importador.ImportarArquivo(txtCaminhoArquivo.Text);
 
-                // =============================================
-                // NOVO: EXPORTAR FALHAS PARA CSV AUTOMATICAMENTE
-                // =============================================
+                // Exportar falhas para CSV
                 string arquivoFalhas = null;
                 if (ultimoResultado.Falhas > 0)
                 {
@@ -126,15 +143,13 @@ namespace Cadastro1
                     }
                     catch (Exception exCsv)
                     {
-                        // Não bloqueia se falhar ao gerar CSV
                         System.Diagnostics.Debug.WriteLine($"Erro ao gerar CSV de falhas: {exCsv.Message}");
                     }
                 }
                 else
                 {
-                    lblStatus.Text = $"✅ Importação concluída! {ultimoResultado.Sucessos} cadastros realizados.";
+                    lblStatus.Text = $"✅ Importação 100% concluída! {ultimoResultado.Sucessos} cadastros realizados.";
                 }
-                // =============================================
 
                 // Atualizar interface
                 progressBar.Visible = false;
@@ -143,15 +158,17 @@ namespace Cadastro1
                 // Mostrar resultados
                 MostrarResultados();
 
-                // NOVO: Avisar sobre CSV de falhas
+                // Avisar sobre CSV de falhas
                 if (!string.IsNullOrEmpty(arquivoFalhas))
                 {
                     DialogResult abrirCsv = MessageBox.Show(
                         $"📊 IMPORTAÇÃO CONCLUÍDA\n\n" +
                         $"✅ Sucessos: {ultimoResultado.Sucessos}\n" +
-                        $"❌ Falhas: {ultimoResultado.Falhas}\n\n" +
+                        $"❌ Falhas: {ultimoResultado.Falhas}\n" +
+                        $"🔄 CPFs duplicados: {ultimoResultado.CPFsDuplicados}\n\n" +
                         $"📄 Foi gerado um arquivo CSV com as falhas:\n" +
                         $"{Path.GetFileName(arquivoFalhas)}\n\n" +
+                        $"💡 Você pode corrigir os erros no CSV e importar novamente!\n\n" +
                         $"Deseja abrir a pasta onde o arquivo foi salvo?",
                         "CSV de Falhas Gerado",
                         MessageBoxButtons.YesNo,
@@ -159,10 +176,21 @@ namespace Cadastro1
 
                     if (abrirCsv == DialogResult.Yes)
                     {
-                        // Abrir pasta do arquivo
                         System.Diagnostics.Process.Start("explorer.exe",
                             $"/select,\"{arquivoFalhas}\"");
                     }
+                }
+                else if (ultimoResultado.Sucessos > 0)
+                {
+                    MessageBox.Show(
+                        $"🎉 IMPORTAÇÃO 100% CONCLUÍDA!\n\n" +
+                        $"✅ {ultimoResultado.Sucessos} clientes cadastrados com sucesso\n" +
+                        $"❌ {ultimoResultado.Falhas} falhas\n" +
+                        $"🔄 {ultimoResultado.CPFsDuplicados} CPFs já existentes (pulados)\n\n" +
+                        "Todos os clientes foram importados!",
+                        "Sucesso Total",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                 }
 
                 // Habilitar botões
@@ -175,11 +203,27 @@ namespace Cadastro1
                 lblStatus.Text = "❌ Erro na importação";
                 lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
 
-                MessageBox.Show(
-                    $"Erro durante a importação:\n\n{ex.Message}",
-                    "Erro",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                // Mensagem de erro detalhada
+                string mensagemErro = ex.Message;
+
+                // Se for erro de driver Excel, mostrar solução
+                if (mensagemErro.Contains("Driver") || mensagemErro.Contains("driver") ||
+                    mensagemErro.Contains("OleDb") || mensagemErro.Contains("OLEDB"))
+                {
+                    MessageBox.Show(
+                        mensagemErro,
+                        "Driver Excel Não Disponível",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"❌ Erro durante a importação:\n\n{mensagemErro}",
+                        "Erro",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
 
                 // Reabilitar controles
                 btnSelecionarArquivo.Enabled = true;
@@ -207,9 +251,13 @@ namespace Cadastro1
             dgvResultados.Columns["Detalhes"].Width = 300;
             dgvResultados.Columns["Detalhes"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
-            // Preencher dados
-            foreach (var resultado in ultimoResultado.Resultados)
+            // Mostrar apenas primeiros 100 resultados (performance)
+            int maxMostrar = Math.Min(100, ultimoResultado.Resultados.Count);
+
+            for (int i = 0; i < maxMostrar; i++)
             {
+                var resultado = ultimoResultado.Resultados[i];
+
                 int rowIndex = dgvResultados.Rows.Add();
                 DataGridViewRow row = dgvResultados.Rows[rowIndex];
 
@@ -247,7 +295,7 @@ namespace Cadastro1
                     }
                     else
                     {
-                        detalhes = "Cadastrado sem dados extras";
+                        detalhes = "Cadastrado com todos os dados";
                     }
                 }
                 else
@@ -265,13 +313,23 @@ namespace Cadastro1
                 row.Cells["Detalhes"].Value = detalhes;
             }
 
+            // Se tiver mais resultados, mostrar aviso
+            if (ultimoResultado.Resultados.Count > maxMostrar)
+            {
+                lblStatus.Text += $" (Mostrando {maxMostrar} de {ultimoResultado.TotalLinhas} linhas)";
+            }
+
             // Atualizar resumo
             txtResumo.Text =
-                $"Total processado: {ultimoResultado.TotalLinhas}\r\n" +
+                $"📊 RESUMO\r\n" +
+                $"━━━━━━━━━━━━━━━━━━\r\n" +
+                $"Total: {ultimoResultado.TotalLinhas}\r\n" +
                 $"✅ Sucessos: {ultimoResultado.Sucessos}\r\n" +
                 $"❌ Falhas: {ultimoResultado.Falhas}\r\n" +
-                $"🔄 CPFs duplicados: {ultimoResultado.CPFsDuplicados}\r\n" +
-                $"⚠️  Campos preenchidos auto: {ultimoResultado.CamposPreenchidosAuto}";
+                $"🔄 Duplicados: {ultimoResultado.CPFsDuplicados}\r\n" +
+                $"⚠️  Campos auto: {ultimoResultado.CamposPreenchidosAuto}\r\n\r\n" +
+                $"Taxa de sucesso:\r\n" +
+                $"{(ultimoResultado.TotalLinhas > 0 ? (double)ultimoResultado.Sucessos / ultimoResultado.TotalLinhas * 100 : 0):F1}%";
         }
 
         private string FormatarCPF(string cpf)

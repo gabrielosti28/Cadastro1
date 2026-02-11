@@ -1,12 +1,15 @@
 ﻿// =============================================
-// IMPORTADOR DE PLANILHAS EXCEL/CSV
-// Arquivo: ExcelImporter.cs
-// Lê planilhas e extrai CPFs para mala direta
+// IMPORTADOR DE PLANILHAS - VERSÃO UNIVERSAL
+// Arquivo: ExcelImporter.cs (ATUALIZADO)
+// SUPORTA: CSV, XLSX, XLS, TXT, TSV
 // =============================================
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Cadastro1
 {
@@ -102,7 +105,8 @@ namespace Cadastro1
     }
 
     /// <summary>
-    /// Importador de planilhas Excel/CSV
+    /// Importador universal de planilhas
+    /// SUPORTA: CSV, XLSX, XLS, TXT, TSV
     /// </summary>
     public class ExcelImporter
     {
@@ -114,7 +118,7 @@ namespace Cadastro1
         }
 
         /// <summary>
-        /// Importa CPFs de arquivo Excel ou CSV
+        /// Importa CPFs de qualquer formato de planilha
         /// </summary>
         public ResultadoImportacao ImportarPlanilha(string caminhoArquivo)
         {
@@ -122,21 +126,36 @@ namespace Cadastro1
 
             try
             {
-                // Detectar tipo de arquivo
+                // Detectar tipo de arquivo pela extensão
                 string extensao = Path.GetExtension(caminhoArquivo).ToLower();
                 List<string> cpfsLidos;
 
-                if (extensao == ".csv")
+                switch (extensao)
                 {
-                    cpfsLidos = LerCSV(caminhoArquivo);
-                }
-                else if (extensao == ".xlsx" || extensao == ".xls")
-                {
-                    cpfsLidos = LerExcel(caminhoArquivo);
-                }
-                else
-                {
-                    throw new Exception($"Formato não suportado: {extensao}\n\nUse arquivos .xlsx, .xls ou .csv");
+                    case ".csv":
+                        cpfsLidos = LerCSV(caminhoArquivo);
+                        break;
+
+                    case ".txt":
+                    case ".tsv":
+                        cpfsLidos = LerTXT(caminhoArquivo);
+                        break;
+
+                    case ".xlsx":
+                    case ".xls":
+                        cpfsLidos = LerExcelOleDb(caminhoArquivo);
+                        break;
+
+                    default:
+                        throw new Exception(
+                            $"❌ FORMATO NÃO SUPORTADO: {extensao}\n\n" +
+                            "Formatos aceitos:\n" +
+                            "✓ .CSV (separado por vírgula ou ponto-e-vírgula)\n" +
+                            "✓ .TXT (texto delimitado)\n" +
+                            "✓ .TSV (separado por tabulação)\n" +
+                            "✓ .XLSX (Excel moderno)\n" +
+                            "✓ .XLS (Excel antigo)\n\n" +
+                            "Converta seu arquivo para um destes formatos.");
                 }
 
                 resultado.TotalCPFs = cpfsLidos.Count;
@@ -153,12 +172,12 @@ namespace Cadastro1
             }
             catch (Exception ex)
             {
-                throw new Exception($"Erro ao importar planilha:\n\n{ex.Message}");
+                throw new Exception($"❌ Erro ao importar planilha:\n\n{ex.Message}");
             }
         }
 
         /// <summary>
-        /// Lê arquivo CSV e extrai CPFs
+        /// Lê arquivo CSV (vírgula ou ponto-e-vírgula)
         /// </summary>
         private List<string> LerCSV(string caminhoArquivo)
         {
@@ -166,10 +185,30 @@ namespace Cadastro1
 
             try
             {
-                string[] linhas = File.ReadAllLines(caminhoArquivo);
+                // Tentar diferentes encodings
+                string[] encodings = { "UTF-8", "ISO-8859-1", "Windows-1252" };
+                string[] linhas = null;
 
-                // Detectar separador (ponto-e-vírgula ou vírgula)
-                string separador = linhas.Length > 0 && linhas[0].Contains(";") ? ";" : ",";
+                foreach (string enc in encodings)
+                {
+                    try
+                    {
+                        linhas = File.ReadAllLines(caminhoArquivo, Encoding.GetEncoding(enc));
+                        break;
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+
+                if (linhas == null || linhas.Length == 0)
+                {
+                    throw new Exception("Arquivo vazio ou não foi possível ler com nenhum encoding.");
+                }
+
+                // Detectar separador (vírgula, ponto-e-vírgula ou tab)
+                string separador = DetectarSeparador(linhas[0]);
 
                 // Processar linhas (pular cabeçalho)
                 for (int i = 1; i < linhas.Length; i++)
@@ -179,44 +218,146 @@ namespace Cadastro1
 
                     string[] colunas = linha.Split(new[] { separador }, StringSplitOptions.None);
 
-                    // CPF está na coluna 2 (índice 1)
-                    if (colunas.Length > 1)
+                    // Tentar encontrar CPF em qualquer coluna
+                    foreach (string coluna in colunas)
                     {
-                        string cpf = LimparCPF(colunas[1]);
+                        string cpf = LimparCPF(coluna);
                         if (ValidarCPF(cpf))
                         {
                             cpfs.Add(cpf);
+                            break; // Pegar apenas o primeiro CPF válido da linha
                         }
                     }
                 }
+
+                return cpfs;
             }
             catch (Exception ex)
             {
                 throw new Exception($"Erro ao ler CSV: {ex.Message}");
             }
-
-            return cpfs;
         }
 
         /// <summary>
-        /// Lê arquivo Excel (.xlsx ou .xls) e extrai CPFs
-        /// Usa a biblioteca EPPlus ou similar
+        /// Lê arquivo TXT/TSV (texto delimitado)
         /// </summary>
-        private List<string> LerExcel(string caminhoArquivo)
+        private List<string> LerTXT(string caminhoArquivo)
         {
-            // NOTA: Para ler arquivos .xlsx, seria necessário usar EPPlus ou ClosedXML
-            // Como a biblioteca não está instalada, vamos sugerir conversão para CSV
-            // ou implementar leitura básica via OleDb
+            // TXT usa mesma lógica que CSV
+            return LerCSV(caminhoArquivo);
+        }
 
-            throw new Exception(
-                "⚠️ ARQUIVO EXCEL DETECTADO\n\n" +
-                "Para arquivos .xlsx ou .xls, por favor:\n\n" +
-                "1. Abra a planilha no Excel\n" +
-                "2. Vá em 'Arquivo' > 'Salvar Como'\n" +
-                "3. Escolha o formato 'CSV (delimitado por vírgulas)'\n" +
-                "4. Importe o arquivo .csv gerado\n\n" +
-                "Ou instale a biblioteca EPPlus no projeto para suporte direto a Excel."
-            );
+        /// <summary>
+        /// Lê arquivos Excel (.xlsx ou .xls) usando OleDb
+        /// Funciona sem bibliotecas externas
+        /// </summary>
+        private List<string> LerExcelOleDb(string caminhoArquivo)
+        {
+            List<string> cpfs = new List<string>();
+
+            try
+            {
+                string extensao = Path.GetExtension(caminhoArquivo).ToLower();
+                string connectionString;
+
+                // String de conexão diferente para .xlsx e .xls
+                if (extensao == ".xlsx")
+                {
+                    connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={caminhoArquivo};" +
+                                      "Extended Properties='Excel 12.0 Xml;HDR=YES;IMEX=1'";
+                }
+                else // .xls
+                {
+                    connectionString = $"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={caminhoArquivo};" +
+                                      "Extended Properties='Excel 8.0;HDR=YES;IMEX=1'";
+                }
+
+                using (OleDbConnection conn = new OleDbConnection(connectionString))
+                {
+                    conn.Open();
+
+                    // Obter nome da primeira planilha
+                    DataTable dtSchema = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
+                    if (dtSchema == null || dtSchema.Rows.Count == 0)
+                    {
+                        throw new Exception("Planilha não contém dados.");
+                    }
+
+                    string nomePlanilha = dtSchema.Rows[0]["TABLE_NAME"].ToString();
+
+                    // Ler dados da planilha
+                    string query = $"SELECT * FROM [{nomePlanilha}]";
+                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(query, conn))
+                    {
+                        DataTable dt = new DataTable();
+                        adapter.Fill(dt);
+
+                        // Processar cada linha
+                        foreach (DataRow row in dt.Rows)
+                        {
+                            // Tentar encontrar CPF em qualquer coluna
+                            foreach (var item in row.ItemArray)
+                            {
+                                if (item == null || item == DBNull.Value) continue;
+
+                                string valor = item.ToString();
+                                string cpf = LimparCPF(valor);
+
+                                if (ValidarCPF(cpf))
+                                {
+                                    cpfs.Add(cpf);
+                                    break; // Pegar apenas o primeiro CPF válido da linha
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return cpfs;
+            }
+            catch (Exception ex)
+            {
+                // Se OleDb falhar, tentar método alternativo simples
+                if (ex.Message.Contains("not registered") || ex.Message.Contains("não registrado"))
+                {
+                    throw new Exception(
+                        "❌ DRIVER DE EXCEL NÃO INSTALADO\n\n" +
+                        "Para importar arquivos Excel, você precisa de um dos seguintes:\n\n" +
+                        "SOLUÇÃO 1 (Recomendada - Mais Simples):\n" +
+                        "   → Abra o arquivo no Excel\n" +
+                        "   → Vá em 'Arquivo' > 'Salvar Como'\n" +
+                        "   → Escolha formato 'CSV (separado por vírgulas)'\n" +
+                        "   → Importe o arquivo .CSV gerado\n\n" +
+                        "SOLUÇÃO 2 (Técnica):\n" +
+                        "   → Baixe e instale 'Microsoft Access Database Engine'\n" +
+                        "   → Link: https://www.microsoft.com/download/details.aspx?id=54920\n" +
+                        "   → Reinicie o programa após instalar\n\n" +
+                        $"Arquivo tentado: {Path.GetFileName(caminhoArquivo)}");
+                }
+
+                throw new Exception($"Erro ao ler Excel: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Detecta o separador usado no arquivo (vírgula, ponto-e-vírgula ou tab)
+        /// </summary>
+        private string DetectarSeparador(string linha)
+        {
+            if (string.IsNullOrWhiteSpace(linha))
+                return ";";
+
+            int virgulas = linha.Count(c => c == ',');
+            int pontosVirgula = linha.Count(c => c == ';');
+            int tabs = linha.Count(c => c == '\t');
+
+            // Retornar o separador mais frequente
+            if (tabs > virgulas && tabs > pontosVirgula)
+                return "\t";
+            else if (pontosVirgula > virgulas)
+                return ";";
+            else
+                return ",";
         }
 
         /// <summary>
