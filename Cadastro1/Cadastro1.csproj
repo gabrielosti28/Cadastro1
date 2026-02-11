@@ -231,6 +231,12 @@
     <Compile Include="FormSelecionarCidade.Designer.cs">
       <DependentUpon>FormSelecionarCidade.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSelecionarCidadeImportacao.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSelecionarCidadeImportacao.Designer.cs">
+      <DependentUpon>FormSelecionarCidadeImportacao.cs</DependentUpon>
+    </Compile>
     <Compile Include="ImportadorClientesLote.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MailingPdfGenerator.cs" />

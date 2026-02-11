@@ -1,7 +1,7 @@
 ﻿// =============================================
-// IMPORTADOR DE CLIENTES EM LOTE - VERSÃO UNIVERSAL
+// IMPORTADOR DE CLIENTES EM LOTE - COM FILTRO DE CIDADES
 // Arquivo: ImportadorClientesLote.cs (ATUALIZADO)
-// SUPORTA: CSV, XLSX, XLS, TXT, TSV
+// SUPORTA: CSV, XLSX, XLS, TXT, TSV + FILTRO POR CIDADE
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -18,6 +18,7 @@ namespace Cadastro1
         public bool Sucesso { get; set; }
         public string Nome { get; set; }
         public string CPF { get; set; }
+        public string Cidade { get; set; } // NOVO: Guardar cidade para relatório
         public string MensagemErro { get; set; }
         public List<string> CamposFaltantes { get; set; }
         public Dictionary<string, string> DadosExcedentes { get; set; }
@@ -39,6 +40,7 @@ namespace Cadastro1
         public int Falhas { get; set; }
         public int CPFsDuplicados { get; set; }
         public int CamposPreenchidosAuto { get; set; }
+        public int ClientesIgnoradosPorCidade { get; set; } // NOVO: Clientes ignorados por filtro de cidade
         public List<ResultadoCadastroCliente> Resultados { get; set; }
 
         public ResultadoImportacaoLote()
@@ -60,6 +62,13 @@ namespace Cadastro1
             sb.AppendLine($"   ✅ Cadastros bem-sucedidos:      {Sucessos}");
             sb.AppendLine($"   ❌ Falhas no cadastro:           {Falhas}");
             sb.AppendLine($"   🔄 CPFs já existentes (pulados): {CPFsDuplicados}");
+
+            // NOVO: Mostrar clientes ignorados por cidade
+            if (ClientesIgnoradosPorCidade > 0)
+            {
+                sb.AppendLine($"   🏙️ Ignorados por filtro cidade:  {ClientesIgnoradosPorCidade}");
+            }
+
             sb.AppendLine($"   ⚠️  Campos preenchidos auto:     {CamposPreenchidosAuto}\n");
 
             double taxaSucesso = TotalLinhas > 0 ? (double)Sucessos / TotalLinhas * 100 : 0;
@@ -90,7 +99,7 @@ namespace Cadastro1
                 for (int i = 0; i < mostrar; i++)
                 {
                     var r = sucessos[i];
-                    sb.AppendLine($"   {i + 1,3}. {r.Nome.PadRight(40)} | CPF: {FormatarCPF(r.CPF)}");
+                    sb.AppendLine($"   {i + 1,3}. {r.Nome.PadRight(35)} | CPF: {FormatarCPF(r.CPF)} | {r.Cidade}");
 
                     if (r.CamposPreenchidosAutomaticamente.Count > 0)
                     {
@@ -126,6 +135,11 @@ namespace Cadastro1
                     var r = falhas[i];
                     sb.AppendLine($"   {i + 1,3}. Nome: {r.Nome ?? "NÃO ENCONTRADO"}");
                     sb.AppendLine($"        CPF: {(string.IsNullOrEmpty(r.CPF) ? "NÃO ENCONTRADO" : FormatarCPF(r.CPF))}");
+
+                    if (!string.IsNullOrEmpty(r.Cidade))
+                    {
+                        sb.AppendLine($"        Cidade: {r.Cidade}");
+                    }
 
                     if (r.CamposFaltantes.Count > 0)
                     {
@@ -175,12 +189,13 @@ namespace Cadastro1
                     {
                         string nome = falha.Nome ?? "";
                         string cpf = falha.CPF ?? "";
+                        string cidade = falha.Cidade ?? "";
                         string motivo = falha.MensagemErro ?? "Erro desconhecido";
                         string camposProblema = falha.CamposFaltantes.Count > 0
                             ? string.Join(", ", falha.CamposFaltantes)
                             : "N/A";
 
-                        sw.WriteLine($"{nome};{cpf};;;;;;;;{motivo};{camposProblema}");
+                        sw.WriteLine($"{nome};{cpf};;;{cidade};;;;{motivo};{camposProblema}");
                     }
                 }
 
@@ -211,6 +226,7 @@ namespace Cadastro1
     {
         private ClienteDAL clienteDAL;
         private ClienteAnexoDAL anexoDAL;
+        private HashSet<string> cidadesFiltro; // NOVO: Filtro de cidades selecionadas
 
         private readonly Dictionary<string, string[]> camposObrigatorios = new Dictionary<string, string[]>
         {
@@ -233,6 +249,169 @@ namespace Cadastro1
         {
             clienteDAL = new ClienteDAL();
             anexoDAL = new ClienteAnexoDAL();
+            cidadesFiltro = null; // Sem filtro por padrão
+        }
+
+        // =============================================
+        // NOVO: Método para definir filtro de cidades
+        // =============================================
+        public void DefinirFiltroCidades(List<string> cidades)
+        {
+            if (cidades == null || cidades.Count == 0)
+            {
+                cidadesFiltro = null;
+            }
+            else
+            {
+                // Normalizar nomes das cidades (uppercase para comparação case-insensitive)
+                cidadesFiltro = new HashSet<string>(
+                    cidades.Select(c => c.ToUpper().Trim()),
+                    StringComparer.OrdinalIgnoreCase
+                );
+            }
+        }
+
+        // =============================================
+        // NOVO: Método para extrair cidades da planilha
+        // =============================================
+        public List<string> ExtrairCidadesDaPlanilha(string caminhoArquivo)
+        {
+            string extensao = Path.GetExtension(caminhoArquivo).ToLower();
+            HashSet<string> cidades = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                switch (extensao)
+                {
+                    case ".csv":
+                    case ".txt":
+                    case ".tsv":
+                        cidades = ExtrairCidadesCSV(caminhoArquivo);
+                        break;
+
+                    case ".xlsx":
+                    case ".xls":
+                        cidades = ExtrairCidadesExcel(caminhoArquivo);
+                        break;
+
+                    default:
+                        throw new Exception($"Formato não suportado: {extensao}");
+                }
+
+                // Remover valores vazios e normalizar
+                return cidades
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Select(c => c.Trim())
+                    .OrderBy(c => c)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao extrair cidades: {ex.Message}");
+            }
+        }
+
+        private HashSet<string> ExtrairCidadesCSV(string caminhoArquivo)
+        {
+            HashSet<string> cidades = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                string[] linhas = LerArquivoComEncodingCorreto(caminhoArquivo);
+
+                if (linhas.Length == 0)
+                    return cidades;
+
+                string separador = DetectarSeparador(linhas[0]);
+                string[] colunas = linhas[0].Split(new[] { separador }, StringSplitOptions.None);
+
+                // Encontrar índice da coluna Cidade
+                int indiceCidade = -1;
+                for (int i = 0; i < colunas.Length; i++)
+                {
+                    if (camposObrigatorios["Cidade"].Any(c =>
+                        c.Equals(colunas[i].Trim(), StringComparison.OrdinalIgnoreCase)))
+                    {
+                        indiceCidade = i;
+                        break;
+                    }
+                }
+
+                if (indiceCidade == -1)
+                    return cidades;
+
+                // Extrair cidades das linhas
+                for (int i = 1; i < linhas.Length; i++)
+                {
+                    string linha = linhas[i].Trim();
+                    if (string.IsNullOrWhiteSpace(linha)) continue;
+
+                    string[] valores = linha.Split(new[] { separador }, StringSplitOptions.None);
+
+                    if (indiceCidade < valores.Length)
+                    {
+                        string cidade = valores[indiceCidade].Trim();
+                        if (!string.IsNullOrWhiteSpace(cidade))
+                        {
+                            cidades.Add(cidade);
+                        }
+                    }
+                }
+
+                return cidades;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao extrair cidades do CSV: {ex.Message}");
+            }
+        }
+
+        private HashSet<string> ExtrairCidadesExcel(string caminhoArquivo)
+        {
+            HashSet<string> cidades = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                DataTable dt = LerExcelOleDb(caminhoArquivo);
+
+                if (dt == null || dt.Rows.Count == 0)
+                    return cidades;
+
+                // Encontrar coluna Cidade
+                string colunaCidade = null;
+                foreach (DataColumn col in dt.Columns)
+                {
+                    if (camposObrigatorios["Cidade"].Any(c =>
+                        c.Equals(col.ColumnName.Trim(), StringComparison.OrdinalIgnoreCase)))
+                    {
+                        colunaCidade = col.ColumnName;
+                        break;
+                    }
+                }
+
+                if (colunaCidade == null)
+                    return cidades;
+
+                // Extrair cidades
+                foreach (DataRow row in dt.Rows)
+                {
+                    var valor = row[colunaCidade];
+                    if (valor != null && valor != DBNull.Value)
+                    {
+                        string cidade = valor.ToString().Trim();
+                        if (!string.IsNullOrWhiteSpace(cidade))
+                        {
+                            cidades.Add(cidade);
+                        }
+                    }
+                }
+
+                return cidades;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao extrair cidades do Excel: {ex.Message}");
+            }
         }
 
         // =============================================
@@ -299,10 +478,16 @@ namespace Cadastro1
                         }
                         else
                         {
-                            if (resultadoCliente.MensagemErro != null &&
-                                resultadoCliente.MensagemErro.Contains("já cadastrado"))
+                            if (resultadoCliente.MensagemErro != null)
                             {
-                                resultado.CPFsDuplicados++;
+                                if (resultadoCliente.MensagemErro.Contains("já cadastrado"))
+                                {
+                                    resultado.CPFsDuplicados++;
+                                }
+                                else if (resultadoCliente.MensagemErro.Contains("cidade não está no filtro"))
+                                {
+                                    resultado.ClientesIgnoradosPorCidade++;
+                                }
                             }
                             resultado.Falhas++;
                         }
@@ -326,9 +511,6 @@ namespace Cadastro1
             }
         }
 
-        // =============================================
-        // NOVO: IMPORTAR EXCEL (XLSX/XLS)
-        // =============================================
         public ResultadoImportacaoLote ImportarExcel(string caminhoArquivo)
         {
             ResultadoImportacaoLote resultado = new ResultadoImportacaoLote();
@@ -340,17 +522,14 @@ namespace Cadastro1
                 if (dt == null || dt.Rows.Count == 0)
                     throw new Exception("Planilha vazia!");
 
-                // Obter nomes das colunas
                 string[] colunas = new string[dt.Columns.Count];
                 for (int i = 0; i < dt.Columns.Count; i++)
                 {
                     colunas[i] = dt.Columns[i].ColumnName;
                 }
 
-                // Processar cada linha
                 foreach (DataRow row in dt.Rows)
                 {
-                    // Verificar se a linha está vazia
                     bool linhaVazia = true;
                     foreach (var item in row.ItemArray)
                     {
@@ -367,7 +546,6 @@ namespace Cadastro1
 
                     try
                     {
-                        // Criar dicionário de dados da linha
                         Dictionary<string, string> dadosLinha = new Dictionary<string, string>();
                         for (int i = 0; i < colunas.Length && i < row.ItemArray.Length; i++)
                         {
@@ -386,10 +564,16 @@ namespace Cadastro1
                         }
                         else
                         {
-                            if (resultadoCliente.MensagemErro != null &&
-                                resultadoCliente.MensagemErro.Contains("já cadastrado"))
+                            if (resultadoCliente.MensagemErro != null)
                             {
-                                resultado.CPFsDuplicados++;
+                                if (resultadoCliente.MensagemErro.Contains("já cadastrado"))
+                                {
+                                    resultado.CPFsDuplicados++;
+                                }
+                                else if (resultadoCliente.MensagemErro.Contains("cidade não está no filtro"))
+                                {
+                                    resultado.ClientesIgnoradosPorCidade++;
+                                }
                             }
                             resultado.Falhas++;
                         }
@@ -527,6 +711,29 @@ namespace Cadastro1
                 string cidade = ExtrairCampo(dadosLinha, camposObrigatorios["Cidade"]);
                 string cep = ExtrairCampo(dadosLinha, camposObrigatorios["CEP"]);
                 string inss = ExtrairCampo(dadosLinha, camposObrigatorios["BeneficioINSS"]);
+
+                // Guardar cidade no resultado para relatório
+                resultado.Cidade = cidade;
+
+                // =============================================
+                // NOVO: VERIFICAR FILTRO DE CIDADE
+                // =============================================
+                if (cidadesFiltro != null && cidadesFiltro.Count > 0)
+                {
+                    if (string.IsNullOrWhiteSpace(cidade))
+                    {
+                        resultado.Sucesso = false;
+                        resultado.MensagemErro = "Cidade não informada e existe filtro ativo";
+                        return resultado;
+                    }
+
+                    if (!cidadesFiltro.Contains(cidade.ToUpper().Trim()))
+                    {
+                        resultado.Sucesso = false;
+                        resultado.MensagemErro = $"Cliente de '{cidade}' - cidade não está no filtro selecionado";
+                        return resultado;
+                    }
+                }
 
                 // Preenchimento automático
                 if (string.IsNullOrWhiteSpace(cep))

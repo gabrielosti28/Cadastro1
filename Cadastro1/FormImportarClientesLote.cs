@@ -1,9 +1,10 @@
 ﻿// =============================================
-// FORMULÁRIO - IMPORTAÇÃO EM LOTE - UNIVERSAL
+// FORMULÁRIO - IMPORTAÇÃO EM LOTE - COM FILTRO DE CIDADES
 // Arquivo: FormImportarClientesLote.cs (ATUALIZADO)
-// SUPORTA: CSV, XLSX, XLS, TXT, TSV
+// NOVO: Seleção de cidades antes da importação
 // =============================================
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -15,11 +16,13 @@ namespace Cadastro1
         private ImportadorClientesLote importador;
         private ResultadoImportacaoLote ultimoResultado;
         private string caminhoArquivoImportado;
+        private List<string> cidadesSelecionadas; // NOVO
 
         public FormImportarClientesLote()
         {
             InitializeComponent();
             importador = new ImportadorClientesLote();
+            cidadesSelecionadas = null;
         }
 
         private void btnSelecionarArquivo_Click(object sender, EventArgs e)
@@ -29,10 +32,6 @@ namespace Cadastro1
                 using (OpenFileDialog ofd = new OpenFileDialog())
                 {
                     ofd.Title = "Selecione a planilha com os clientes";
-
-                    // =============================================
-                    // ATUALIZADO: Aceitar múltiplos formatos
-                    // =============================================
                     ofd.Filter = "Todos os formatos suportados|*.csv;*.xlsx;*.xls;*.txt;*.tsv|" +
                                 "Arquivos CSV|*.csv|" +
                                 "Arquivos Excel|*.xlsx;*.xls|" +
@@ -44,12 +43,15 @@ namespace Cadastro1
                     {
                         txtCaminhoArquivo.Text = ofd.FileName;
                         caminhoArquivoImportado = ofd.FileName;
+
+                        // NOVO: Resetar seleção de cidades ao trocar arquivo
+                        cidadesSelecionadas = null;
+
                         btnIniciarImportacao.Enabled = true;
 
-                        // Mostrar tipo de arquivo detectado
                         string extensao = Path.GetExtension(ofd.FileName).ToUpper();
-                        lblStatus.Text = $"✅ Arquivo {extensao} selecionado - Pronto para importar";
-                        lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
+                        lblStatus.Text = $"✅ Arquivo {extensao} selecionado - Configure o filtro de cidades";
+                        lblStatus.ForeColor = Color.FromArgb(52, 152, 219);
                     }
                 }
             }
@@ -85,46 +87,142 @@ namespace Cadastro1
                 return;
             }
 
-            // Confirmar
-            string extensao = Path.GetExtension(txtCaminhoArquivo.Text).ToUpper();
-            DialogResult confirmacao = MessageBox.Show(
-                $"🚀 CONFIRMAR IMPORTAÇÃO EM LOTE ({extensao})\n\n" +
-                "Esta operação irá:\n" +
-                "• Ler todos os clientes da planilha\n" +
-                "• Cadastrar automaticamente os que tiverem dados completos\n" +
-                "• Preencher dados vazios com placeholders\n" +
-                "• Pular CPFs duplicados\n" +
-                "• GERAR CSV COM AS FALHAS (se houver)\n\n" +
-                $"📁 Arquivo: {Path.GetFileName(txtCaminhoArquivo.Text)}\n\n" +
-                "Deseja continuar?",
-                "Confirmar Importação",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
+            // =============================================
+            // NOVO: ETAPA DE SELEÇÃO DE CIDADES
+            // =============================================
+            try
+            {
+                lblStatus.Text = "⏳ Analisando cidades na planilha...";
+                lblStatus.ForeColor = Color.FromArgb(230, 126, 34);
+                Application.DoEvents();
 
-            if (confirmacao != DialogResult.Yes)
-                return;
+                // Extrair cidades da planilha
+                List<string> cidadesNaPlanilha = importador.ExtrairCidadesDaPlanilha(txtCaminhoArquivo.Text);
 
-            RealizarImportacao();
+                if (cidadesNaPlanilha == null || cidadesNaPlanilha.Count == 0)
+                {
+                    DialogResult semCidades = MessageBox.Show(
+                        "⚠ NENHUMA CIDADE ENCONTRADA\n\n" +
+                        "A planilha não possui dados na coluna 'Cidade'.\n\n" +
+                        "Deseja importar mesmo assim?\n" +
+                        "(Todos os clientes terão cidade preenchida automaticamente)",
+                        "Aviso",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                    if (semCidades != DialogResult.Yes)
+                        return;
+
+                    cidadesSelecionadas = null;
+                }
+                else
+                {
+                    // Mostrar formulário de seleção de cidades
+                    using (FormSelecionarCidadeImportacao formCidades = new FormSelecionarCidadeImportacao(cidadesNaPlanilha))
+                    {
+                        if (formCidades.ShowDialog() != DialogResult.OK)
+                        {
+                            lblStatus.Text = "❌ Importação cancelada - Nenhuma cidade selecionada";
+                            lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
+                            return;
+                        }
+
+                        cidadesSelecionadas = formCidades.CidadesSelecionadas;
+                    }
+
+                    // Aplicar filtro de cidades ao importador
+                    importador.DefinirFiltroCidades(cidadesSelecionadas);
+                }
+
+                // Confirmar importação
+                string mensagemConfirmacao = "🚀 CONFIRMAR IMPORTAÇÃO EM LOTE\n\n";
+
+                if (cidadesSelecionadas == null || cidadesSelecionadas.Count == 0)
+                {
+                    mensagemConfirmacao += "⚠️ SEM FILTRO DE CIDADE - Todos os clientes serão importados\n\n";
+                }
+                else if (cidadesSelecionadas.Count == cidadesNaPlanilha.Count)
+                {
+                    mensagemConfirmacao += $"✅ TODAS AS CIDADES ({cidadesSelecionadas.Count}) selecionadas\n\n";
+                }
+                else
+                {
+                    mensagemConfirmacao += $"📊 FILTRO ATIVO: {cidadesSelecionadas.Count} de {cidadesNaPlanilha.Count} cidades\n\n";
+
+                    if (cidadesSelecionadas.Count <= 5)
+                    {
+                        mensagemConfirmacao += "Cidades selecionadas:\n";
+                        foreach (var cidade in cidadesSelecionadas)
+                        {
+                            mensagemConfirmacao += $"  • {cidade}\n";
+                        }
+                    }
+                    else
+                    {
+                        mensagemConfirmacao += "Primeiras cidades:\n";
+                        for (int i = 0; i < 3; i++)
+                        {
+                            mensagemConfirmacao += $"  • {cidadesSelecionadas[i]}\n";
+                        }
+                        mensagemConfirmacao += $"  • ... e mais {cidadesSelecionadas.Count - 3}\n";
+                    }
+
+                    mensagemConfirmacao += "\n⚠️ Clientes de outras cidades serão IGNORADOS\n\n";
+                }
+
+                mensagemConfirmacao +=
+                    "Esta operação irá:\n" +
+                    "• Cadastrar clientes com dados completos\n" +
+                    "• Preencher dados vazios com placeholders\n" +
+                    "• Pular CPFs duplicados\n" +
+                    "• Gerar CSV com falhas (se houver)\n\n" +
+                    $"📁 Arquivo: {Path.GetFileName(txtCaminhoArquivo.Text)}\n\n" +
+                    "Deseja continuar?";
+
+                DialogResult confirmacao = MessageBox.Show(
+                    mensagemConfirmacao,
+                    "Confirmar Importação",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (confirmacao != DialogResult.Yes)
+                    return;
+
+                RealizarImportacao();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Erro ao processar cidades:\n\n{ex.Message}",
+                    "Erro",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void RealizarImportacao()
         {
             try
             {
-                // Desabilitar controles
                 btnSelecionarArquivo.Enabled = false;
                 btnIniciarImportacao.Enabled = false;
                 progressBar.Visible = true;
                 progressBar.Style = ProgressBarStyle.Marquee;
 
                 string extensao = Path.GetExtension(txtCaminhoArquivo.Text).ToUpper();
-                lblStatus.Text = $"⏳ Processando arquivo {extensao}...";
+
+                if (cidadesSelecionadas != null && cidadesSelecionadas.Count > 0)
+                {
+                    lblStatus.Text = $"⏳ Importando {extensao} (Filtro: {cidadesSelecionadas.Count} cidades)...";
+                }
+                else
+                {
+                    lblStatus.Text = $"⏳ Importando {extensao} (Sem filtro de cidade)...";
+                }
+
                 lblStatus.ForeColor = Color.FromArgb(52, 152, 219);
                 Application.DoEvents();
 
-                // =============================================
-                // ATUALIZADO: Usar método universal
-                // =============================================
                 ultimoResultado = importador.ImportarArquivo(txtCaminhoArquivo.Text);
 
                 // Exportar falhas para CSV
@@ -137,8 +235,7 @@ namespace Cadastro1
 
                         if (!string.IsNullOrEmpty(arquivoFalhas))
                         {
-                            lblStatus.Text = $"✅ Importação concluída! {ultimoResultado.Sucessos} sucessos. " +
-                                           $"📄 CSV de falhas gerado!";
+                            lblStatus.Text = $"✅ Importação concluída! {ultimoResultado.Sucessos} sucessos. 📄 CSV de falhas gerado!";
                         }
                     }
                     catch (Exception exCsv)
@@ -151,49 +248,52 @@ namespace Cadastro1
                     lblStatus.Text = $"✅ Importação 100% concluída! {ultimoResultado.Sucessos} cadastros realizados.";
                 }
 
-                // Atualizar interface
                 progressBar.Visible = false;
                 lblStatus.ForeColor = Color.FromArgb(46, 204, 113);
 
-                // Mostrar resultados
                 MostrarResultados();
 
-                // Avisar sobre CSV de falhas
+                // Mensagem de conclusão com informações sobre filtro
+                string mensagemFinal = $"📊 IMPORTAÇÃO CONCLUÍDA\n\n";
+                mensagemFinal += $"✅ Sucessos: {ultimoResultado.Sucessos}\n";
+                mensagemFinal += $"❌ Falhas: {ultimoResultado.Falhas}\n";
+                mensagemFinal += $"🔄 CPFs duplicados: {ultimoResultado.CPFsDuplicados}\n";
+
+                if (ultimoResultado.ClientesIgnoradosPorCidade > 0)
+                {
+                    mensagemFinal += $"🏙️ Ignorados (filtro cidade): {ultimoResultado.ClientesIgnoradosPorCidade}\n";
+                }
+
+                mensagemFinal += "\n";
+
                 if (!string.IsNullOrEmpty(arquivoFalhas))
                 {
+                    mensagemFinal += $"📄 CSV com falhas gerado:\n{Path.GetFileName(arquivoFalhas)}\n\n";
+                    mensagemFinal += "💡 Você pode corrigir os erros no CSV e importar novamente!\n\n";
+                    mensagemFinal += "Deseja abrir a pasta onde o arquivo foi salvo?";
+
                     DialogResult abrirCsv = MessageBox.Show(
-                        $"📊 IMPORTAÇÃO CONCLUÍDA\n\n" +
-                        $"✅ Sucessos: {ultimoResultado.Sucessos}\n" +
-                        $"❌ Falhas: {ultimoResultado.Falhas}\n" +
-                        $"🔄 CPFs duplicados: {ultimoResultado.CPFsDuplicados}\n\n" +
-                        $"📄 Foi gerado um arquivo CSV com as falhas:\n" +
-                        $"{Path.GetFileName(arquivoFalhas)}\n\n" +
-                        $"💡 Você pode corrigir os erros no CSV e importar novamente!\n\n" +
-                        $"Deseja abrir a pasta onde o arquivo foi salvo?",
+                        mensagemFinal,
                         "CSV de Falhas Gerado",
                         MessageBoxButtons.YesNo,
                         MessageBoxIcon.Information);
 
                     if (abrirCsv == DialogResult.Yes)
                     {
-                        System.Diagnostics.Process.Start("explorer.exe",
-                            $"/select,\"{arquivoFalhas}\"");
+                        System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{arquivoFalhas}\"");
                     }
                 }
                 else if (ultimoResultado.Sucessos > 0)
                 {
+                    mensagemFinal += "🎉 Todos os clientes foram importados com sucesso!";
+
                     MessageBox.Show(
-                        $"🎉 IMPORTAÇÃO 100% CONCLUÍDA!\n\n" +
-                        $"✅ {ultimoResultado.Sucessos} clientes cadastrados com sucesso\n" +
-                        $"❌ {ultimoResultado.Falhas} falhas\n" +
-                        $"🔄 {ultimoResultado.CPFsDuplicados} CPFs já existentes (pulados)\n\n" +
-                        "Todos os clientes foram importados!",
+                        mensagemFinal,
                         "Sucesso Total",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
                 }
 
-                // Habilitar botões
                 btnVerRelatorio.Enabled = true;
                 btnFechar.Enabled = true;
             }
@@ -203,10 +303,8 @@ namespace Cadastro1
                 lblStatus.Text = "❌ Erro na importação";
                 lblStatus.ForeColor = Color.FromArgb(231, 76, 60);
 
-                // Mensagem de erro detalhada
                 string mensagemErro = ex.Message;
 
-                // Se for erro de driver Excel, mostrar solução
                 if (mensagemErro.Contains("Driver") || mensagemErro.Contains("driver") ||
                     mensagemErro.Contains("OleDb") || mensagemErro.Contains("OLEDB"))
                 {
@@ -225,7 +323,6 @@ namespace Cadastro1
                         MessageBoxIcon.Error);
                 }
 
-                // Reabilitar controles
                 btnSelecionarArquivo.Enabled = true;
                 btnIniciarImportacao.Enabled = true;
             }
@@ -235,23 +332,21 @@ namespace Cadastro1
         {
             if (ultimoResultado == null) return;
 
-            // Limpar grid
             dgvResultados.Rows.Clear();
             dgvResultados.Columns.Clear();
 
-            // Configurar colunas
             dgvResultados.Columns.Add("Status", "Status");
             dgvResultados.Columns.Add("Nome", "Nome");
             dgvResultados.Columns.Add("CPF", "CPF");
+            dgvResultados.Columns.Add("Cidade", "Cidade"); // NOVO: Coluna Cidade
             dgvResultados.Columns.Add("Detalhes", "Detalhes");
 
             dgvResultados.Columns["Status"].Width = 80;
-            dgvResultados.Columns["Nome"].Width = 250;
+            dgvResultados.Columns["Nome"].Width = 200;
             dgvResultados.Columns["CPF"].Width = 120;
-            dgvResultados.Columns["Detalhes"].Width = 300;
+            dgvResultados.Columns["Cidade"].Width = 150; // NOVO
             dgvResultados.Columns["Detalhes"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
-            // Mostrar apenas primeiros 100 resultados (performance)
             int maxMostrar = Math.Min(100, ultimoResultado.Resultados.Count);
 
             for (int i = 0; i < maxMostrar; i++)
@@ -261,7 +356,6 @@ namespace Cadastro1
                 int rowIndex = dgvResultados.Rows.Add();
                 DataGridViewRow row = dgvResultados.Rows[rowIndex];
 
-                // Status
                 if (resultado.Sucesso)
                 {
                     row.Cells["Status"].Value = "✅ SUCESSO";
@@ -275,13 +369,10 @@ namespace Cadastro1
                     row.Cells["Status"].Style.ForeColor = Color.FromArgb(114, 28, 36);
                 }
 
-                // Nome
                 row.Cells["Nome"].Value = resultado.Nome ?? "Não encontrado";
-
-                // CPF
                 row.Cells["CPF"].Value = FormatarCPF(resultado.CPF);
+                row.Cells["Cidade"].Value = resultado.Cidade ?? "-"; // NOVO
 
-                // Detalhes
                 string detalhes = "";
                 if (resultado.Sucesso)
                 {
@@ -306,30 +397,44 @@ namespace Cadastro1
                     }
                     else if (!string.IsNullOrEmpty(resultado.MensagemErro))
                     {
-                        detalhes = resultado.MensagemErro;
+                        // NOVO: Destacar filtro de cidade
+                        if (resultado.MensagemErro.Contains("cidade não está no filtro"))
+                        {
+                            detalhes = "🏙️ " + resultado.MensagemErro;
+                            row.Cells["Status"].Style.BackColor = Color.FromArgb(255, 243, 205);
+                            row.Cells["Status"].Style.ForeColor = Color.FromArgb(133, 100, 4);
+                        }
+                        else
+                        {
+                            detalhes = resultado.MensagemErro;
+                        }
                     }
                 }
 
                 row.Cells["Detalhes"].Value = detalhes;
             }
 
-            // Se tiver mais resultados, mostrar aviso
             if (ultimoResultado.Resultados.Count > maxMostrar)
             {
                 lblStatus.Text += $" (Mostrando {maxMostrar} de {ultimoResultado.TotalLinhas} linhas)";
             }
 
             // Atualizar resumo
-            txtResumo.Text =
-                $"📊 RESUMO\r\n" +
-                $"━━━━━━━━━━━━━━━━━━\r\n" +
-                $"Total: {ultimoResultado.TotalLinhas}\r\n" +
-                $"✅ Sucessos: {ultimoResultado.Sucessos}\r\n" +
-                $"❌ Falhas: {ultimoResultado.Falhas}\r\n" +
-                $"🔄 Duplicados: {ultimoResultado.CPFsDuplicados}\r\n" +
-                $"⚠️  Campos auto: {ultimoResultado.CamposPreenchidosAuto}\r\n\r\n" +
-                $"Taxa de sucesso:\r\n" +
-                $"{(ultimoResultado.TotalLinhas > 0 ? (double)ultimoResultado.Sucessos / ultimoResultado.TotalLinhas * 100 : 0):F1}%";
+            string resumo = $"📊 RESUMO\r\n━━━━━━━━━━━━━━━━━━\r\n";
+            resumo += $"Total: {ultimoResultado.TotalLinhas}\r\n";
+            resumo += $"✅ Sucessos: {ultimoResultado.Sucessos}\r\n";
+            resumo += $"❌ Falhas: {ultimoResultado.Falhas}\r\n";
+            resumo += $"🔄 Duplicados: {ultimoResultado.CPFsDuplicados}\r\n";
+
+            if (ultimoResultado.ClientesIgnoradosPorCidade > 0)
+            {
+                resumo += $"🏙️ Ignorados: {ultimoResultado.ClientesIgnoradosPorCidade}\r\n";
+            }
+
+            resumo += $"⚠️ Campos auto: {ultimoResultado.CamposPreenchidosAuto}\r\n\r\n";
+            resumo += $"Taxa sucesso:\r\n{(ultimoResultado.TotalLinhas > 0 ? (double)ultimoResultado.Sucessos / ultimoResultado.TotalLinhas * 100 : 0):F1}%";
+
+            txtResumo.Text = resumo;
         }
 
         private string FormatarCPF(string cpf)
@@ -358,7 +463,6 @@ namespace Cadastro1
                 return;
             }
 
-            // Mostrar relatório detalhado
             FormRelatorioImportacao formRelatorio = new FormRelatorioImportacao(ultimoResultado);
             formRelatorio.ShowDialog();
         }
