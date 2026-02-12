@@ -1,7 +1,8 @@
 ﻿// =============================================
-// IMPORTADOR DE PLANILHAS - VERSÃO UNIVERSAL
+// IMPORTADOR DE PLANILHAS - VERSÃO MELHORADA
 // Arquivo: ExcelImporter.cs (ATUALIZADO)
 // SUPORTA: CSV, XLSX, XLS, TXT, TSV
+// COM TRATAMENTO AMIGÁVEL DE ERROS
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -143,7 +144,10 @@ namespace Cadastro1
 
                     case ".xlsx":
                     case ".xls":
-                        cpfsLidos = LerExcelOleDb(caminhoArquivo);
+                        // =============================================
+                        // TRATAMENTO MELHORADO PARA EXCEL
+                        // =============================================
+                        cpfsLidos = TentarLerExcel(caminhoArquivo, extensao);
                         break;
 
                     default:
@@ -173,6 +177,49 @@ namespace Cadastro1
             catch (Exception ex)
             {
                 throw new Exception($"❌ Erro ao importar planilha:\n\n{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Tenta ler arquivo Excel com tratamento de erro melhorado
+        /// </summary>
+        private List<string> TentarLerExcel(string caminhoArquivo, string extensao)
+        {
+            try
+            {
+                // Tentar ler com OleDb
+                return LerExcelOleDb(caminhoArquivo);
+            }
+            catch (Exception ex)
+            {
+                // =============================================
+                // ERRO AO LER EXCEL - INSTRUÇÕES AMIGÁVEIS
+                // =============================================
+
+                if (ex.Message.Contains("not registered") ||
+                    ex.Message.Contains("não registrado") ||
+                    ex.Message.Contains("não foi possível encontrar") ||
+                    ex.Message.Contains("Could not find"))
+                {
+                    throw new Exception(
+                        "❌ PARA IMPORTAR ARQUIVOS EXCEL\n\n" +
+                        "📝 PARA IMPORTAR ARQUIVOS EXCEL:\n\n" +
+                        "Por favor, converta para CSV:\n\n" +
+                        "📋 Abra o arquivo no Excel\n" +
+                        "📋 Clique em 'Arquivo' → 'Salvar Como'\n" +
+                        "📋 Escolha 'CSV (separado por vírgulas)'\n" +
+                        "📋 Importe o arquivo .CSV gerado\n\n" +
+                        "✅ VANTAGENS:\n" +
+                        "• Funciona em qualquer computador\n" +
+                        "• Não requer drivers ou bibliotecas\n" +
+                        "• Importação mais rápida e confiável");
+                }
+
+                // Outro tipo de erro
+                throw new Exception(
+                    $"❌ Erro ao ler arquivo Excel:\n\n{ex.Message}\n\n" +
+                    "💡 SOLUÇÃO:\n" +
+                    "Converta o arquivo para CSV e tente novamente.");
             }
         }
 
@@ -255,88 +302,63 @@ namespace Cadastro1
         {
             List<string> cpfs = new List<string>();
 
-            try
+            string extensao = Path.GetExtension(caminhoArquivo).ToLower();
+            string connectionString;
+
+            // String de conexão diferente para .xlsx e .xls
+            if (extensao == ".xlsx")
             {
-                string extensao = Path.GetExtension(caminhoArquivo).ToLower();
-                string connectionString;
+                connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={caminhoArquivo};" +
+                                  "Extended Properties='Excel 12.0 Xml;HDR=YES;IMEX=1'";
+            }
+            else // .xls
+            {
+                connectionString = $"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={caminhoArquivo};" +
+                                  "Extended Properties='Excel 8.0;HDR=YES;IMEX=1'";
+            }
 
-                // String de conexão diferente para .xlsx e .xls
-                if (extensao == ".xlsx")
+            using (OleDbConnection conn = new OleDbConnection(connectionString))
+            {
+                conn.Open();
+
+                // Obter nome da primeira planilha
+                DataTable dtSchema = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
+                if (dtSchema == null || dtSchema.Rows.Count == 0)
                 {
-                    connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={caminhoArquivo};" +
-                                      "Extended Properties='Excel 12.0 Xml;HDR=YES;IMEX=1'";
+                    throw new Exception("Planilha não contém dados.");
                 }
-                else // .xls
+
+                string nomePlanilha = dtSchema.Rows[0]["TABLE_NAME"].ToString();
+
+                // Ler dados da planilha
+                string query = $"SELECT * FROM [{nomePlanilha}]";
+                using (OleDbDataAdapter adapter = new OleDbDataAdapter(query, conn))
                 {
-                    connectionString = $"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={caminhoArquivo};" +
-                                      "Extended Properties='Excel 8.0;HDR=YES;IMEX=1'";
-                }
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
 
-                using (OleDbConnection conn = new OleDbConnection(connectionString))
-                {
-                    conn.Open();
-
-                    // Obter nome da primeira planilha
-                    DataTable dtSchema = conn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
-                    if (dtSchema == null || dtSchema.Rows.Count == 0)
+                    // Processar cada linha
+                    foreach (DataRow row in dt.Rows)
                     {
-                        throw new Exception("Planilha não contém dados.");
-                    }
-
-                    string nomePlanilha = dtSchema.Rows[0]["TABLE_NAME"].ToString();
-
-                    // Ler dados da planilha
-                    string query = $"SELECT * FROM [{nomePlanilha}]";
-                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(query, conn))
-                    {
-                        DataTable dt = new DataTable();
-                        adapter.Fill(dt);
-
-                        // Processar cada linha
-                        foreach (DataRow row in dt.Rows)
+                        // Tentar encontrar CPF em qualquer coluna
+                        foreach (var item in row.ItemArray)
                         {
-                            // Tentar encontrar CPF em qualquer coluna
-                            foreach (var item in row.ItemArray)
+                            if (item == null || item == DBNull.Value) continue;
+
+                            string valor = item.ToString();
+                            string cpf = LimparCPF(valor);
+
+                            if (ValidarCPF(cpf))
                             {
-                                if (item == null || item == DBNull.Value) continue;
-
-                                string valor = item.ToString();
-                                string cpf = LimparCPF(valor);
-
-                                if (ValidarCPF(cpf))
-                                {
-                                    cpfs.Add(cpf);
-                                    break; // Pegar apenas o primeiro CPF válido da linha
-                                }
+                                cpfs.Add(cpf);
+                                break; // Pegar apenas o primeiro CPF válido da linha
                             }
                         }
                     }
                 }
-
-                return cpfs;
             }
-            catch (Exception ex)
-            {
-                // Se OleDb falhar, tentar método alternativo simples
-                if (ex.Message.Contains("not registered") || ex.Message.Contains("não registrado"))
-                {
-                    throw new Exception(
-                        "❌ DRIVER DE EXCEL NÃO INSTALADO\n\n" +
-                        "Para importar arquivos Excel, você precisa de um dos seguintes:\n\n" +
-                        "SOLUÇÃO 1 (Recomendada - Mais Simples):\n" +
-                        "   → Abra o arquivo no Excel\n" +
-                        "   → Vá em 'Arquivo' > 'Salvar Como'\n" +
-                        "   → Escolha formato 'CSV (separado por vírgulas)'\n" +
-                        "   → Importe o arquivo .CSV gerado\n\n" +
-                        "SOLUÇÃO 2 (Técnica):\n" +
-                        "   → Baixe e instale 'Microsoft Access Database Engine'\n" +
-                        "   → Link: https://www.microsoft.com/download/details.aspx?id=54920\n" +
-                        "   → Reinicie o programa após instalar\n\n" +
-                        $"Arquivo tentado: {Path.GetFileName(caminhoArquivo)}");
-                }
 
-                throw new Exception($"Erro ao ler Excel: {ex.Message}");
-            }
+            return cpfs;
         }
 
         /// <summary>

@@ -2,6 +2,7 @@
 // IMPORTADOR DE CLIENTES EM LOTE - COM FILTRO DE CIDADES
 // Arquivo: ImportadorClientesLote.cs (ATUALIZADO)
 // SUPORTA: CSV, XLSX, XLS, TXT, TSV + FILTRO POR CIDADE
+// NOVO: Aceita nomes de colunas em MAIÚSCULAS, minúsculas ou MiStUrAdO
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace Cadastro1
         public bool Sucesso { get; set; }
         public string Nome { get; set; }
         public string CPF { get; set; }
-        public string Cidade { get; set; } // NOVO: Guardar cidade para relatório
+        public string Cidade { get; set; }
         public string MensagemErro { get; set; }
         public List<string> CamposFaltantes { get; set; }
         public Dictionary<string, string> DadosExcedentes { get; set; }
@@ -40,7 +41,7 @@ namespace Cadastro1
         public int Falhas { get; set; }
         public int CPFsDuplicados { get; set; }
         public int CamposPreenchidosAuto { get; set; }
-        public int ClientesIgnoradosPorCidade { get; set; } // NOVO: Clientes ignorados por filtro de cidade
+        public int ClientesIgnoradosPorCidade { get; set; }
         public List<ResultadoCadastroCliente> Resultados { get; set; }
 
         public ResultadoImportacaoLote()
@@ -63,7 +64,6 @@ namespace Cadastro1
             sb.AppendLine($"   ❌ Falhas no cadastro:           {Falhas}");
             sb.AppendLine($"   🔄 CPFs já existentes (pulados): {CPFsDuplicados}");
 
-            // NOVO: Mostrar clientes ignorados por cidade
             if (ClientesIgnoradosPorCidade > 0)
             {
                 sb.AppendLine($"   🏙️ Ignorados por filtro cidade:  {ClientesIgnoradosPorCidade}");
@@ -88,7 +88,6 @@ namespace Cadastro1
                 sb.AppendLine("   🔧 IMPORTANTE: Atualize estes dados posteriormente!\n");
             }
 
-            // SUCESSOS
             var sucessos = Resultados.Where(r => r.Sucesso).ToList();
             if (sucessos.Count > 0)
             {
@@ -122,7 +121,6 @@ namespace Cadastro1
                 }
             }
 
-            // FALHAS
             var falhas = Resultados.Where(r => !r.Sucesso).ToList();
             if (falhas.Count > 0)
             {
@@ -226,35 +224,36 @@ namespace Cadastro1
     {
         private ClienteDAL clienteDAL;
         private ClienteAnexoDAL anexoDAL;
-        private HashSet<string> cidadesFiltro; // NOVO: Filtro de cidades selecionadas
+        private HashSet<string> cidadesFiltro;
 
+        // =============================================
+        // ATUALIZAÇÃO: Dicionários simplificados
+        // A comparação case-insensitive agora é feita no método ExtrairCampo
+        // =============================================
         private readonly Dictionary<string, string[]> camposObrigatorios = new Dictionary<string, string[]>
         {
             { "Nome", new[] { "Nome", "NomeCompleto", "Cliente", "NomeCliente" } },
             { "CPF", new[] { "CPF", "Cpf", "DocumentoCPF" } },
-            { "DataNascimento", new[] { "DataNascimento", "Nascimento", "DataNasc", "DtNascimento" } },
+            { "DataNascimento", new[] { "DataNascimento", "Nascimento", "DataNasc", "DtNascimento", "Data_Nascimento" } },
             { "Endereco", new[] { "Endereco", "Endereço", "Rua", "Logradouro" } },
             { "Cidade", new[] { "Cidade", "Municipio", "Município" } },
-            { "CEP", new[] { "CEP", "Cep", "CodigoPostal" } },
-            { "BeneficioINSS", new[] { "Beneficio", "BeneficioINSS", "INSS", "NumeroINSS", "NB" } }
+            { "CEP", new[] { "CEP", "Cep", "CodigoPostal", "Codigo_Postal" } },
+            { "BeneficioINSS", new[] { "Beneficio", "BeneficioINSS", "Benefício", "INSS", "NumeroINSS", "NB" } }
         };
 
         private readonly Dictionary<string, string[]> camposOpcionais = new Dictionary<string, string[]>
         {
             { "Telefone", new[] { "Telefone", "Fone", "Celular", "telefone_1", "Tel" } },
-            { "BeneficioINSS2", new[] { "Beneficio2", "SegundoBeneficio", "OutroBeneficio" } }
+            { "BeneficioINSS2", new[] { "Beneficio2", "Benefício2", "SegundoBeneficio", "OutroBeneficio" } }
         };
 
         public ImportadorClientesLote()
         {
             clienteDAL = new ClienteDAL();
             anexoDAL = new ClienteAnexoDAL();
-            cidadesFiltro = null; // Sem filtro por padrão
+            cidadesFiltro = null;
         }
 
-        // =============================================
-        // NOVO: Método para definir filtro de cidades
-        // =============================================
         public void DefinirFiltroCidades(List<string> cidades)
         {
             if (cidades == null || cidades.Count == 0)
@@ -263,7 +262,6 @@ namespace Cadastro1
             }
             else
             {
-                // Normalizar nomes das cidades (uppercase para comparação case-insensitive)
                 cidadesFiltro = new HashSet<string>(
                     cidades.Select(c => c.ToUpper().Trim()),
                     StringComparer.OrdinalIgnoreCase
@@ -271,9 +269,6 @@ namespace Cadastro1
             }
         }
 
-        // =============================================
-        // NOVO: Método para extrair cidades da planilha
-        // =============================================
         public List<string> ExtrairCidadesDaPlanilha(string caminhoArquivo)
         {
             string extensao = Path.GetExtension(caminhoArquivo).ToLower();
@@ -298,7 +293,6 @@ namespace Cadastro1
                         throw new Exception($"Formato não suportado: {extensao}");
                 }
 
-                // Remover valores vazios e normalizar
                 return cidades
                     .Where(c => !string.IsNullOrWhiteSpace(c))
                     .Select(c => c.Trim())
@@ -325,7 +319,7 @@ namespace Cadastro1
                 string separador = DetectarSeparador(linhas[0]);
                 string[] colunas = linhas[0].Split(new[] { separador }, StringSplitOptions.None);
 
-                // Encontrar índice da coluna Cidade
+                // ATUALIZADO: Busca case-insensitive
                 int indiceCidade = -1;
                 for (int i = 0; i < colunas.Length; i++)
                 {
@@ -340,7 +334,6 @@ namespace Cadastro1
                 if (indiceCidade == -1)
                     return cidades;
 
-                // Extrair cidades das linhas
                 for (int i = 1; i < linhas.Length; i++)
                 {
                     string linha = linhas[i].Trim();
@@ -377,7 +370,7 @@ namespace Cadastro1
                 if (dt == null || dt.Rows.Count == 0)
                     return cidades;
 
-                // Encontrar coluna Cidade
+                // ATUALIZADO: Busca case-insensitive
                 string colunaCidade = null;
                 foreach (DataColumn col in dt.Columns)
                 {
@@ -392,7 +385,6 @@ namespace Cadastro1
                 if (colunaCidade == null)
                     return cidades;
 
-                // Extrair cidades
                 foreach (DataRow row in dt.Rows)
                 {
                     var valor = row[colunaCidade];
@@ -414,9 +406,6 @@ namespace Cadastro1
             }
         }
 
-        // =============================================
-        // MÉTODO PRINCIPAL - SUPORTA MÚLTIPLOS FORMATOS
-        // =============================================
         public ResultadoImportacaoLote ImportarArquivo(string caminhoArquivo)
         {
             string extensao = Path.GetExtension(caminhoArquivo).ToLower();
@@ -712,12 +701,9 @@ namespace Cadastro1
                 string cep = ExtrairCampo(dadosLinha, camposObrigatorios["CEP"]);
                 string inss = ExtrairCampo(dadosLinha, camposObrigatorios["BeneficioINSS"]);
 
-                // Guardar cidade no resultado para relatório
                 resultado.Cidade = cidade;
 
-                // =============================================
-                // NOVO: VERIFICAR FILTRO DE CIDADE
-                // =============================================
+                // Verificar filtro de cidade
                 if (cidadesFiltro != null && cidadesFiltro.Count > 0)
                 {
                     if (string.IsNullOrWhiteSpace(cidade))
@@ -961,10 +947,14 @@ namespace Cadastro1
             }
         }
 
+        // =============================================
+        // MÉTODO ATUALIZADO: COMPARAÇÃO CASE-INSENSITIVE
+        // =============================================
         private string ExtrairCampo(Dictionary<string, string> dados, string[] nomespossiveis)
         {
             foreach (string nome in nomespossiveis)
             {
+                // ATUALIZAÇÃO: Usar comparação case-insensitive
                 var kvp = dados.FirstOrDefault(x =>
                     x.Key.Equals(nome, StringComparison.OrdinalIgnoreCase));
 

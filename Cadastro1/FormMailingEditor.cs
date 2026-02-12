@@ -1,7 +1,7 @@
 ﻿// =============================================
-// FORMULÁRIO EDITOR DE MALA DIRETA (CORRIGIDO)
+// FORMULÁRIO EDITOR DE MALA DIRETA (ATUALIZADO)
 // Arquivo: FormMailingEditor.cs
-// CORREÇÃO: Busca funcionando + Preview visual preciso
+// ATUALIZAÇÃO: Suporte a múltiplos formatos de planilha
 // =============================================
 using System;
 using System.Collections.Generic;
@@ -75,7 +75,7 @@ namespace Cadastro1
         }
 
         // =============================================
-        // CORREÇÃO PRINCIPAL: BUSCA FUNCIONANDO
+        // BUSCA DE CLIENTES
         // =============================================
         private void txtBuscaCPF_TextChanged(object sender, EventArgs e)
         {
@@ -91,7 +91,6 @@ namespace Cadastro1
 
             try
             {
-                // BUSCAR com o método corrigido
                 clientesFiltrados = clienteDAL.BuscarClientesPorFiltro(filtro, 500);
                 AtualizarListaClientes();
 
@@ -208,20 +207,12 @@ namespace Cadastro1
             MouseEventArgs me = e as MouseEventArgs;
             if (me == null) return;
 
-            // =============================================
-            // CONVERSÃO PRECISA: PIXELS → MILÍMETROS
-            // =============================================
-
-            // Converter posição do clique de pixels para milímetros
             float xMm = (me.X / RazaoX);
             float yMm = (me.Y / RazaoY);
 
             string campo = camposOrdem[contadorCliques];
 
-            // Remover campo anterior se existir
             templateAtual.Campos.RemoveAll(c => c.Nome == campo);
-
-            // Adicionar novo campo com coordenadas em mm
             templateAtual.AdicionarCampoPadrao(campo, xMm, yMm);
 
             contadorCliques++;
@@ -253,9 +244,6 @@ namespace Cadastro1
             AtualizarStatus();
         }
 
-        // =============================================
-        // PREVIEW VISUAL PRECISO
-        // =============================================
         private void PicPreview_Paint(object sender, PaintEventArgs e)
         {
             if (templateAtual == null || templateAtual.Campos.Count == 0) return;
@@ -265,11 +253,9 @@ namespace Cadastro1
 
             foreach (var campo in templateAtual.Campos)
             {
-                // Converter mm para pixels para desenho
                 float xPx = campo.PosicaoX * RazaoX;
                 float yPx = campo.PosicaoY * RazaoY;
 
-                // Cor por campo
                 Color cor = campo.Nome == "Endereco" ? Color.FromArgb(155, 89, 182) :
                            campo.Nome == "Cidade" ? Color.FromArgb(230, 126, 34) :
                            Color.FromArgb(231, 76, 60);
@@ -277,20 +263,15 @@ namespace Cadastro1
                 using (Brush brush = new SolidBrush(cor))
                 using (Pen pen = new Pen(cor, 2))
                 {
-                    // Desenhar marcador de cruz
                     g.DrawLine(pen, xPx - 10, yPx, xPx + 10, yPx);
                     g.DrawLine(pen, xPx, yPx - 10, xPx, yPx + 10);
-
-                    // Desenhar círculo no centro
                     g.FillEllipse(brush, xPx - 4, yPx - 4, 8, 8);
 
-                    // Desenhar label com coordenadas
                     using (Font font = new Font("Segoe UI", 9, FontStyle.Bold))
                     {
                         string label = $"{campo.Nome}\n({campo.PosicaoX:F1}mm, {campo.PosicaoY:F1}mm)";
-
-                        // Fundo semi-transparente para o texto
                         SizeF tamanhoTexto = g.MeasureString(label, font);
+
                         using (Brush fundoBrush = new SolidBrush(Color.FromArgb(200, Color.White)))
                         {
                             g.FillRectangle(fundoBrush, xPx + 15, yPx - 10, tamanhoTexto.Width + 4, tamanhoTexto.Height + 4);
@@ -423,7 +404,6 @@ namespace Cadastro1
                     return;
                 }
 
-                // Obter clientes selecionados
                 List<Cliente> clientesSelecionados = new List<Cliente>();
 
                 foreach (int index in chkClientes.CheckedIndices)
@@ -488,6 +468,10 @@ namespace Cadastro1
             this.Close();
         }
 
+        // =============================================
+        // IMPORTAÇÃO DE PLANILHA - ATUALIZADO
+        // Agora suporta: XLSX, XLS, CSV, TXT, TSV
+        // =============================================
         private void BtnImportarPlanilha_Click(object sender, EventArgs e)
         {
             try
@@ -495,14 +479,50 @@ namespace Cadastro1
                 using (OpenFileDialog ofd = new OpenFileDialog())
                 {
                     ofd.Title = "Selecione a planilha com CPFs";
-                    ofd.Filter = "Arquivos CSV|*.csv|Arquivos Excel|*.xlsx;*.xls|Todos os arquivos|*.*";
-                    ofd.FilterIndex = 1;
+
+                    // =============================================
+                    // FILTROS ATUALIZADOS - MÚLTIPLOS FORMATOS
+                    // =============================================
+                    ofd.Filter =
+                        "Todos os formatos suportados|*.csv;*.xlsx;*.xls;*.txt;*.tsv|" +
+                        "Arquivos Excel (*.xlsx)|*.xlsx|" +
+                        "Arquivos Excel Antigo (*.xls)|*.xls|" +
+                        "Arquivos CSV (*.csv)|*.csv|" +
+                        "Arquivos de Texto (*.txt)|*.txt|" +
+                        "Arquivos TSV (*.tsv)|*.tsv|" +
+                        "Todos os arquivos (*.*)|*.*";
+
+                    ofd.FilterIndex = 1; // "Todos os formatos suportados" como padrão
 
                     if (ofd.ShowDialog() == DialogResult.OK)
                     {
                         btnImportarPlanilha.Enabled = false;
                         btnImportarPlanilha.Text = "⏳ Importando...";
                         Application.DoEvents();
+
+                        // Verificar extensão do arquivo
+                        string extensao = Path.GetExtension(ofd.FileName).ToLower();
+                        string[] extensoesSuportadas = { ".csv", ".xlsx", ".xls", ".txt", ".tsv" };
+
+                        if (!Array.Exists(extensoesSuportadas, ext => ext == extensao))
+                        {
+                            MessageBox.Show(
+                                $"❌ FORMATO NÃO SUPORTADO: {extensao}\n\n" +
+                                "Formatos aceitos:\n" +
+                                "✓ .XLSX (Excel moderno)\n" +
+                                "✓ .XLS (Excel antigo)\n" +
+                                "✓ .CSV (separado por vírgula ou ponto-e-vírgula)\n" +
+                                "✓ .TXT (texto delimitado)\n" +
+                                "✓ .TSV (separado por tabulação)\n\n" +
+                                "Por favor, converta seu arquivo para um destes formatos.",
+                                "Formato Não Suportado",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+
+                            btnImportarPlanilha.Enabled = true;
+                            btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV/TXT)";
+                            return;
+                        }
 
                         ExcelImporter importer = new ExcelImporter();
                         ResultadoImportacao resultado = importer.ImportarPlanilha(ofd.FileName);
@@ -517,14 +537,19 @@ namespace Cadastro1
                             MessageBoxIcon.Information);
 
                         btnImportarPlanilha.Enabled = true;
-                        btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV)";
+                        btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV/TXT)";
+                    }
+                    else
+                    {
+                        btnImportarPlanilha.Enabled = true;
+                        btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV/TXT)";
                     }
                 }
             }
             catch (Exception ex)
             {
                 btnImportarPlanilha.Enabled = true;
-                btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV)";
+                btnImportarPlanilha.Text = "📊 IMPORTAR CPFs DA PLANILHA (Excel/CSV/TXT)";
 
                 MessageBox.Show(
                     ex.Message,
