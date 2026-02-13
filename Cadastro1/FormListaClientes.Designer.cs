@@ -48,11 +48,11 @@
             // panelContainer
             // 
             this.panelContainer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
+            this.panelContainer.Controls.Add(this.btnFechar);
             this.panelContainer.Controls.Add(this.panelPaginacao);
             this.panelContainer.Controls.Add(this.label1);
             this.panelContainer.Controls.Add(this.dgvClientes);
             this.panelContainer.Controls.Add(this.lblTitulo);
-            this.panelContainer.Controls.Add(this.btnFechar);
             this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelContainer.Location = new System.Drawing.Point(0, 0);
             this.panelContainer.Name = "panelContainer";
@@ -68,7 +68,7 @@
             this.panelPaginacao.Controls.Add(this.btnProximo);
             this.panelPaginacao.Location = new System.Drawing.Point(12, 753);
             this.panelPaginacao.Name = "panelPaginacao";
-            this.panelPaginacao.Size = new System.Drawing.Size(1246, 45);
+            this.panelPaginacao.Size = new System.Drawing.Size(1330, 50);
             this.panelPaginacao.TabIndex = 3;
             // 
             // btnAnterior
@@ -79,9 +79,9 @@
             this.btnAnterior.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAnterior.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnAnterior.ForeColor = System.Drawing.Color.White;
-            this.btnAnterior.Location = new System.Drawing.Point(10, 6);
+            this.btnAnterior.Location = new System.Drawing.Point(10, 8);
             this.btnAnterior.Name = "btnAnterior";
-            this.btnAnterior.Size = new System.Drawing.Size(120, 30);
+            this.btnAnterior.Size = new System.Drawing.Size(120, 32);
             this.btnAnterior.TabIndex = 0;
             this.btnAnterior.Text = "◀ Anterior";
             this.btnAnterior.UseVisualStyleBackColor = false;
@@ -91,26 +91,29 @@
             // 
             // lblPaginacao
             // 
+            this.lblPaginacao.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.lblPaginacao.AutoSize = true;
             this.lblPaginacao.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.lblPaginacao.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.lblPaginacao.Location = new System.Drawing.Point(500, 11);
+            this.lblPaginacao.Location = new System.Drawing.Point(555, 14);
             this.lblPaginacao.Name = "lblPaginacao";
             this.lblPaginacao.Size = new System.Drawing.Size(216, 19);
             this.lblPaginacao.TabIndex = 1;
             this.lblPaginacao.Text = "Página 1 de 1 | Total: 0 clientes";
+            this.lblPaginacao.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnProximo
             // 
+            this.btnProximo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnProximo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(204)))), ((int)(((byte)(113)))));
             this.btnProximo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnProximo.FlatAppearance.BorderSize = 0;
             this.btnProximo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnProximo.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnProximo.ForeColor = System.Drawing.Color.White;
-            this.btnProximo.Location = new System.Drawing.Point(1114, 6);
+            this.btnProximo.Location = new System.Drawing.Point(1198, 8);
             this.btnProximo.Name = "btnProximo";
-            this.btnProximo.Size = new System.Drawing.Size(120, 30);
+            this.btnProximo.Size = new System.Drawing.Size(120, 32);
             this.btnProximo.TabIndex = 2;
             this.btnProximo.Text = "Próximo ▶";
             this.btnProximo.UseVisualStyleBackColor = false;
@@ -190,10 +193,10 @@
             this.btnFechar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnFechar.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
             this.btnFechar.ForeColor = System.Drawing.Color.White;
-            this.btnFechar.Location = new System.Drawing.Point(535, 804);
+            this.btnFechar.Location = new System.Drawing.Point(587, 815);
             this.btnFechar.Name = "btnFechar";
-            this.btnFechar.Size = new System.Drawing.Size(180, 45);
-            this.btnFechar.TabIndex = 1;
+            this.btnFechar.Size = new System.Drawing.Size(180, 50);
+            this.btnFechar.TabIndex = 4;
             this.btnFechar.Text = "✖ FECHAR";
             this.btnFechar.UseVisualStyleBackColor = false;
             this.btnFechar.Click += new System.EventHandler(this.btnFechar_Click);
