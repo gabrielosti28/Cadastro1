@@ -475,5 +475,13 @@ namespace Cadastro1
                     "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+            FormImportarPastas form = new FormImportarPastas();
+            form.ShowDialog();
+
+        }    
     }
 }

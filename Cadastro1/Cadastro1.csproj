@@ -189,6 +189,12 @@
     <Compile Include="FormImportarClientesLote.Designer.cs">
       <DependentUpon>FormImportarClientesLote.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formimportarpastas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formimportarpastas.Designer.cs">
+      <DependentUpon>Formimportarpastas.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormListaClientes.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -225,6 +231,12 @@
     <Compile Include="FormRelatorioImportacao.Designer.cs">
       <DependentUpon>FormRelatorioImportacao.cs</DependentUpon>
     </Compile>
+    <Compile Include="Formrelatorioimportacaopastas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formrelatorioimportacaopastas.Designer.cs">
+      <DependentUpon>Formrelatorioimportacaopastas.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSelecionarCidade.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -238,6 +250,7 @@
       <DependentUpon>FormSelecionarCidadeImportacao.cs</DependentUpon>
     </Compile>
     <Compile Include="ImportadorClientesLote.cs" />
+    <Compile Include="Importadorpastas.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MailingPdfGenerator.cs" />
     <Compile Include="MailingTemplate.cs" />

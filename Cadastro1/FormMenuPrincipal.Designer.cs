@@ -45,6 +45,7 @@
             this.lblSubtitulo = new System.Windows.Forms.Label();
             this.lblTitulo = new System.Windows.Forms.Label();
             this.btnSair = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.panelContainer.SuspendLayout();
             this.panelAniversariantes.SuspendLayout();
             this.panelBotoes.SuspendLayout();
@@ -53,6 +54,7 @@
             // panelContainer
             // 
             this.panelContainer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(248)))), ((int)(((byte)(255)))));
+            this.panelContainer.Controls.Add(this.button1);
             this.panelContainer.Controls.Add(this.btnEnviarSms);
             this.panelContainer.Controls.Add(this.btnConfigurarPastas);
             this.panelContainer.Controls.Add(this.btnMalaDireta);
@@ -66,8 +68,9 @@
             this.panelContainer.Controls.Add(this.btnSair);
             this.panelContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelContainer.Location = new System.Drawing.Point(0, 0);
+            this.panelContainer.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(1277, 850);
+            this.panelContainer.Size = new System.Drawing.Size(1703, 1046);
             this.panelContainer.TabIndex = 0;
             // 
             // btnEnviarSms
@@ -78,9 +81,10 @@
             this.btnEnviarSms.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEnviarSms.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnEnviarSms.ForeColor = System.Drawing.Color.White;
-            this.btnEnviarSms.Location = new System.Drawing.Point(1106, 15);
+            this.btnEnviarSms.Location = new System.Drawing.Point(1475, 18);
+            this.btnEnviarSms.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnEnviarSms.Name = "btnEnviarSms";
-            this.btnEnviarSms.Size = new System.Drawing.Size(160, 35);
+            this.btnEnviarSms.Size = new System.Drawing.Size(213, 43);
             this.btnEnviarSms.TabIndex = 10;
             this.btnEnviarSms.Text = "📱 Enviar SMS";
             this.btnEnviarSms.UseVisualStyleBackColor = false;
@@ -96,9 +100,10 @@
             this.btnConfigurarPastas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnConfigurarPastas.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnConfigurarPastas.ForeColor = System.Drawing.Color.White;
-            this.btnConfigurarPastas.Location = new System.Drawing.Point(910, 15);
+            this.btnConfigurarPastas.Location = new System.Drawing.Point(1213, 18);
+            this.btnConfigurarPastas.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnConfigurarPastas.Name = "btnConfigurarPastas";
-            this.btnConfigurarPastas.Size = new System.Drawing.Size(180, 35);
+            this.btnConfigurarPastas.Size = new System.Drawing.Size(240, 43);
             this.btnConfigurarPastas.TabIndex = 9;
             this.btnConfigurarPastas.Text = "⚙️ Configurar Pastas";
             this.btnConfigurarPastas.UseVisualStyleBackColor = false;
@@ -114,9 +119,10 @@
             this.btnMalaDireta.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnMalaDireta.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnMalaDireta.ForeColor = System.Drawing.Color.White;
-            this.btnMalaDireta.Location = new System.Drawing.Point(730, 15);
+            this.btnMalaDireta.Location = new System.Drawing.Point(973, 18);
+            this.btnMalaDireta.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnMalaDireta.Name = "btnMalaDireta";
-            this.btnMalaDireta.Size = new System.Drawing.Size(160, 35);
+            this.btnMalaDireta.Size = new System.Drawing.Size(213, 43);
             this.btnMalaDireta.TabIndex = 8;
             this.btnMalaDireta.Text = "📮 Mala Direta";
             this.btnMalaDireta.UseVisualStyleBackColor = false;
@@ -132,9 +138,10 @@
             this.btnAlterarSenha.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAlterarSenha.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnAlterarSenha.ForeColor = System.Drawing.Color.White;
-            this.btnAlterarSenha.Location = new System.Drawing.Point(550, 15);
+            this.btnAlterarSenha.Location = new System.Drawing.Point(733, 18);
+            this.btnAlterarSenha.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnAlterarSenha.Name = "btnAlterarSenha";
-            this.btnAlterarSenha.Size = new System.Drawing.Size(160, 35);
+            this.btnAlterarSenha.Size = new System.Drawing.Size(213, 43);
             this.btnAlterarSenha.TabIndex = 7;
             this.btnAlterarSenha.Text = "🔑 Alterar Senha";
             this.btnAlterarSenha.UseVisualStyleBackColor = false;
@@ -150,9 +157,10 @@
             this.btnGerenciarBackup.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnGerenciarBackup.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnGerenciarBackup.ForeColor = System.Drawing.Color.White;
-            this.btnGerenciarBackup.Location = new System.Drawing.Point(350, 15);
+            this.btnGerenciarBackup.Location = new System.Drawing.Point(467, 18);
+            this.btnGerenciarBackup.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnGerenciarBackup.Name = "btnGerenciarBackup";
-            this.btnGerenciarBackup.Size = new System.Drawing.Size(180, 35);
+            this.btnGerenciarBackup.Size = new System.Drawing.Size(240, 43);
             this.btnGerenciarBackup.TabIndex = 6;
             this.btnGerenciarBackup.Text = "💾 Gerenciar Backup";
             this.btnGerenciarBackup.UseVisualStyleBackColor = false;
@@ -165,9 +173,10 @@
             this.lblUsuarioLogado.AutoSize = true;
             this.lblUsuarioLogado.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.lblUsuarioLogado.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblUsuarioLogado.Location = new System.Drawing.Point(20, 23);
+            this.lblUsuarioLogado.Location = new System.Drawing.Point(27, 28);
+            this.lblUsuarioLogado.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblUsuarioLogado.Name = "lblUsuarioLogado";
-            this.lblUsuarioLogado.Size = new System.Drawing.Size(116, 19);
+            this.lblUsuarioLogado.Size = new System.Drawing.Size(139, 23);
             this.lblUsuarioLogado.TabIndex = 5;
             this.lblUsuarioLogado.Text = "👤 Usuário: N/A";
             // 
@@ -176,18 +185,20 @@
             this.panelAniversariantes.BackColor = System.Drawing.Color.White;
             this.panelAniversariantes.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelAniversariantes.Controls.Add(this.lblTituloAniversariantes);
-            this.panelAniversariantes.Location = new System.Drawing.Point(12, 140);
+            this.panelAniversariantes.Location = new System.Drawing.Point(16, 172);
+            this.panelAniversariantes.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panelAniversariantes.Name = "panelAniversariantes";
-            this.panelAniversariantes.Size = new System.Drawing.Size(489, 600);
+            this.panelAniversariantes.Size = new System.Drawing.Size(651, 738);
             this.panelAniversariantes.TabIndex = 4;
             // 
             // lblTituloAniversariantes
             // 
             this.lblTituloAniversariantes.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.lblTituloAniversariantes.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblTituloAniversariantes.Location = new System.Drawing.Point(70, 10);
+            this.lblTituloAniversariantes.Location = new System.Drawing.Point(93, 12);
+            this.lblTituloAniversariantes.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblTituloAniversariantes.Name = "lblTituloAniversariantes";
-            this.lblTituloAniversariantes.Size = new System.Drawing.Size(330, 30);
+            this.lblTituloAniversariantes.Size = new System.Drawing.Size(440, 37);
             this.lblTituloAniversariantes.TabIndex = 0;
             this.lblTituloAniversariantes.Text = "🎂 ANIVERSARIANTES";
             this.lblTituloAniversariantes.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -200,9 +211,10 @@
             this.panelBotoes.Controls.Add(this.btnListar);
             this.panelBotoes.Controls.Add(this.btnBuscar);
             this.panelBotoes.Controls.Add(this.btnNovo);
-            this.panelBotoes.Location = new System.Drawing.Point(526, 140);
+            this.panelBotoes.Location = new System.Drawing.Point(701, 172);
+            this.panelBotoes.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.panelBotoes.Name = "panelBotoes";
-            this.panelBotoes.Size = new System.Drawing.Size(550, 400);
+            this.panelBotoes.Size = new System.Drawing.Size(733, 492);
             this.panelBotoes.TabIndex = 1;
             // 
             // btnImportarLote
@@ -213,9 +225,10 @@
             this.btnImportarLote.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnImportarLote.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
             this.btnImportarLote.ForeColor = System.Drawing.Color.White;
-            this.btnImportarLote.Location = new System.Drawing.Point(25, 308);
+            this.btnImportarLote.Location = new System.Drawing.Point(33, 379);
+            this.btnImportarLote.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnImportarLote.Name = "btnImportarLote";
-            this.btnImportarLote.Size = new System.Drawing.Size(500, 80);
+            this.btnImportarLote.Size = new System.Drawing.Size(667, 98);
             this.btnImportarLote.TabIndex = 10;
             this.btnImportarLote.Text = "📥 IMPORTAR CLIENTES\r\n(PLANILHA)";
             this.btnImportarLote.UseVisualStyleBackColor = false;
@@ -230,9 +243,10 @@
             this.btnListar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnListar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnListar.ForeColor = System.Drawing.Color.White;
-            this.btnListar.Location = new System.Drawing.Point(25, 209);
+            this.btnListar.Location = new System.Drawing.Point(33, 257);
+            this.btnListar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnListar.Name = "btnListar";
-            this.btnListar.Size = new System.Drawing.Size(500, 80);
+            this.btnListar.Size = new System.Drawing.Size(667, 98);
             this.btnListar.TabIndex = 2;
             this.btnListar.Text = "📋 VER TODOS OS CLIENTES";
             this.btnListar.UseVisualStyleBackColor = false;
@@ -247,9 +261,10 @@
             this.btnBuscar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBuscar.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnBuscar.ForeColor = System.Drawing.Color.White;
-            this.btnBuscar.Location = new System.Drawing.Point(25, 112);
+            this.btnBuscar.Location = new System.Drawing.Point(33, 138);
+            this.btnBuscar.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnBuscar.Name = "btnBuscar";
-            this.btnBuscar.Size = new System.Drawing.Size(500, 75);
+            this.btnBuscar.Size = new System.Drawing.Size(667, 92);
             this.btnBuscar.TabIndex = 1;
             this.btnBuscar.Text = "🔍 BUSCAR CLIENTE POR CPF";
             this.btnBuscar.UseVisualStyleBackColor = false;
@@ -264,9 +279,10 @@
             this.btnNovo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnNovo.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnNovo.ForeColor = System.Drawing.Color.White;
-            this.btnNovo.Location = new System.Drawing.Point(25, 10);
+            this.btnNovo.Location = new System.Drawing.Point(33, 12);
+            this.btnNovo.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnNovo.Name = "btnNovo";
-            this.btnNovo.Size = new System.Drawing.Size(500, 82);
+            this.btnNovo.Size = new System.Drawing.Size(667, 101);
             this.btnNovo.TabIndex = 0;
             this.btnNovo.Text = "➕ CADASTRAR NOVO CLIENTE";
             this.btnNovo.UseVisualStyleBackColor = false;
@@ -279,9 +295,10 @@
             this.lblSubtitulo.AutoSize = true;
             this.lblSubtitulo.Font = new System.Drawing.Font("Segoe UI", 14F);
             this.lblSubtitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(70)))));
-            this.lblSubtitulo.Location = new System.Drawing.Point(660, 112);
+            this.lblSubtitulo.Location = new System.Drawing.Point(880, 138);
+            this.lblSubtitulo.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblSubtitulo.Name = "lblSubtitulo";
-            this.lblSubtitulo.Size = new System.Drawing.Size(240, 25);
+            this.lblSubtitulo.Size = new System.Drawing.Size(300, 32);
             this.lblSubtitulo.TabIndex = 2;
             this.lblSubtitulo.Text = "Escolha uma opção abaixo:";
             // 
@@ -290,9 +307,10 @@
             this.lblTitulo.AutoSize = true;
             this.lblTitulo.Font = new System.Drawing.Font("Segoe UI", 24F, System.Drawing.FontStyle.Bold);
             this.lblTitulo.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(102)))), ((int)(((byte)(204)))));
-            this.lblTitulo.Location = new System.Drawing.Point(200, 70);
+            this.lblTitulo.Location = new System.Drawing.Point(267, 86);
+            this.lblTitulo.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblTitulo.Name = "lblTitulo";
-            this.lblTitulo.Size = new System.Drawing.Size(387, 45);
+            this.lblTitulo.Size = new System.Drawing.Size(474, 54);
             this.lblTitulo.TabIndex = 2;
             this.lblTitulo.Text = "SISTEMA DE CADASTRO";
             // 
@@ -303,9 +321,10 @@
             this.btnSair.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSair.Font = new System.Drawing.Font("Segoe UI", 12F);
             this.btnSair.ForeColor = System.Drawing.Color.White;
-            this.btnSair.Location = new System.Drawing.Point(624, 584);
+            this.btnSair.Location = new System.Drawing.Point(838, 823);
+            this.btnSair.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnSair.Name = "btnSair";
-            this.btnSair.Size = new System.Drawing.Size(350, 71);
+            this.btnSair.Size = new System.Drawing.Size(467, 87);
             this.btnSair.TabIndex = 3;
             this.btnSair.Text = "🔒 Sair e Fazer Logout";
             this.btnSair.UseVisualStyleBackColor = false;
@@ -313,13 +332,25 @@
             this.btnSair.MouseEnter += new System.EventHandler(this.Botao_MouseEnter);
             this.btnSair.MouseLeave += new System.EventHandler(this.Botao_MouseLeave);
             // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button1.Location = new System.Drawing.Point(835, 707);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(470, 100);
+            this.button1.TabIndex = 11;
+            this.button1.Text = "importar pastas";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // FormMenuPrincipal
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1277, 850);
+            this.ClientSize = new System.Drawing.Size(1703, 1046);
             this.Controls.Add(this.panelContainer);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.MaximizeBox = false;
             this.Name = "FormMenuPrincipal";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -352,5 +383,6 @@
         private System.Windows.Forms.Button btnMalaDireta;
         private System.Windows.Forms.Button btnConfigurarPastas;
         private System.Windows.Forms.Button btnEnviarSms;
+        private System.Windows.Forms.Button button1;
     }
 }
